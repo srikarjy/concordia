@@ -49,11 +49,30 @@ k8s/                     deployment manifests
 docs/                    roadmap and design notes
 ```
 
+## Usage (Phase 1)
+
+ConceptCLIP is [gated on Hugging Face](https://hf.co/JerrryNie/ConceptCLIP) —
+accept the license on the model page, then set `HF_TOKEN` in your
+environment.
+
+```bash
+pip install -e .
+export HF_TOKEN=hf_...
+concordia infer path/to/image.png \
+  --concept melanoma --concept nevus --concept seborrheic_keratosis
+```
+
+Zero-shot only: there's no fixed label set, just candidate concept
+strings scored against the image per call.
+
 ## Status
 
-Nothing here is trained, tuned, or benchmarked yet — this repo currently
-holds the scaffold and the plan. Build order and definition-of-done for
-each phase live in [docs/ROADMAP.md](docs/ROADMAP.md).
+Phase 1 (inference engine + CLI) is scaffolded; not yet exercised against
+real gated access, so `region_heatmap`'s exact behavior is unconfirmed —
+see the caveat in [engine.py](src/concordia/engine.py). Everything past
+Phase 1 (structured trace, eval harness, LIME/SHAP, memory, deployment)
+is still just the plan. Build order and definition-of-done for each phase
+live in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## License
 
