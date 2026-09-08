@@ -1,102 +1,113 @@
-# Roadmap
+# Concordia Roadmap
 
-Concordia is built in phases. Each phase produces something runnable and
-measurable — no phase depends on speculative future work.
+This is a research plan, not a record of completed experiments. The current scope is documentation only. Each subsequent phase must meet its completion criteria before the next dependent phase begins. Null or negative findings are valid outcomes.
 
-## Phase 0 — Scaffolding (this commit)
-- Repo structure, packaging, README, About.
-- No modeling code yet.
+## Phase 0 — Repository Foundation
 
-## Phase 1 — Inference engine
-- `concordia/engine.py`: wraps a Hugging Face ConceptCLIP checkpoint.
-  Given an image, returns top-k concept predictions with scores and,
-  for the top-2 concepts, a region-concept alignment heatmap.
-- Minimal CLI: `concordia infer <image>` prints predictions + saves heatmap.
-- Done when: runs end-to-end on a handful of sample images with no crashes.
+Current deliverables: project README, this roadmap, MIT license, and practical Git exclusions. The README establishes architecture, experimental scope, reproducibility expectations, and component boundaries.
 
-## Phase 2 — Structured explanation trace
-- `concordia/explain.py`: turns raw engine output into a structured trace —
-  `primary_finding`, `evidence` (supporting/competing concepts), a
-  `decision_basis` (why this confidence tier, in terms of score margins),
-  and a `counterfactual` (what would need to change for a different verdict).
-- Confidence policy: thresholds that map score margins to
-  high/medium/low-confidence tiers with different downstream handling
-  (e.g. low confidence → flag for review rather than auto-report).
-- Done when: trace output is stable JSON, covered by unit tests on
-  synthetic score distributions (clear win, close call, ambiguous).
+The expanded foundation will add dedicated architecture, experiment-design, and reproducibility documents; minimal package metadata and editor configuration; and documented directories for configuration, external data, processed data, frozen evidence, experiment manifests, reports, and tests. Future source boundaries are `predictors`, `explanations`, `evidence`, `scientist`, `interventions`, `evaluation`, and `reporting`. Empty directories need only placeholders; no implementation files are needed for scaffolding.
 
-## Phase 3 — Evaluation harness (the priority — see below)
-- Validates Phases 1–2 against ground truth. Without this, "confidence
-  tier" and "explanation" are just labels with no evidence behind them.
+**Completion criteria:** the initial documentation clearly distinguishes plans from results, specifies one scientist LLM plus a deterministic evaluator, and contains no executable project code. Complete the expanded skeleton before implementation when that work is authorized. Do not install speculative dependencies.
 
-## Phase 4 — Post-hoc cross-validation
-- `concordia/posthoc_explain.py`: LIME and SHAP as independent,
-  model-agnostic checks on the intrinsic heatmap from Phase 1.
-- Opt-in (`posthoc=True`) — expensive, meant for interrogating a specific
-  result, not routine calls.
-- A **concordance score**: quantify agreement between intrinsic/LIME/SHAP
-  salient regions (e.g. IoU or rank correlation of top regions), surfaced
-  in the trace output rather than left for a human to eyeball three
-  heatmaps side by side.
+## Phase 1 — Baseline Toxicity Predictor
 
-## Phase 5 — Case memory
-- `concordia/memory.py`: SQLite-backed case history (single-writer —
-  documented constraint, not an oversight).
-- Similarity retrieval: given a new case's embedding, surface the nearest
-  past cases and how they were adjudicated, as a fourth evidence source
-  alongside intrinsic/LIME/SHAP.
+- Obtain and version Tox21; record source, usage terms, checksums, and assay label definitions. Isolate NR-AhR and explicitly handle missing labels without treating them as negatives.
+- Validate molecules with RDKit. Define canonical SMILES, duplicate handling, invalid-input handling, and conflicting-label policy.
+- Create fixed training, validation, and test partitions. Prefer a documented scaffold-aware strategy; keep duplicate structures together and audit leakage.
+- Compute Morgan fingerprints with recorded radius, size, chirality settings, and software versions.
+- Train a Random Forest with recorded seeds and class-imbalance handling. Use validation data for hyperparameters, thresholds, and any calibration decisions.
+- Evaluate discrimination and class-sensitive performance, including ROC-AUC and precision-recall measures with uncertainty where appropriate. Record probability limitations.
+- Persist the model, split manifest, preprocessing configuration, environment, and performance artifacts.
 
-## Phase 6 — Serving + deployment
-- `concordia/api/`: thin REST (and optionally MCP) interface over the
-  harness.
-- Dockerfile + `k8s/` manifests (Deployment, Service, PVC for memory.db).
-- `replicas: 1` by design until memory.py moves off SQLite.
+**Completion criteria:** a reproducible baseline artifact predicts held-out valid molecules; split and label audits pass; performance and limitations are reported without selecting the test cohort based on favorable outcomes. Freeze the approximately 30-molecule study cohort separately from training.
 
----
+## Phase 2 — XAI Evidence Generation
 
-## Phase 3 in detail — Evaluation Harness
+- Use TreeSHAP for the fixed baseline; verify the supported model/output configuration.
+- Specify explained class, output scale, expected value, feature ordering, background/reference data where applicable, and attribution settings.
+- Record fingerprint-feature attributions and connect features to molecular context only where the mapping is defensible. Document hashed-bit collisions and multiple matching environments; do not imply unique atom-level or causal interpretation.
+- Validate finite values, feature consistency, and reconstruction/additivity within a documented tolerance appropriate to the chosen configuration.
+- Serialize stable explanation artifacts and frozen packets containing molecule, prediction, metadata, attributions, and a fixed selection of curated documents.
+- Start with approximately eight real supporting documents. Record source, version, excerpt boundaries, usage rights, and evidence identifiers. Define exact packet schemas in this phase, not in the initial repository setup.
 
-**Why this is next, not last:** everything upstream (confidence tiers,
-"high-confidence" claims, explanation quality) is currently asserted, not
-measured. The eval harness is what turns Concordia from a demo into
-something whose claims can be checked.
+**Completion criteria:** every cohort molecule has a traceable model explanation and content-hashed packet; packets can be replayed without retraining, regenerating explanations, or retrieving new documents.
 
-**Scope:**
+## Phase 3 — Scientist LLM Interface
 
-1. **Dataset.** Pull a small labeled public set (target: 150–300 images,
-   e.g. a subset of a public dermatology or radiology dataset with class
-   labels). Store a manifest (`data/manifest.csv`: image path, label,
-   split) — never commit the images themselves if the source license
-   doesn't allow redistribution.
+- Map packets to a versioned prompt using a direct provider API.
+- Define a claim taxonomy distinguishing prediction restatements, attribution-based interpretations, and biological/mechanistic hypotheses.
+- Define claim text, type, confidence, evidence references, evidence strength, and prediction relationship in a structured contract; validate it with Pydantic.
+- Specify confidence scales, stable evidence identifiers, and a claim-comparison strategy before the main experiment.
+- Preserve exact requests, raw responses, parsed claims, validation failures, provider metadata, and any retries. Predefine retry limits and failure handling to avoid selective inclusion.
+- Record model identifiers and generation parameters, including temperature; assess repeated calls under the same settings. Each condition starts without previous responses in context.
 
-2. **Metrics — model quality.**
-   - Top-1 / top-k accuracy, per-class and aggregate.
-   - AUC per class (one-vs-rest) where applicable.
-   - Confusion matrix.
+**Completion criteria:** the interface can preserve and validate outputs for frozen packets, record failures, and replay saved responses. No agent framework, debate, or evaluator-driven correction loop is introduced.
 
-3. **Metrics — calibration (does confidence mean anything).**
-   - Reliability diagram: for each confidence tier (high/medium/low from
-     Phase 2's policy), what fraction of predictions in that tier were
-     actually correct?
-   - Expected Calibration Error (ECE) as a single number to track over
-     time.
-   - This is the test of the confidence policy's core claim — if
-     "high confidence" cases aren't meaningfully more accurate than
-     "medium confidence" ones, the policy is decorative.
+## Phase 4 — Intervention Engine
 
-4. **Metrics — explanation quality.**
-   - Concordance score (Phase 4) vs. correctness: does agreement between
-     intrinsic/LIME/SHAP predict when the model is right?
-   - If ground-truth region annotations exist for any subset of the data,
-     compute localization overlap (IoU) between the heatmap and the
-     annotated region — a direct check that the model is looking at the
-     right evidence, not just getting the label right for the wrong reason.
+- Implement an identity control, explanation withholding, and explanation shuffling first.
+- For shuffling, precompute a seeded donor mapping with no self-donors. Keep the assay, predictor, explanation format, and declared donor-selection constraints consistent.
+- Change only the designated explanation payload. Preserve recipient molecule, prediction, prompt, documents, and other unrelated context. Keep actual donor provenance in the audit record without revealing experimental labels to the scientist.
+- Remove all designated explanation content when withholding, including any duplicate attribution-derived summaries. Use a predeclared representation for absent evidence.
+- After the initial conditions work, define deterministic corruption such as sign inversion of a recorded subset of attribution values. Record magnitude, selection rule, affected fields, and seed; keep this extension outside the minimum three-condition experiment.
+- Give each transformation an identifier/version and an auditable manifest linking parent and resulting packet hashes.
 
-5. **Output.** A single `eval report` (JSON + a rendered summary) per run,
-   versioned by model checkpoint + dataset manifest hash, so results are
-   comparable across changes.
+**Completion criteria:** identical inputs and configuration produce identical variants; audits demonstrate that unrelated fields remain unchanged. Shuffling has no self-donors and no accidental provenance disclosure. Corruption has separately documented validation before use.
 
-**Done when:** running `concordia eval --dataset data/manifest.csv`
-produces a report with all of the above, and the numbers are believable
-enough to put in the README's About section as an actual claim rather
-than an aspiration.
+## Phase 5 — Deterministic Evaluation
+
+- Predefine claim matching: use structured categories and explicit rules where possible; use fixed human mappings for semantic equivalence that cannot be established mechanically.
+- Define retention, additions, and removals relative to control, including denominators and empty-claim cases.
+- Compare confidence for matched claims; separately account for removed or added claims rather than inventing missing confidence values.
+- Record evidence-reference changes, reference validity, unsupported-claim rates, contradiction rates, and intervention sensitivity. Distinguish prediction-grounded claims from explanation-dependent claims.
+- Define human scoring rubrics for scientific support and semantic contradictions. Have independent reviewers score a subset where feasible, record disagreements, and preserve adjudications.
+- Report schema failures, unavailable outputs, and unmatched claims explicitly. Do not silently filter problematic runs.
+- The evaluator consumes validated claims and any fixed annotations and produces metrics/comparison results only. It never generates alternative conclusions, rewrites responses, or coaches the scientist.
+
+**Completion criteria:** saved inputs and annotation versions yield identical metrics; definitions, denominators, matching rules, and limitations are documented. Manual scientific judgment is clearly distinguished from automated reference checks.
+
+## Phase 6 — MVP Experiment
+
+- Freeze approximately 30 held-out molecules from NR-AhR, one predictor, one XAI method, one scientist model, approximately eight documents, and the control/withheld/shuffled conditions.
+- Record inclusion/exclusion criteria before reviewing LLM outcomes. Describe class balance and prediction-confidence coverage; this is a small exploratory study.
+- Predeclare hypotheses: explanation-dependent claims may become more qualified when explanations are withheld; shuffled evidence may alter explanations or expose inappropriate confidence. Stable prediction restatements may be warranted. None of these outcomes is assumed.
+- Specify repeat counts and generation settings before collection. Randomize or balance condition order, use independent contexts, and pair comparisons by molecule. Repeated calls are not independent additional molecules.
+- Store molecule input, model prediction, original explanation, transformed packet, intervention manifest, raw response, structured claims, validation status, metrics, and immutable experiment manifest.
+- Audit confounders: missing-evidence wording, prompt length, donor compatibility, documentary support, prior molecular knowledge, fingerprint ambiguity, predictor quality, provider drift, and sampling variability.
+
+**Completion criteria:** the frozen matrix of molecules, conditions, and repetitions is accounted for, including failures; all results can be traced to immutable input artifacts. No test-set tuning or selective rerunning based on favorable scientific conclusions.
+
+## Phase 7 — Analysis and Findings
+
+- Aggregate paired intervention differences, claim changes, confidence distributions, and evidence dependence.
+- Estimate uncertainty with the molecule as the sampling unit; distinguish within-molecule generation variance from between-molecule variation. Avoid overstating significance in a small exploratory cohort.
+- Present molecule-level case studies selected with transparent criteria, including faithful responses and ambiguous cases as well as failures if observed.
+- Analyze manual scoring and disagreements; report limitations of reference validity, semantic matching, XAI interpretation, and assay-specific generalization.
+- Publish a reproducible findings report with protocol deviations, missingness, model performance context, and null/negative results where observed.
+
+**Completion criteria:** every table and claim is traceable to saved outputs and documented analysis; the report answers the research question to the extent supported without predetermining the outcome.
+
+## Phase 8 — Stronger Molecular Predictor
+
+Only after the baseline framework works, evaluate Chemprop v2 with PyTorch and an appropriate Integrated Gradients / Captum integration. Verify model compatibility, attribution targets, baselines, and numerical checks before drawing comparisons.
+
+Repeat selected experiments while preserving molecule selection and LLM/evaluation settings where possible. Document changes in predictive performance, attribution granularity, and evidence format as potential confounders. Compare whether observations generalize across predictor/XAI combinations rather than assuming an improvement.
+
+**Completion criteria:** the graph-model pathway produces traceable validated evidence, and the comparative report separates robustness observations from predictor and explanation-method differences.
+
+## Phase 9 — Portfolio / Research Presentation
+
+Produce reproducible figures and experiment tables, an architecture diagram, a methodology explanation, limitations, and a minimal static HTML findings report. Link shareable manifests and artifacts with versioned access instructions. Add concise reproduction instructions once actual commands exist.
+
+**Completion criteria:** readers can understand the scientific question, inspect evidence behind conclusions, and reproduce the reported analysis from saved artifacts. No React application or dashboard is required.
+
+## Artifact and Reproducibility Contract
+
+Future configuration files will select assay, dataset version, seeds, model/XAI settings, prompt, generation parameters, intervention mapping, and repetitions without containing secrets. Future data documentation will distinguish external raw inputs, processed derivatives, and frozen evidence; provenance and redistribution rights must be recorded.
+
+Experiment manifests will link dataset checksums, molecule identifiers, split versions, predictor hashes, explanation versions, packet hashes, prompt versions, exact model identifiers, generation settings, intervention identifiers, raw-response locations, environment locks, code revisions, annotations, and metric definitions. A changed input produces a new run identity; derived results never overwrite raw evidence.
+
+Keep small, reviewable configurations, provenance records, prompts, manifests, and permitted findings in Git. Store bulky datasets, model binaries, raw experiment payloads, and restricted documents outside Git with checksums and retrieval instructions. Optional tracking may use one of MLflow or Weights & Biases; neither is needed for this foundation.
+
+Frozen evidence isolates the experimental manipulation from changes in retrieval, model training, or explanation generation. Replaying saved responses supports deterministic analysis; repeating hosted generation may produce different responses and must be treated as a new observation.

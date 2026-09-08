@@ -1,10 +1,41 @@
+# Python and local tooling
 __pycache__/
-*.pyc
+*.py[cod]
 .venv/
 venv/
 *.egg-info/
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+.ipynb_checkpoints/
+.idea/
+.vscode/
 .DS_Store
-*.db
-data/images/
+
+# Secrets (safe example configuration can be committed)
 .env
+.env.*
+!.env.example
+credentials/
+secrets/
+*.pem
+*.key
+
+# Local bulk artifacts; commit manifests and checksums outside these paths
+artifacts/
+data/raw/*
+!data/raw/.gitkeep
+!data/raw/README.md
+data/processed/*
+!data/processed/.gitkeep
+!data/processed/README.md
+data/evidence/payloads/
+experiments/outputs/
+mlruns/
+wandb/
+
+# Prompts, configs, manifests, evidence metadata, and reports stay trackable
