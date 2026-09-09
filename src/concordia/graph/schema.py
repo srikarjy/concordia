@@ -3,16 +3,54 @@
 from __future__ import annotations
 
 from collections import deque
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+
+class GraphNodeType(StrEnum):
+    SOURCE_FILE = "SourceFile"
+    SOURCE_SPAN = "SourceSpan"
+    PARSER_RUN = "ParserRun"
+    DATASET = "Dataset"
+    SEQUENCE = "Sequence"
+    GENOMIC_SEQUENCE = "GenomicSequence"
+    VARIANT = "Variant"
+    MODEL = "Model"
+    CHECKPOINT = "Checkpoint"
+    PREDICTION = "Prediction"
+    MODEL_OUTPUT = "ModelOutput"
+    ATTRIBUTION = "Attribution"
+    COUNTERFACTUAL_EFFECT = "CounterfactualEffect"
+    PAPER = "Paper"
+    CLAIM = "Claim"
+    SCIENTIFIC_CLAIM = "ScientificClaim"
+    TOOL_RUN = "ToolRun"
+    ARTIFACT = "Artifact"
+    DOCUMENT_SECTION = "DocumentSection"
+    SOURCE_SYMBOL = "SourceSymbol"
+    EXPERIMENT_MANIFEST = "ExperimentManifest"
+    EXTRACTION_CANDIDATE = "ExtractionCandidate"
+
+
+class GraphRelation(StrEnum):
+    USED = "used"
+    WAS_GENERATED_BY = "wasGeneratedBy"
+    WAS_DERIVED_FROM = "wasDerivedFrom"
+    WAS_REVISION_OF = "wasRevisionOf"
+    QUOTED_FROM = "quotedFrom"
+    SUPPORTED_BY = "supportedBy"
+    CONTRADICTED_BY = "contradictedBy"
+    LEGACY_SUPPORTED_BY = "supported_by"
+    LEGACY_DERIVED_FROM = "derived_from"
 
 
 class GraphNode(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     node_id: str = Field(min_length=1)
-    node_type: str = Field(min_length=1)
+    node_type: GraphNodeType
     label: str = Field(min_length=1)
     properties: dict[str, Any] = Field(default_factory=dict)
 
@@ -23,7 +61,7 @@ class GraphEdge(BaseModel):
     edge_id: str = Field(min_length=1)
     source: str = Field(min_length=1)
     target: str = Field(min_length=1)
-    relation: str = Field(min_length=1)
+    relation: GraphRelation
     properties: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -53,7 +91,7 @@ class EvidenceGraph(BaseModel):
         adjacency: dict[str, list[str]] = {}
         for edge in self.edges:
             adjacency.setdefault(edge.source, []).append(edge.target)
-        queue = deque([(source, (source,))])
+        queue: deque[tuple[str, tuple[str, ...]]] = deque([(source, (source,))])
         visited = {source}
         while queue:
             current, current_path = queue.popleft()

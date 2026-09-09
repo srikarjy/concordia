@@ -17,6 +17,12 @@ The HTTP control plane persists inputs and schedules work without executing the 
 
 Each state change is checked before append; event sequence numbers provide optimistic concurrency; and artifact references identify their producing event and tool. Server-Sent Events use sequence numbers as event IDs, accept `Last-Event-ID`, bound each database read, emit idle heartbeats, and close after terminal delivery. The server binds to `127.0.0.1` by default. CellForge execution remains planned.
 
+### Ingestion boundary
+
+Project ingestion uses deterministic format parsers rather than a language model. A source file is stored by SHA-256, parsed into accepted or rejected extraction candidates, and connected through `quotedFrom`, `wasGeneratedBy`, and `used` edges to its exact source span, parser run, and source file. The graph records assertions with validation state; it does not promote extracted text into unquestioned biological fact.
+
+An append-only SQLite source index assigns revision numbers per repository-relative path. A changed digest creates a new `SourceFile` linked to its predecessor by `wasRevisionOf`; unchanged content reuses the existing revision. The graph itself is canonically serialized into local content-addressed storage. SQLite is the revision index, not a substitute authoritative vector database.
+
 ## Molecular research pipeline
 
 Concordia is organized as a linear, artifact-producing research pipeline. Each boundary has one responsibility and a serializable output. This makes every downstream experiment replayable without silently retraining a model, regenerating an explanation, or retrieving different context.

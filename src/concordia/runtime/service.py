@@ -13,7 +13,13 @@ from concordia.events.sqlite import SQLiteEventLedger, request_digest
 from concordia.genomics.evo2 import RecordedFixtureScorer
 from concordia.genomics.ism import MutationEffect, scan_position
 from concordia.genomics.schema import GenomicSequence
-from concordia.graph.schema import EvidenceGraph, GraphEdge, GraphNode
+from concordia.graph.schema import (
+    EvidenceGraph,
+    GraphEdge,
+    GraphNode,
+    GraphNodeType,
+    GraphRelation,
+)
 from concordia.runtime.contracts import (
     ArtifactReference,
     GenomicFixtureTask,
@@ -375,13 +381,13 @@ class RunService:
             nodes=(
                 GraphNode(
                     node_id="claim:fixture-1",
-                    node_type="ScientificClaim",
+                    node_type=GraphNodeType.SCIENTIFIC_CLAIM,
                     label="Fixture score changes after one substitution",
                     properties=fixture_properties,
                 ),
                 GraphNode(
                     node_id=f"effect:{effects_digest}",
-                    node_type="CounterfactualEffect",
+                    node_type=GraphNodeType.COUNTERFACTUAL_EFFECT,
                     label=(
                         f"Position {strongest.position} "
                         f"{strongest.reference}>{strongest.alternate}"
@@ -390,13 +396,13 @@ class RunService:
                 ),
                 GraphNode(
                     node_id=f"score:{score_digest}",
-                    node_type="ModelOutput",
+                    node_type=GraphNodeType.MODEL_OUTPUT,
                     label=model_id,
                     properties={**fixture_properties, "artifact_hash": score_digest},
                 ),
                 GraphNode(
                     node_id=f"sequence:{spec.task.sequence_artifact_id}",
-                    node_type="GenomicSequence",
+                    node_type=GraphNodeType.GENOMIC_SEQUENCE,
                     label="persisted genomic input",
                     properties={
                         **fixture_properties,
@@ -409,19 +415,19 @@ class RunService:
                     edge_id="edge:claim-effect",
                     source="claim:fixture-1",
                     target=f"effect:{effects_digest}",
-                    relation="supported_by",
+                    relation=GraphRelation.LEGACY_SUPPORTED_BY,
                 ),
                 GraphEdge(
                     edge_id="edge:effect-score",
                     source=f"effect:{effects_digest}",
                     target=f"score:{score_digest}",
-                    relation="derived_from",
+                    relation=GraphRelation.LEGACY_DERIVED_FROM,
                 ),
                 GraphEdge(
                     edge_id="edge:score-sequence",
                     source=f"score:{score_digest}",
                     target=f"sequence:{spec.task.sequence_artifact_id}",
-                    relation="used",
+                    relation=GraphRelation.USED,
                 ),
             ),
         )

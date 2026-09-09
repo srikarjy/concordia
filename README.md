@@ -4,7 +4,7 @@ Concordia Colony is a provenance-first scientific platform for testing, tracing,
 
 One seed scientist creates a bounded colony of isolated workflow variants. Each descendant inherits a versioned digital genome, uses approved computational biology tools inside a sandbox, and produces structured claims. Deterministic infrastructure verifies evidence paths, calculates fitness, selects surviving workflows, and records the complete lineage.
 
-> **Current status:** the repository contains a working molecular evidence baseline, the first zero-cost genomic evidence vertical slice, and the durable local backend foundation. Colony evolution, CellForge integration, real Evo2 execution, cross-method validation, and the interactive frontend are planned. No genomic or scientist-model research result is claimed.
+> **Current status:** the repository contains a working molecular evidence baseline, the first zero-cost genomic evidence vertical slice, the durable local backend foundation, and provenance-aware project ingestion. Colony evolution, CellForge integration, real Evo2 execution, cross-method validation, and the interactive frontend are planned. No genomic or scientist-model research result is claimed.
 
 ## Problem
 
@@ -77,6 +77,12 @@ Claim
 ```
 
 Fixture-backed paths remain visible but cannot receive scientific support status.
+
+### Project ingestion
+
+The `ingest-project` command deterministically parses supported repository files and stores the resulting evidence graph as a content-addressed artifact. Implemented parsers cover Markdown headings, Python class and function definitions, YAML, JSON, CSV metadata rows, experiment manifests, XAI records, and paper metadata.
+
+Every extracted entity records its repository-relative path, source digest, parser version, exact line and character span, extraction method, confidence, and validation status. Accepted assertions and rejected candidates both remain in the graph. Changed files create append-only `wasRevisionOf` chains; unchanged re-ingestion produces the same graph identity.
 
 ## Cross-Verification
 
@@ -176,6 +182,7 @@ uv sync --extra dev --extra xai --extra scientist
 .venv/bin/pytest
 .venv/bin/ruff check src tests
 .venv/bin/concordia genomic-demo
+.venv/bin/concordia ingest-project
 ```
 
 Start the local control plane on the loopback interface:
@@ -239,10 +246,12 @@ Real local Evo2 forward inference requires supported NVIDIA hardware and substan
 
 1. **Evidence graph vertical slice:** complete for the current software fixture.
 2. **Durable backend:** complete for the local fixture scope; the event ledger, worker leases, recovery, cancellation, replay, artifact APIs, and live events are implemented.
-3. **Colony evolution:** digital genomes, controlled mutations, deterministic fitness, selection, and lineage.
-4. **Cross-verification:** independent evidence families, contradictions, and stability checks.
-5. **Scientific validation:** a frozen regulatory-variant task using real model outputs and real biological evidence.
-6. **Interactive presentation:** the lineage, evidence, sequence, comparison, and artifact workspace.
+3. **Project ingestion:** complete for deterministic local text and metadata parsing with immutable provenance graphs and source revision history.
+4. **CellForge tools:** typed sandbox execution and event/graph integration.
+5. **Colony evolution:** digital genomes, controlled mutations, deterministic fitness, selection, and lineage.
+6. **Cross-verification:** independent evidence families, contradictions, and stability checks.
+7. **Scientific validation:** a frozen regulatory-variant task using real model outputs and real biological evidence.
+8. **Interactive presentation:** the lineage, evidence, sequence, comparison, and artifact workspace.
 
 See the [detailed roadmap](docs/ROADMAP.md), [architecture](docs/architecture.md), [experiment design](docs/experiment-design.md), and [reproducibility contract](docs/reproducibility.md).
 

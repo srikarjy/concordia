@@ -57,6 +57,13 @@ def build_parser() -> argparse.ArgumentParser:
     worker.add_argument("--state-root", type=Path, default=Path(".concordia"))
     worker.add_argument("--owner")
     worker.add_argument("--once", action="store_true")
+    ingest = subparsers.add_parser(
+        "ingest-project", help="build a provenance graph from supported project files"
+    )
+    ingest.add_argument("--root", type=Path, default=Path("."))
+    ingest.add_argument(
+        "--state-root", type=Path, default=Path(".concordia/ingestion")
+    )
     return parser
 
 
@@ -139,6 +146,22 @@ def main() -> None:
                         time.sleep(1)
             except KeyboardInterrupt:
                 pass
+    elif args.command == "ingest-project":
+        from concordia.ingestion.service import ProjectIngestor
+
+        result = ProjectIngestor(args.root, args.state_root).ingest_repository()
+        print(
+            json.dumps(
+                {
+                    "schema_version": result.schema_version,
+                    "graph_artifact_digest": result.graph_artifact_digest,
+                    "file_count": result.file_count,
+                    "accepted_entity_count": result.accepted_entity_count,
+                    "rejected_entity_count": result.rejected_entity_count,
+                },
+                indent=2,
+            )
+        )
 
 
 if __name__ == "__main__":

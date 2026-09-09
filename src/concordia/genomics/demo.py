@@ -9,7 +9,13 @@ from concordia.artifacts import write_json
 from concordia.genomics.evo2 import RecordedFixtureScorer
 from concordia.genomics.ism import scan_position
 from concordia.genomics.schema import GenomicSequence
-from concordia.graph.schema import EvidenceGraph, GraphEdge, GraphNode
+from concordia.graph.schema import (
+    EvidenceGraph,
+    GraphEdge,
+    GraphNode,
+    GraphNodeType,
+    GraphRelation,
+)
 from concordia.storage.content import ContentAddressedStore
 from concordia.verification.backtrack import backtrack_claim
 
@@ -36,25 +42,25 @@ def run_genomic_fixture_demo(output_directory: str | Path) -> dict[str, Any]:
         nodes=(
             GraphNode(
                 node_id="claim:fixture-1",
-                node_type="ScientificClaim",
+                node_type=GraphNodeType.SCIENTIFIC_CLAIM,
                 label="Fixture score changes after one substitution",
                 properties={"scientific_use_allowed": False},
             ),
             GraphNode(
                 node_id=f"effect:{effect_artifact}",
-                node_type="CounterfactualEffect",
+                node_type=GraphNodeType.COUNTERFACTUAL_EFFECT,
                 label=f"Position {strongest.position} {strongest.reference}>{strongest.alternate}",
                 properties={"scientific_use_allowed": False, "artifact_hash": effect_artifact},
             ),
             GraphNode(
                 node_id=f"score:{score_artifact}",
-                node_type="ModelOutput",
+                node_type=GraphNodeType.MODEL_OUTPUT,
                 label=scorer.model_id,
                 properties={"scientific_use_allowed": False, "artifact_hash": score_artifact},
             ),
             GraphNode(
                 node_id=f"sequence:{sequence_artifact}",
-                node_type="GenomicSequence",
+                node_type=GraphNodeType.GENOMIC_SEQUENCE,
                 label=sequence.sequence_id,
                 properties={"scientific_use_allowed": False, "artifact_hash": sequence_artifact},
             ),
@@ -64,19 +70,19 @@ def run_genomic_fixture_demo(output_directory: str | Path) -> dict[str, Any]:
                 edge_id="edge:claim-effect",
                 source="claim:fixture-1",
                 target=f"effect:{effect_artifact}",
-                relation="supported_by",
+                relation=GraphRelation.LEGACY_SUPPORTED_BY,
             ),
             GraphEdge(
                 edge_id="edge:effect-score",
                 source=f"effect:{effect_artifact}",
                 target=f"score:{score_artifact}",
-                relation="derived_from",
+                relation=GraphRelation.LEGACY_DERIVED_FROM,
             ),
             GraphEdge(
                 edge_id="edge:score-sequence",
                 source=f"score:{score_artifact}",
                 target=f"sequence:{sequence_artifact}",
-                relation="used",
+                relation=GraphRelation.USED,
             ),
         ),
     )
