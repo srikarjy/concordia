@@ -13,6 +13,7 @@ from concordia.explanations.tree_shap import generate_tree_shap, validate_tree_s
 from concordia.predictors.baseline import train_baseline
 from concordia.predictors.data import download_file
 from concordia.reporting.demo import write_demo_report
+from concordia.scientist.doctor import check_local_runtime
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -39,6 +40,8 @@ def build_parser() -> argparse.ArgumentParser:
     packets.add_argument("--limit", type=int)
     demo = subparsers.add_parser("demo", help="write an illustrative report without model access")
     demo.add_argument("--output", type=Path, default=Path("reports/demo.html"))
+    doctor = subparsers.add_parser("doctor", help="check local scientist runtime prerequisites")
+    doctor.add_argument("--config", type=Path, default=Path("configs/scientist_local.yaml"))
     return parser
 
 
@@ -91,6 +94,8 @@ def main() -> None:
         print(json.dumps(validate_tree_shap(args.manifest), indent=2))
     elif args.command == "demo":
         print(json.dumps({"report": str(write_demo_report(args.output))}, indent=2))
+    elif args.command == "doctor":
+        print(json.dumps(check_local_runtime(args.config), indent=2))
 
 
 if __name__ == "__main__":

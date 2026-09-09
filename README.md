@@ -145,6 +145,8 @@ For the real baseline, download the configured Tox21 archive and run:
 The model and data remain local. The baseline command writes ignored artifacts
 under artifacts/; its manifest records checksums and environment metadata.
 
+Before a local scientist run, check the runtime with `OLLAMA_NO_CLOUD=1 concordia doctor`. This command only inspects the local Ollama installation; it does not download a model or contact a hosted service.
+
 ## Roadmap
 
 [The detailed roadmap](docs/ROADMAP.md) progresses from foundation through baseline prediction, XAI evidence, scientist interface, interventions, deterministic evaluation, the small experiment, and findings. A stronger predictor and static HTML presentation follow the baseline study.

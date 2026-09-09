@@ -46,6 +46,8 @@ The expanded foundation will add dedicated architecture, experiment-design, and 
 
 The optional tool-enabled extension begins here. A local deny-by-default gateway now exposes typed, read-only computational biology tools through a bounded session with an auditable trace. Tool access must be treated as a declared condition; the packet-only MVP remains the cleanest primary comparison.
 
+Run `OLLAMA_NO_CLOUD=1 concordia doctor` before qualification. The diagnostic is local-only and does not pull model weights automatically.
+
 ## Phase 4 — Intervention Engine
 
 - Implement an identity control, explanation withholding, and explanation shuffling first.
