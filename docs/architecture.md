@@ -38,6 +38,8 @@ Render a versioned prompt, call one LLM independently for each packet, preserve 
 
 The optional tool-enabled extension routes requests through a local, deny-by-default gateway. Requests and results are typed JSON records; each tool has a versioned handler, bounded calls, and an auditable result hash. Evaluation policies can allow packet inspection, while researcher policies can allow additional deterministic RDKit inspection. Neither permits arbitrary shell or Python execution, network access, retraining, explanation regeneration, cross-packet access, or policy changes.
 
+The bounded session accepts either a typed tool request or a final structured response on each turn. It stops at the policy call limit, records denied and failed calls, and never carries conversation state between experimental conditions.
+
 ### Evaluation
 
 Compare control and intervention claims using versioned deterministic rules. Human annotations may be supplied as fixed input for semantic questions that rules cannot answer. Evaluation never calls an LLM, generates a scientific answer, or feeds corrections back to the scientist.
