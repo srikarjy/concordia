@@ -36,7 +36,7 @@ Apply one deterministic transformation to an evidence packet. An intervention re
 
 Render a versioned prompt, call one LLM independently for each packet, preserve the raw response, and validate a structured claim contract. It has no memory across conditions, debate roles, or access to control outputs.
 
-The optional tool-enabled extension routes requests through a local, deny-by-default gateway. Requests and results are typed JSON records; each tool has a versioned handler, bounded calls, and an auditable result hash. Evaluation policies can allow packet inspection, while researcher policies can allow additional deterministic RDKit inspection. Neither permits arbitrary shell or Python execution, network access, retraining, explanation regeneration, cross-packet access, or policy changes.
+The optional tool-enabled extension routes requests through a local, deny-by-default gateway. It is a separate researcher-mode ablation, not part of the packet-only evaluation. The evaluation policy allows zero tools and zero tool calls. Requests and results in researcher mode are typed JSON records; each tool has a versioned handler, bounded calls, and an auditable result hash. Researcher mode may allow deterministic RDKit inspection, but it cannot contribute evidence to the primary MVP comparison. Neither mode permits arbitrary shell or Python execution, network access, retraining, explanation regeneration, cross-packet access, or policy changes.
 
 The bounded session accepts either a typed tool request or a final structured response on each turn. It stops at the policy call limit, records denied and failed calls, and never carries conversation state between experimental conditions.
 

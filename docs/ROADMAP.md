@@ -44,7 +44,7 @@ The expanded foundation will add dedicated architecture, experiment-design, and 
 
 **Completion criteria:** the interface can preserve and validate outputs for frozen packets, record failures, and replay saved responses. The local Ollama adapter, versioned prompt, Pydantic response contract, and content-hashed run records are implemented. A model qualification run and the cohort matrix remain before Phase 3 is complete. No agent framework, debate, or evaluator-driven correction loop is introduced.
 
-The optional tool-enabled extension begins here. A local deny-by-default gateway now exposes typed, read-only computational biology tools through a bounded session with an auditable trace. Tool access must be treated as a declared condition; the packet-only MVP remains the cleanest primary comparison.
+The optional tool-enabled extension begins here. A local deny-by-default gateway exists for a separate researcher-mode ablation. The evaluation policy exposes zero tools and permits zero tool calls; the packet-only MVP remains the primary comparison. Any tool-enabled run must have a distinct condition identifier and cannot be merged with packet-only results.
 
 Run `OLLAMA_NO_CLOUD=1 concordia doctor` before qualification. The diagnostic is local-only and does not pull model weights automatically.
 

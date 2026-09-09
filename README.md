@@ -145,7 +145,7 @@ For the real baseline, download the configured Tox21 archive and run:
 The model and data remain local. The baseline command writes ignored artifacts
 under artifacts/; its manifest records checksums and environment metadata.
 
-Before a local scientist run, check the runtime with `OLLAMA_NO_CLOUD=1 concordia doctor`. This command only inspects the local Ollama installation; it does not download a model or contact a hosted service.
+Before a local scientist run, check the runtime with `OLLAMA_NO_CLOUD=1 concordia doctor`. This command only inspects the local Ollama installation; it does not download a model or contact a hosted service. The MVP scientist receives frozen packets directly and has no tool access during evaluation.
 
 ## Roadmap
 
@@ -157,7 +157,7 @@ Phase 0 established architecture, project boundaries, reproducibility design, an
 
 ## Non-Goals
 
-Concordia is not a multi-agent debate framework, autonomous scientist, new XAI algorithm, production toxicity prediction platform, generic RAG chatbot, or general hallucination benchmark. It uses one scientist LLM with deterministic evaluation infrastructure. No advocate, skeptic, judge, or self-correction agents are planned. Static reports are preferred; no frontend framework, service architecture, or database is needed for the MVP.
+Concordia is not a multi-agent debate framework, autonomous scientist, new XAI algorithm, production toxicity prediction platform, generic RAG chatbot, or general hallucination benchmark. It uses one scientist LLM with deterministic evaluation infrastructure. No advocate, skeptic, judge, or self-correction agents are planned. Tool-enabled research mode is a separate ablation and cannot contribute evidence to the packet-only MVP. Static reports are preferred; no frontend framework, service architecture, or database is needed for the MVP.
 
 ## License
 

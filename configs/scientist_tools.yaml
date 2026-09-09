@@ -1,6 +1,5 @@
 policy_version: scientist-tools-v1
 mode: evaluation
-allowed_tools:
-  - evidence.packet_summary
-max_tool_calls: 4
+allowed_tools: []
+max_tool_calls: 0
 max_result_bytes: 200000
