@@ -1,170 +1,208 @@
-# Concordia
+# Concordia Colony
 
-Concordia evaluates whether a scientist LLM remains faithful to molecular-model explanations under controlled XAI evidence corruption.
+Concordia Colony is a provenance-first scientific platform for testing, tracing, and improving explanations produced around genomic foundation models.
 
-**Status: Phases 0–2 are complete and Phase 3 is in development.** The repository contains reproducible Tox21/NR-AhR preparation, scaffold splitting, Morgan fingerprints, a Random Forest baseline, validated TreeSHAP development artifacts, frozen packet manifests, a local structured scientist interface, tests, and the research design for the later intervention study. No LLM robustness result is claimed yet.
+One seed scientist creates a bounded colony of isolated workflow variants. Each descendant inherits a versioned digital genome, uses approved computational biology tools inside a sandbox, and produces structured claims. Deterministic infrastructure verifies evidence paths, calculates fitness, selects surviving workflows, and records the complete lineage.
 
-## Why Concordia?
+> **Current status:** the repository contains a working molecular evidence baseline and the first zero-cost genomic evidence vertical slice. Colony scheduling, durable APIs, real Evo2 execution, cross-method validation, and the interactive frontend are planned. No genomic or scientist-model research result is claimed.
 
-Scientific AI workflows can combine predictive ML models, explainable AI (XAI) evidence, and LLM-generated interpretations. A fluent scientific explanation may sound convincing even when the model evidence supplied to the LLM is incomplete or incorrect. Concordia is designed to measure how scientific claims respond to controlled changes in that evidence.
+## Problem
 
-## Research Question
+Genomic foundation models can assign scores or attribution signals to DNA sequences, but an attribution map does not establish that a highlighted region is causal, stable, or biologically meaningful. Researchers need to know:
 
-When an LLM receives a molecular prediction and its explanation, does it appropriately reduce or change its scientific claims when the explanation is withheld, shuffled, or corrupted—or does it rationalize the altered evidence?
+- which input, model, checkpoint, and method produced an explanation;
+- whether the explanation agrees with controlled sequence perturbations;
+- whether it remains stable across windows, references, and repeated runs;
+- whether independent biological or model evidence supports it;
+- which scientific claims depend on which evidence;
+- and whether the full analysis can be inspected and replayed.
 
-## Core Idea
+Concordia Colony turns those questions into an auditable computational workflow.
 
-One scientist LLM interprets fixed evidence under multiple conditions. A deterministic evaluator compares its structured outputs.
+## Product
+
+A researcher supplies a genomic region, variant, declared task, model configuration, and optional project files. Concordia builds an evidence graph, executes approved verification tools, and returns model artifacts, counterfactual results, structured claims, supporting and contradictory evidence, verification metrics, workflow lineage, and a reproducible manifest.
+
+The output is a testable, evidence-traceable hypothesis or audit result—not a declaration of biological truth.
+
+## System Overview
 
 ```mermaid
-flowchart TD
-    M[Tox21 molecule] --> P[Molecular predictor]
-    P --> X[XAI explanation]
-    X --> E[Frozen evidence packet including prediction]
-    E --> C[Control packet]
-    E --> I[Deterministic evidence intervention]
-    C --> L[Same scientist LLM and versioned prompt]
-    I --> L
-    L --> S[Structured claims, grouped by condition]
-    S --> V[Deterministic comparison and metrics]
-    V --> R[Findings report]
+flowchart LR
+    I[DNA, variants, papers, project files] --> G[Evidence graph]
+    G --> S[Seed scientist]
+    S --> C[Bounded colony]
+    C --> F[CellForge sandboxes]
+    F --> T[Evo2 and verification tools]
+    T --> G
+    G --> V[Deterministic backtracking and fitness]
+    V --> C
+    V --> R[Interactive report]
 ```
 
-Interventions modify the evidence before each independent LLM call. The evaluator only calculates comparison results; it does not generate explanations or feedback to the scientist.
+CellForge owns isolated tool execution. Concordia owns run orchestration, digital genomes, evidence lineage, structured claims, deterministic verification, colony selection, and reporting.
 
-## What Concordia Tests
+## Digital Evolution
 
-| Condition | Evidence supplied |
+The colony is a controlled search over scientific workflows rather than a group discussion.
+
+| Biological concept | Concordia representation |
 | --- | --- |
-| Control | Unmodified predictor output and corresponding XAI evidence |
-| Explanation withheld | Same prediction, with XAI evidence removed |
-| Explanation shuffled | Same prediction, with explanation evidence from another molecule |
-| Explanation corrupted | Same prediction, with specified attribution values deterministically modified or inverted; a later extension |
+| Genome | Versioned prompt, workflow, tool policy, attribution settings, and budgets |
+| Mutation | One recorded change to a permitted genome field |
+| Organism | One isolated workflow execution |
+| Phenotype | Tool trace, artifacts, claims, and verification results |
+| Environment | Frozen biological task and evidence |
+| Fitness | Deterministic evidence, stability, reproducibility, and resource metrics |
+| Selection | Recorded survivor selection from declared metric components |
+| Extinction | A terminal lineage that failed validation, policy, or selection |
 
-The study will examine claim retention, additions and removals, confidence changes, and dependence on evidence references. A control explanation is authentic model evidence, not proof of a biological mechanism; a model prediction may itself be wrong.
+Descendants cannot communicate, inspect competing answers, edit policy, rewrite fitness rules, or create unrestricted tools. The orchestrator controls reproduction. The evaluator does not use another language model to judge scientific truth.
 
-## Why This Matters
+## Evidence Graph and Backtracking
 
-Scientific reliability requires interpretations to reflect the strength and relevance of their evidence. Concordia asks: **Does the LLM's scientific reasoning appropriately respond when the explanatory evidence underneath it changes?** This goes beyond labeling an answer as a hallucination: stable prediction statements can be appropriate while unsupported mechanistic explanations should be qualified.
+Concordia connects a scientific graph to a provenance graph. Scientific nodes include sequences, variants, assays, models, predictions, attributions, motifs, annotations, papers, and claims. Provenance nodes include source files, source spans, parser runs, tool executions, artifacts, prompts, model turns, digital genomes, colony members, mutations, verification checks, and fitness records.
 
-## Initial Experiment
-
-The planned MVP uses Tox21, initially the NR-AhR assay, with approximately 30 held-out molecules for experimental evaluation. The predictor will train on a separate, larger training partition; the 30 molecules are not the training dataset.
-
-- One baseline: RDKit Morgan fingerprints and a scikit-learn Random Forest.
-- One explanation method: SHAP / TreeSHAP for the baseline's fingerprint features.
-- Frozen packets containing molecule identity, prediction probability, assay, model identity, attribution evidence, and experiment metadata.
-- Approximately eight curated supporting documents, with provenance and fixed excerpts.
-- One scientist LLM accessed through a local runtime with structured outputs; the first backend will be Ollama, with the runtime and model recorded in each manifest.
-- Control, explanation-withheld, and explanation-shuffled conditions, with repeated calls where useful to estimate variability.
-- Deterministic comparisons, manual scientific scoring where necessary, and a reproducible findings report.
-
-The predictor baseline is implemented and has been run on the downloaded archive. TreeSHAP and packet generation now work for development subsets and validate checksums, dimensions, finiteness, and reconstruction error. The study cohort, scientist responses, and Concordia robustness results are not yet available. Deterministic corruption follows the minimal experiment once the initial conditions work.
-
-## Architecture
-
-| Component | Future responsibility |
-| --- | --- |
-| Predictor | Produce an assay-specific prediction and probability from a validated molecule. |
-| Explanation engine | Generate existing XAI attributions for the fixed predictor and input. |
-| Evidence packet builder | Freeze prediction, explanation, document excerpts, identifiers, and provenance for replay. |
-| Scientist LLM | Interpret one supplied packet through one local, stateless model call and return structured scientific claims. |
-| Intervention engine | Transform only designated evidence fields and record the transformation. |
-| Claim parser | Validate the response contract using Pydantic; preserve invalid raw responses and validation failures. |
-| Deterministic evaluator | Compare validated claims using fixed rules and, where needed, separately supplied human annotations. |
-| Reporting layer | Summarize metrics, uncertainty, and examples in reproducible reports. |
-
-Future modules will follow `predictors`, `explanations`, `evidence`, `scientist`, `interventions`, `evaluation`, and `reporting`. Claim parsing belongs to the scientist interface. Exact packet and claim schemas are deferred; planned claim concepts include claim text, type, confidence, evidence reference, evidence strength, and relationship to the prediction.
-
-## Example Experiment
-
-Consider a real Tox21 molecule selected later as Molecule A and an eligible donor Molecule B. This is a conceptual protocol, not an experimental result:
-
-| Run | Input |
-| --- | --- |
-| Control | A's unchanged prediction plus A's original explanation |
-| Withheld | A's unchanged prediction with no explanation |
-| Shuffled | A's unchanged prediction plus B's explanation |
-
-Each independent call returns the same structured claim contract. The evaluator compares claim membership, confidence, and cited evidence against A's control output. It records the donor mapping separately for audit; it does not provide control responses or intervention labels to the scientist.
-
-## Evaluation
-
-Planned dimensions include claim retention, addition and removal; confidence shifts; evidence-reference changes; unsupported claim and contradiction rates; and explanation/intervention sensitivity. Claim matching rules, denominators, missing-output handling, and confidence scales must be fixed before the main experiment.
-
-Deterministic reference checks can establish whether a cited evidence item exists, but cannot establish all scientific entailment. Semantic support and contradictions will use predefined human annotation rules where mechanical checks are insufficient. The evaluator will aggregate those annotations without introducing another reasoning LLM. Sensitivity alone is not success: interpretation must consider which claims should change and which remain supported by the unchanged prediction.
-
-## Reproducibility
-
-The planned contract records dataset source/version and checksum, molecule identifiers and canonicalization policy, split membership, seeds, predictor artifact identity, fingerprint settings, XAI configuration, document versions, prompt version, LLM model identifier, generation parameters, and intervention identifiers. Content-hashed packets and immutable experiment manifests link these inputs to saved raw responses, validation records, and derived results.
-
-Randomness in data splitting, training, explanation generation, donor selection, and repeated LLM calls will be recorded separately. Hosted LLM calls may remain nondeterministic despite fixed parameters; saved responses enable exact evaluation replay, while new calls measure generation variability. Credentials and large artifacts remain outside Git; shareable manifests and artifact checksums remain version-controlled.
-
-## Technology
-
-### MVP / baseline
-
-Planned and partially implemented: Python, RDKit, MoleculeNet / Tox21, Morgan fingerprints, scikit-learn Random Forest, SHAP / TreeSHAP, a local Ollama runtime, JSON Schema, and Pydantic. Analysis uses NumPy and pandas initially and may add SciPy or DuckDB for larger reports. No hosted tracking service is required.
-
-### Later extension
-
-Chemprop v2, PyTorch, and Integrated Gradients / Captum will be considered after the baseline evaluation framework works. These tools are not implemented or installed by this setup.
-
-An optional post-MVP study may test framework generalization on a real genomic task using Evo 2 local forward outputs. Because Evo 2 consumes DNA rather than molecular SMILES, it is a separate research extension rather than part of the Tox21 predictor stack. It requires a validated genomic task, an established attribution method, and suitable FP8 hardware.
-
-## Repository Structure
+Every accepted assertion records its source, version, generating activity, input hashes, output hash, and validation state. A claim can be followed through the system:
 
 ```text
-concordia/
-├── configs/           Versioned experiment configuration
-├── data/              External, processed, and frozen evidence locations
-├── experiments/       Run manifests and ignored bulk outputs
-├── reports/           Shareable static reports
-├── src/concordia/     Predictor and future scientist/evaluation modules
-├── tests/              Unit and integration checks
-├── README.md          Project scope and usage
-└── docs/              Architecture, design, reproducibility, and roadmap
+Claim
+  → evidence assertion
+  → source span or artifact
+  → attribution region
+  → sequence locus
+  → counterfactual mutation
+  → model score delta
+  → model checkpoint and input
 ```
 
-Large datasets, model binaries, raw responses, and generated artifacts are kept out of Git; manifests and checksums remain reviewable.
+Fixture-backed paths remain visible but cannot receive scientific support status.
 
-## Try the local demo
+## Cross-Verification
 
-The demo requires no dataset, model weights, credentials, or network access.
-From the repository root, run:
+Evidence is grouped by method family so several related attribution algorithms are not mistaken for independent confirmation. Planned families include:
 
-    uv sync
-    .venv/bin/concordia demo
-    open reports/demo.html
+1. Counterfactual evidence from controlled in-silico mutagenesis.
+2. Gradient or attribution evidence for a declared model output.
+3. Biological annotations such as motifs, accessibility, binding, or conservation.
+4. Cross-model evidence from a compatible independently trained model.
+5. Literature evidence preserved with exact source provenance.
 
-For the real baseline, download the configured Tox21 archive and run:
+Agreement increases confidence only within the declared model and assay scope. It does not establish biological causality. Verification statuses are `SUPPORTED`, `PARTIALLY_SUPPORTED`, `CONTRADICTED`, `UNVERIFIABLE`, and `MISSING_EVIDENCE`.
 
-    .venv/bin/concordia download
-    .venv/bin/concordia train-baseline
+## Backend Direction
 
-The model and data remain local. The baseline command writes ignored artifacts
-under artifacts/; its manifest records checksums and environment metadata.
+The target is a modular monolith with isolated workers:
 
-Before a local scientist run, check the runtime with `OLLAMA_NO_CLOUD=1 concordia doctor`. This command only inspects the local Ollama installation; it does not download a model or contact a hosted service. The MVP scientist receives frozen packets directly and has no tool access during evaluation.
+- FastAPI control plane with typed OpenAPI contracts;
+- idempotent commands and explicit run state transitions;
+- append-only SQLite event ledger;
+- worker leases, cancellation, bounded retries, and crash recovery;
+- DuckDB and Parquet evidence-graph projections;
+- SHA-256 content-addressed artifact storage;
+- versioned tool registry and policy engine;
+- CellForge execution adapter;
+- Server-Sent Events for live progress;
+- deterministic fitness, lineage, and replay services;
+- structured logs and local resource accounting.
 
-The zero-cost genomic vertical slice exercises validated DNA input, an Evo2-compatible recorded-fixture adapter, deterministic in-silico mutagenesis, content-addressed artifacts, an evidence graph, and claim backtracking:
+Cloud schedulers and object stores may be added as replaceable adapters. They are not required for local development or the portfolio demonstration.
 
-    .venv/bin/concordia genomic-demo
+## Interactive Workspace
 
-The command labels every fixture artifact as unsuitable for scientific use. It validates the software contract and does not represent an Evo2 experiment or biological finding.
+The planned React and TypeScript workspace will open directly into an active scientific run and provide:
+
+- a WebGL colony lineage graph with generation replay;
+- a knowledge and provenance graph with semantic zoom;
+- claim backtracking that illuminates complete evidence paths;
+- genomic sequence, variant, attribution, motif, and mutational-scan tracks;
+- parent-versus-descendant and method-versus-method comparisons;
+- a cross-verification matrix and live execution stream;
+- immutable artifact, genome, and policy inspectors;
+- and clear visualization of failed or extinct lineages.
+
+Scientific views must be rendered from saved artifacts and clearly distinguish demonstrations from measured results.
+
+## Current Implementation
+
+### Molecular evidence baseline
+
+The original track demonstrates the evidence-intervention pattern with real Tox21 NR-AhR data:
+
+- RDKit validation, canonicalization, and duplicate handling;
+- deterministic scaffold-aware splitting;
+- Morgan fingerprints and Random Forest prediction;
+- validated TreeSHAP artifacts and content-hashed evidence packets;
+- withheld, shuffled, and deterministic corruption transforms;
+- structured scientist claims and deterministic comparison rules.
+
+This track remains a molecular proof of the framework. Its results must not be combined with genomic results.
+
+### Genomic evidence vertical slice
+
+The zero-cost genomic slice implements:
+
+- validated DNA and variant contracts;
+- reference-allele and coordinate checks;
+- an Evo2-compatible scoring boundary;
+- an explicitly labeled recorded-fixture scorer;
+- deterministic position-level in-silico mutagenesis;
+- content-addressed artifact storage;
+- validated evidence-graph nodes and edges;
+- shortest-path claim backtracking;
+- and rejection of fixture-backed paths as scientific evidence.
+
+The recorded fixture validates software behavior only. It is not an Evo2 result.
+
+## Local Quickstart
+
+```bash
+uv sync --extra dev --extra xai --extra scientist
+.venv/bin/pytest
+.venv/bin/ruff check src tests
+.venv/bin/concordia genomic-demo
+```
+
+Run the molecular baseline:
+
+```bash
+.venv/bin/concordia download
+.venv/bin/concordia train-baseline
+.venv/bin/concordia explain \
+  --model artifacts/baseline_nr_ahr/model.joblib \
+  --molecules artifacts/baseline_nr_ahr/molecules.csv \
+  --output artifacts/tree_shap
+```
+
+Check the local scientist runtime without downloading a model:
+
+```bash
+OLLAMA_NO_CLOUD=1 .venv/bin/concordia doctor
+```
+
+Generated datasets, models, raw responses, and bulk artifacts stay outside Git. Small manifests, schemas, prompts, documentation, and permitted reports remain version controlled.
+
+## Zero-Cost Constraint
+
+The portfolio version must be developable without paid infrastructure. It uses SQLite, DuckDB, Parquet, the local filesystem, local model runtimes, CellForge, and open-source visualization libraries. GPU-dependent tools must degrade gracefully. Recorded fixtures may validate software interfaces but cannot support scientific conclusions.
+
+Real local Evo2 forward inference requires supported NVIDIA hardware and substantial model storage. Real Evo2 experiments remain behind an adapter until compatible compute is available.
 
 ## Roadmap
 
-[The detailed roadmap](docs/ROADMAP.md) progresses from foundation through baseline prediction, XAI evidence, scientist interface, interventions, deterministic evaluation, the small experiment, and findings. A stronger predictor and static HTML presentation follow the baseline study.
+1. **Evidence graph vertical slice:** complete for the current software fixture.
+2. **Durable backend:** state machine, event ledger, leases, replay, graph APIs, and live events.
+3. **Colony evolution:** digital genomes, controlled mutations, deterministic fitness, selection, and lineage.
+4. **Cross-verification:** independent evidence families, contradictions, and stability checks.
+5. **Scientific validation:** a frozen regulatory-variant task using real model outputs and real biological evidence.
+6. **Interactive presentation:** the lineage, evidence, sequence, comparison, and artifact workspace.
 
-## Current Status
+See the [detailed roadmap](docs/ROADMAP.md), [architecture](docs/architecture.md), [experiment design](docs/experiment-design.md), and [reproducibility contract](docs/reproducibility.md).
 
-Phase 0 established architecture, project boundaries, reproducibility design, and experiment structure. Phase 1 provides a tested baseline predictor and a real-data audit. Phase 2 provides validated TreeSHAP and packet-manifest tooling for development artifacts. Phase 3 now provides a local structured scientist adapter and content-hashed response records. The central LLM robustness experiment begins after the approximately 30-molecule cohort and evidence set are frozen. There are no measured Concordia robustness findings.
+## Scientific Boundaries
 
-## Non-Goals
-
-Concordia is not a multi-agent debate framework, autonomous scientist, new XAI algorithm, production toxicity prediction platform, generic RAG chatbot, or general hallucination benchmark. It uses one scientist LLM with deterministic evaluation infrastructure. No advocate, skeptic, judge, or self-correction agents are planned. Tool-enabled research mode is a separate ablation and cannot contribute evidence to the packet-only MVP. Static reports are preferred; no frontend framework, service architecture, or database is needed for the MVP.
+Concordia Colony is not a clinical decision system, a causal-inference engine, or a source of experimental validation. Foundation-model scores, attribution values, method agreement, and literature support are evidence with limitations. They are not substitutes for biological experiments.
 
 ## License
 
-Available under the [MIT License](LICENSE). External datasets, documents, and model artifacts retain their own licenses.
+Available under the [MIT License](LICENSE). External datasets, documents, model artifacts, and annotations retain their own licenses.
