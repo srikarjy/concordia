@@ -1,6 +1,13 @@
 # Concordia Roadmap
 
-This is a research plan and implementation record. Phase 0 and the baseline portion of Phase 1 are complete; Phase 2 evidence generation is implemented for development artifacts and is being hardened for the frozen study cohort. No scientist-LLM robustness result has been produced. Each subsequent phase must meet its completion criteria before the next dependent phase begins. Null or negative findings are valid outcomes.
+This is a research plan and implementation record. The older sections below preserve the molecular study plan and its original numbering. The active Concordia Colony implementation track is recorded separately here so that planned functionality is not confused with implemented behavior. No scientist-LLM robustness or genomic research result has been produced. Null or negative findings are valid outcomes.
+
+## Concordia Colony implementation track
+
+- **Phase 0 — repository audit:** complete for the current Colony direction. The repository and historical molecular architecture were inspected, with the clean baseline at 16 passing tests and a clean Ruff run before backend changes.
+- **Phase 1 — genomic evidence vertical slice:** complete for the explicitly labeled recorded fixture. DNA and variant validation, zero-based coordinates, fixture scoring, deterministic mutational scanning, immutable artifacts, graph construction, and fixture-rejecting backtracking are implemented.
+- **Phase 2 — durable backend foundation:** the first synchronous vertical slice is complete. Run contracts, the explicit state machine, an append-only SQLite/WAL ledger, optimistic concurrency, idempotent creation, content-addressed artifact metadata, deterministic replay, restart recovery, cursor event pagination, and typed run/event/artifact APIs are implemented. Worker leases, asynchronous execution, cancellation, SSE, and in-flight crash recovery remain before Phase 2 as a whole is complete.
+- **Phase 3 and later:** not started. Colony evolution is intentionally excluded until the Phase 2 completion boundary is met.
 
 ## Phase 0 — Repository Foundation
 

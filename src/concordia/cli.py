@@ -49,6 +49,9 @@ def build_parser() -> argparse.ArgumentParser:
     genomic_demo.add_argument(
         "--output", type=Path, default=Path("artifacts/genomic_fixture_demo")
     )
+    api = subparsers.add_parser("serve-api", help="serve the local durable run API")
+    api.add_argument("--state-root", type=Path, default=Path(".concordia"))
+    api.add_argument("--port", type=int, default=8000)
     return parser
 
 
@@ -105,6 +108,12 @@ def main() -> None:
         print(json.dumps(check_local_runtime(args.config), indent=2))
     elif args.command == "genomic-demo":
         print(json.dumps(run_genomic_fixture_demo(args.output), indent=2))
+    elif args.command == "serve-api":
+        import uvicorn
+
+        from concordia.api.app import create_app
+
+        uvicorn.run(create_app(args.state_root), host="127.0.0.1", port=args.port)
 
 
 if __name__ == "__main__":

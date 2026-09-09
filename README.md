@@ -4,7 +4,7 @@ Concordia Colony is a provenance-first scientific platform for testing, tracing,
 
 One seed scientist creates a bounded colony of isolated workflow variants. Each descendant inherits a versioned digital genome, uses approved computational biology tools inside a sandbox, and produces structured claims. Deterministic infrastructure verifies evidence paths, calculates fitness, selects surviving workflows, and records the complete lineage.
 
-> **Current status:** the repository contains a working molecular evidence baseline and the first zero-cost genomic evidence vertical slice. Colony scheduling, durable APIs, real Evo2 execution, cross-method validation, and the interactive frontend are planned. No genomic or scientist-model research result is claimed.
+> **Current status:** the repository contains a working molecular evidence baseline, the first zero-cost genomic evidence vertical slice, and a durable local backend slice. Colony scheduling, worker leases, live events, real Evo2 execution, cross-method validation, and the interactive frontend are planned. No genomic or scientist-model research result is claimed.
 
 ## Problem
 
@@ -108,6 +108,20 @@ The target is a modular monolith with isolated workers:
 
 Cloud schedulers and object stores may be added as replaceable adapters. They are not required for local development or the portfolio demonstration.
 
+### Implemented durable slice
+
+The local backend now persists a genomic fixture run in an append-only SQLite ledger. It provides explicit validated states, monotonic per-run event sequences, optimistic append checks, idempotent creation, event replay, restart recovery, content-addressed artifact references, cursor-based event pagination, structured API errors, and typed OpenAPI contracts.
+
+The working path is:
+
+```text
+create run → persist genomic input → append transitions → execute fixture scoring
+→ persist score, mutational scan, evidence graph, and verification artifacts
+→ reconstruct the completed run from events
+```
+
+The fixture scorer remains software-only, and every artifact produced by this path has `scientific_use_allowed=false`. Worker leases, asynchronous claiming, cancellation, SSE, and recovery of in-flight execution remain Phase 2 work; the current HTTP execution is synchronous.
+
 ## Interactive Workspace
 
 The planned React and TypeScript workspace will open directly into an active scientific run and provide:
@@ -163,6 +177,32 @@ uv sync --extra dev --extra xai --extra scientist
 .venv/bin/concordia genomic-demo
 ```
 
+Start the local control plane on the loopback interface:
+
+```bash
+.venv/bin/concordia serve-api
+```
+
+Then create a durable fixture run:
+
+```bash
+curl -X POST http://127.0.0.1:8000/runs \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "idempotency_key": "demo-run-1",
+    "sequence": {
+      "sequence_id": "fixture:demo",
+      "sequence": "ACGTTGCAACGT",
+      "assembly": "GRCh38",
+      "region": "chr1:0-12",
+      "strand": "+"
+    },
+    "scan_position": 4
+  }'
+```
+
+Local state is written beneath `.concordia/` and is ignored by Git. API schemas are available at `http://127.0.0.1:8000/docs`.
+
 Run the molecular baseline:
 
 ```bash
@@ -191,7 +231,7 @@ Real local Evo2 forward inference requires supported NVIDIA hardware and substan
 ## Roadmap
 
 1. **Evidence graph vertical slice:** complete for the current software fixture.
-2. **Durable backend:** state machine, event ledger, leases, replay, graph APIs, and live events.
+2. **Durable backend:** first synchronous event-ledger slice complete; leases, cancellation, graph slicing, and live events remain.
 3. **Colony evolution:** digital genomes, controlled mutations, deterministic fitness, selection, and lineage.
 4. **Cross-verification:** independent evidence families, contradictions, and stability checks.
 5. **Scientific validation:** a frozen regulatory-variant task using real model outputs and real biological evidence.

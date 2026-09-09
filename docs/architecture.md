@@ -1,5 +1,22 @@
 # Architecture
 
+Concordia Colony is a local-first modular monolith. Domain contracts for genomic inputs, run state, evidence graphs, and verification do not depend on the HTTP control plane. The first durable backend slice adds SQLite-backed orchestration around the existing genomic evidence flow while preserving the older molecular research pipeline described below.
+
+```mermaid
+flowchart LR
+    A[FastAPI control plane] --> S[Run service]
+    S --> L[Append-only SQLite ledger]
+    S --> C[Content-addressed store]
+    S --> G[Genomic fixture tools]
+    G --> E[Evidence graph]
+    E --> V[Deterministic backtracking]
+    L --> P[State reconstruction and replay]
+```
+
+The HTTP path executes synchronously in this slice. SQLite events, rather than a mutable run row, are authoritative. Each state change is checked before append; event sequence numbers provide optimistic concurrency; and artifact references identify their producing event and tool. The server binds to `127.0.0.1` by default. Worker processes, leases, cancellation, SSE, and CellForge execution remain planned.
+
+## Molecular research pipeline
+
 Concordia is organized as a linear, artifact-producing research pipeline. Each boundary has one responsibility and a serializable output. This makes every downstream experiment replayable without silently retraining a model, regenerating an explanation, or retrieving different context.
 
 ```mermaid
