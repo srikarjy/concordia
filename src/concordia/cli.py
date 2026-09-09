@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
 from pathlib import Path
 
 from concordia.artifacts import sha256_file
@@ -52,6 +53,10 @@ def build_parser() -> argparse.ArgumentParser:
     api = subparsers.add_parser("serve-api", help="serve the local durable run API")
     api.add_argument("--state-root", type=Path, default=Path(".concordia"))
     api.add_argument("--port", type=int, default=8000)
+    worker = subparsers.add_parser("run-worker", help="run the durable local worker")
+    worker.add_argument("--state-root", type=Path, default=Path(".concordia"))
+    worker.add_argument("--owner")
+    worker.add_argument("--once", action="store_true")
     return parser
 
 
@@ -114,6 +119,26 @@ def main() -> None:
         from concordia.api.app import create_app
 
         uvicorn.run(create_app(args.state_root), host="127.0.0.1", port=args.port)
+    elif args.command == "run-worker":
+        from concordia.runtime.service import RunService
+        from concordia.runtime.worker import LocalWorker
+
+        worker = LocalWorker.create(RunService.local(args.state_root), owner=args.owner)
+        if args.once:
+            record = worker.run_once()
+            print(
+                json.dumps(
+                    record.model_dump(mode="json") if record is not None else {"status": "idle"},
+                    indent=2,
+                )
+            )
+        else:
+            try:
+                while True:
+                    if worker.run_once() is None:
+                        time.sleep(1)
+            except KeyboardInterrupt:
+                pass
 
 
 if __name__ == "__main__":

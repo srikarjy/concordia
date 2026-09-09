@@ -47,6 +47,7 @@ class GenomicFixtureTask(BaseModel):
     sequence_artifact_id: Sha256Digest
     scan_position: int = Field(ge=0)
     execution_mode: str = Field(default="recorded_fixture", pattern=r"^recorded_fixture$")
+    max_infrastructure_attempts: int = Field(default=3, ge=1, le=10)
 
 
 class RunSpec(BaseModel):

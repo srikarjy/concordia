@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
@@ -111,6 +112,34 @@ def test_optimistic_append_and_pagination(tmp_path) -> None:
     )
     assert second_page.items[0].sequence_number == 4
     assert second_page.next_cursor is None
+
+
+def test_concurrent_appends_allow_only_one_expected_sequence(tmp_path) -> None:
+    service = RunService.local(tmp_path)
+    record = service.create_scheduled(fixture_request())
+
+    def append_once(label: str) -> str:
+        service.ledger.append(
+            record.spec.run_id,
+            "CONCURRENT_TEST_EVENT",
+            {"label": label},
+            expected_sequence=record.last_sequence_number,
+        )
+        return label
+
+    outcomes: list[str] = []
+    errors: list[Exception] = []
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futures = [executor.submit(append_once, label) for label in ("a", "b")]
+        for future in futures:
+            try:
+                outcomes.append(future.result())
+            except Exception as error:
+                errors.append(error)
+
+    assert len(outcomes) == 1
+    assert len(errors) == 1
+    assert isinstance(errors[0], ConcurrencyError)
 
 
 def test_validation_failure_is_preserved_as_terminal_history(tmp_path) -> None:

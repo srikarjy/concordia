@@ -13,7 +13,9 @@ flowchart LR
     L --> P[State reconstruction and replay]
 ```
 
-The HTTP path executes synchronously in this slice. SQLite events, rather than a mutable run row, are authoritative. Each state change is checked before append; event sequence numbers provide optimistic concurrency; and artifact references identify their producing event and tool. The server binds to `127.0.0.1` by default. Worker processes, leases, cancellation, SSE, and CellForge execution remain planned.
+The HTTP control plane persists inputs and schedules work without executing the scientific stage in the request process. SQLite events, rather than a mutable run row, are authoritative. The operational jobs table tracks queue state, bounded attempts, cancellation, and expiring leases; it does not replace the event history. A separate local worker claims jobs, heartbeats its lease, resumes stale executions from recorded events, and retries only failures explicitly classified as infrastructure failures.
+
+Each state change is checked before append; event sequence numbers provide optimistic concurrency; and artifact references identify their producing event and tool. Server-Sent Events use sequence numbers as event IDs, accept `Last-Event-ID`, bound each database read, emit idle heartbeats, and close after terminal delivery. The server binds to `127.0.0.1` by default. CellForge execution remains planned.
 
 ## Molecular research pipeline
 

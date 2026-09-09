@@ -4,7 +4,7 @@ Concordia Colony is a provenance-first scientific platform for testing, tracing,
 
 One seed scientist creates a bounded colony of isolated workflow variants. Each descendant inherits a versioned digital genome, uses approved computational biology tools inside a sandbox, and produces structured claims. Deterministic infrastructure verifies evidence paths, calculates fitness, selects surviving workflows, and records the complete lineage.
 
-> **Current status:** the repository contains a working molecular evidence baseline, the first zero-cost genomic evidence vertical slice, and a durable local backend slice. Colony scheduling, worker leases, live events, real Evo2 execution, cross-method validation, and the interactive frontend are planned. No genomic or scientist-model research result is claimed.
+> **Current status:** the repository contains a working molecular evidence baseline, the first zero-cost genomic evidence vertical slice, and the durable local backend foundation. Colony evolution, CellForge integration, real Evo2 execution, cross-method validation, and the interactive frontend are planned. No genomic or scientist-model research result is claimed.
 
 ## Problem
 
@@ -108,19 +108,20 @@ The target is a modular monolith with isolated workers:
 
 Cloud schedulers and object stores may be added as replaceable adapters. They are not required for local development or the portfolio demonstration.
 
-### Implemented durable slice
+### Implemented durable backend
 
-The local backend now persists a genomic fixture run in an append-only SQLite ledger. It provides explicit validated states, monotonic per-run event sequences, optimistic append checks, idempotent creation, event replay, restart recovery, content-addressed artifact references, cursor-based event pagination, structured API errors, and typed OpenAPI contracts.
+The local backend persists genomic fixture runs in an append-only SQLite ledger and schedules them for isolated local workers. It provides explicit validated states, monotonic per-run event sequences, optimistic append checks, idempotent creation, event replay, restart recovery, content-addressed artifact references, cursor-based event pagination, structured API errors, typed OpenAPI contracts, expiring worker leases, heartbeats, stale-lease recovery, bounded infrastructure retries, cancellation, and reconnectable Server-Sent Events.
 
 The working path is:
 
 ```text
-create run → persist genomic input → append transitions → execute fixture scoring
+create run → persist genomic input → schedule durable job → claim worker lease
+→ execute fixture scoring
 → persist score, mutational scan, evidence graph, and verification artifacts
 → reconstruct the completed run from events
 ```
 
-The fixture scorer remains software-only, and every artifact produced by this path has `scientific_use_allowed=false`. Worker leases, asynchronous claiming, cancellation, SSE, and recovery of in-flight execution remain Phase 2 work; the current HTTP execution is synchronous.
+The fixture scorer remains software-only, and every artifact produced by this path has `scientific_use_allowed=false`. Only explicitly classified infrastructure failures are retried; validation, artifact, model, policy, and scientific-tool failures are preserved without automatic reruns.
 
 ## Interactive Workspace
 
@@ -183,6 +184,12 @@ Start the local control plane on the loopback interface:
 .venv/bin/concordia serve-api
 ```
 
+Run the local worker in another terminal:
+
+```bash
+.venv/bin/concordia run-worker
+```
+
 Then create a durable fixture run:
 
 ```bash
@@ -201,7 +208,7 @@ curl -X POST http://127.0.0.1:8000/runs \
   }'
 ```
 
-Local state is written beneath `.concordia/` and is ignored by Git. API schemas are available at `http://127.0.0.1:8000/docs`.
+`POST /runs` persists and schedules the run; it does not execute scientific work inside the request process. Local state is written beneath `.concordia/` and is ignored by Git. API schemas are available at `http://127.0.0.1:8000/docs`, and live events are available at `GET /runs/{run_id}/stream` with `Last-Event-ID` reconnection.
 
 Run the molecular baseline:
 
@@ -231,7 +238,7 @@ Real local Evo2 forward inference requires supported NVIDIA hardware and substan
 ## Roadmap
 
 1. **Evidence graph vertical slice:** complete for the current software fixture.
-2. **Durable backend:** first synchronous event-ledger slice complete; leases, cancellation, graph slicing, and live events remain.
+2. **Durable backend:** complete for the local fixture scope; the event ledger, worker leases, recovery, cancellation, replay, artifact APIs, and live events are implemented.
 3. **Colony evolution:** digital genomes, controlled mutations, deterministic fitness, selection, and lineage.
 4. **Cross-verification:** independent evidence families, contradictions, and stability checks.
 5. **Scientific validation:** a frozen regulatory-variant task using real model outputs and real biological evidence.

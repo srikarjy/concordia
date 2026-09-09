@@ -212,6 +212,13 @@ class SQLiteEventLedger:
             raise RunNotFoundError(run_id)
         return tuple(self._row_to_event(row) for row in rows)
 
+    def run_ids(self) -> tuple[str, ...]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT DISTINCT run_id FROM events ORDER BY run_id"
+            ).fetchall()
+        return tuple(str(row["run_id"]) for row in rows)
+
     def ping(self) -> None:
         with self._connect() as connection:
             connection.execute("SELECT 1").fetchone()

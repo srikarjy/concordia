@@ -23,6 +23,7 @@ from concordia.runtime.contracts import (
     RunStatus,
 )
 from concordia.runtime.state_machine import reconstruct_run, validate_transition
+from concordia.scheduling.jobs import JobLease, SQLiteJobQueue
 from concordia.storage.content import ContentAddressedStore
 from concordia.verification.backtrack import backtrack_claim
 
@@ -36,29 +37,62 @@ class CreateRunRequest(BaseModel):
     policy_version: str = Field(default="fixture-deny-scientific-use-v1", min_length=1)
     sequence: GenomicSequence
     scan_position: int = Field(ge=0)
+    max_infrastructure_attempts: int = Field(default=3, ge=1, le=10)
+
+
+class ArtifactExecutionError(RuntimeError):
+    pass
 
 
 class RunService:
-    def __init__(self, ledger: SQLiteEventLedger, artifacts: ContentAddressedStore):
+    def __init__(
+        self,
+        ledger: SQLiteEventLedger,
+        artifacts: ContentAddressedStore,
+        jobs: SQLiteJobQueue,
+    ):
         self.ledger = ledger
         self.artifacts = artifacts
+        self.jobs = jobs
 
     @classmethod
     def local(cls, root: str | Path) -> RunService:
         root_path = Path(root)
-        return cls(
-            SQLiteEventLedger(root_path / "events.sqlite3"),
+        database_path = root_path / "events.sqlite3"
+        ledger = SQLiteEventLedger(database_path)
+        service = cls(
+            ledger,
             ContentAddressedStore(root_path / "artifacts"),
+            SQLiteJobQueue(database_path),
         )
+        service.recover_scheduled_jobs()
+        return service
 
     def create_and_execute(self, request: CreateRunRequest) -> RunRecord:
+        from concordia.runtime.worker import LocalWorker
+
+        record = self.create_scheduled(request)
+        if record.current_status is not RunStatus.SCHEDULED:
+            return record
+        completed = LocalWorker.create(self, owner=f"inline-{uuid.uuid4()}").run_once(
+            run_id=record.spec.run_id
+        )
+        return completed or self.get_run(record.spec.run_id)
+
+    def create_scheduled(self, request: CreateRunRequest) -> RunRecord:
         request_value = request.model_dump(mode="json")
         command_digest = request_digest(request_value)
         existing_run_id = self.ledger.resolve_command(
             request.idempotency_key, command_digest
         )
         if existing_run_id is not None:
-            return self.get_run(existing_run_id)
+            record = self.get_run(existing_run_id)
+            if record.current_status is RunStatus.SCHEDULED:
+                self.jobs.enqueue(
+                    existing_run_id,
+                    max_attempts=record.spec.task.max_infrastructure_attempts,
+                )
+            return record
         sequence_payload = self._canonical_bytes(request.sequence.model_dump(mode="json"))
         sequence_digest = self.artifacts.put_bytes(sequence_payload)
         run_id = str(uuid.uuid4())
@@ -72,6 +106,7 @@ class RunService:
             task=GenomicFixtureTask(
                 sequence_artifact_id=sequence_digest,
                 scan_position=request.scan_position,
+                max_infrastructure_attempts=request.max_infrastructure_attempts,
             ),
         )
         input_reference = self._reference(
@@ -89,25 +124,56 @@ class RunService:
         if persisted_run_id != run_id:
             return self.get_run(persisted_run_id)
         try:
-            return self._execute(spec, request.sequence)
+            for status in (
+                RunStatus.VALIDATING,
+                RunStatus.INGESTING,
+                RunStatus.GRAPH_READY,
+                RunStatus.PLANNING,
+                RunStatus.SCHEDULED,
+            ):
+                self.transition(run_id, status)
+            self.jobs.enqueue(
+                run_id, max_attempts=spec.task.max_infrastructure_attempts
+            )
+            return self.get_run(run_id)
         except ValueError as error:
             self.transition(run_id, RunStatus.FAILED_VALIDATION, reason=str(error))
             return self.get_run(run_id)
-        except Exception as error:
-            self.transition(run_id, RunStatus.FAILED_TOOL, reason=type(error).__name__)
-            raise
 
-    def _execute(self, spec: RunSpec, sequence: GenomicSequence) -> RunRecord:
+    def execute_leased(self, lease: JobLease) -> RunRecord:
+        record = self.get_run(lease.run_id)
+        if self.jobs.is_cancel_requested(lease.run_id):
+            if record.current_status is not RunStatus.CANCELLED:
+                return self.transition(lease.run_id, RunStatus.CANCELLED, reason="cancel requested")
+            return record
+        if record.current_status is RunStatus.SCHEDULED:
+            record = self.transition(lease.run_id, RunStatus.EXECUTING)
+        if record.current_status is not RunStatus.EXECUTING:
+            return self._resume_execution(record, lease)
+        try:
+            sequence_payload = self.artifacts.get_bytes(record.spec.task.sequence_artifact_id)
+        except (OSError, ValueError) as error:
+            raise ArtifactExecutionError("input artifact failed integrity validation") from error
+        sequence = GenomicSequence.model_validate_json(sequence_payload)
+        return self._resume_execution(record, lease, sequence=sequence)
+
+    def _resume_execution(
+        self,
+        record: RunRecord,
+        lease: JobLease,
+        *,
+        sequence: GenomicSequence | None = None,
+    ) -> RunRecord:
+        spec = record.spec
         run_id = spec.run_id
-        for status in (
-            RunStatus.VALIDATING,
-            RunStatus.INGESTING,
-            RunStatus.GRAPH_READY,
-            RunStatus.PLANNING,
-            RunStatus.SCHEDULED,
-            RunStatus.EXECUTING,
-        ):
-            self.transition(run_id, status)
+        if sequence is None:
+            try:
+                sequence_payload = self.artifacts.get_bytes(spec.task.sequence_artifact_id)
+            except (OSError, ValueError) as error:
+                raise ArtifactExecutionError(
+                    "input artifact failed integrity validation"
+                ) from error
+            sequence = GenomicSequence.model_validate_json(sequence_payload)
 
         if spec.task.scan_position >= len(sequence.sequence):
             raise ValueError("scan position exceeds sequence length")
@@ -118,78 +184,123 @@ class RunService:
         effects_digest = self.artifacts.put_json(
             [effect.model_dump(mode="json") for effect in effects]
         )
-        execution_event_id = str(uuid.uuid4())
+        event_types = {event.event_type for event in self.ledger.all_events(run_id)}
+        if "FIXTURE_STAGE_COMPLETED" not in event_types:
+            execution_event_id = str(uuid.uuid4())
+            record = self.get_run(run_id)
+            self.ledger.append(
+                run_id,
+                "FIXTURE_STAGE_COMPLETED",
+                {
+                    "execution_mode": "recorded_fixture",
+                    "scientific_use_allowed": False,
+                    "artifacts": [
+                        self._reference(
+                            score_digest,
+                            event_id=execution_event_id,
+                            producing_tool="evo2.recorded_fixture.score",
+                        ),
+                        self._reference(
+                            effects_digest,
+                            event_id=execution_event_id,
+                            producing_tool="xai.mutational_scan",
+                        ),
+                    ],
+                },
+                expected_sequence=record.last_sequence_number,
+                event_id=execution_event_id,
+            )
         record = self.get_run(run_id)
-        self.ledger.append(
-            run_id,
-            "FIXTURE_STAGE_COMPLETED",
-            {
-                "execution_mode": "recorded_fixture",
-                "scientific_use_allowed": False,
-                "artifacts": [
-                    self._reference(
-                        score_digest,
-                        event_id=execution_event_id,
-                        producing_tool="evo2.recorded_fixture.score",
-                    ),
-                    self._reference(
-                        effects_digest,
-                        event_id=execution_event_id,
-                        producing_tool="xai.mutational_scan",
-                    ),
-                ],
-            },
-            expected_sequence=record.last_sequence_number,
-            event_id=execution_event_id,
-        )
-        self.transition(run_id, RunStatus.CLAIM_VALIDATION)
+        if record.current_status is RunStatus.EXECUTING:
+            self.transition(run_id, RunStatus.CLAIM_VALIDATION)
+        lease = self.jobs.heartbeat(lease)
+        if self.jobs.is_cancel_requested(run_id):
+            return self.transition(run_id, RunStatus.CANCELLED, reason="cancel requested")
 
         strongest = max(effects, key=lambda effect: abs(effect.delta))
         graph = self._fixture_graph(spec, scorer.model_id, score_digest, effects_digest, strongest)
         graph_digest = self.artifacts.put_json(graph.model_dump(mode="json"))
-        graph_event_id = str(uuid.uuid4())
+        if "EVIDENCE_GRAPH_PERSISTED" not in event_types:
+            graph_event_id = str(uuid.uuid4())
+            record = self.get_run(run_id)
+            self.ledger.append(
+                run_id,
+                "EVIDENCE_GRAPH_PERSISTED",
+                {
+                    "artifacts": [
+                        self._reference(
+                            graph_digest,
+                            event_id=graph_event_id,
+                            producing_tool="graph.fixture_builder",
+                        )
+                    ]
+                },
+                expected_sequence=record.last_sequence_number,
+                event_id=graph_event_id,
+            )
         record = self.get_run(run_id)
-        self.ledger.append(
-            run_id,
-            "EVIDENCE_GRAPH_PERSISTED",
-            {
-                "artifacts": [
-                    self._reference(
-                        graph_digest,
-                        event_id=graph_event_id,
-                        producing_tool="graph.fixture_builder",
-                    )
-                ]
-            },
-            expected_sequence=record.last_sequence_number,
-            event_id=graph_event_id,
-        )
-        self.transition(run_id, RunStatus.BACKTRACKING)
+        if record.current_status is RunStatus.CLAIM_VALIDATION:
+            self.transition(run_id, RunStatus.BACKTRACKING)
+        lease = self.jobs.heartbeat(lease)
+        if self.jobs.is_cancel_requested(run_id):
+            return self.transition(run_id, RunStatus.CANCELLED, reason="cancel requested")
         verification = backtrack_claim(
             graph, "claim:fixture-1", f"sequence:{spec.task.sequence_artifact_id}"
         )
         verification_digest = self.artifacts.put_json(verification.model_dump(mode="json"))
-        verification_event_id = str(uuid.uuid4())
+        if "CLAIM_BACKTRACKED" not in event_types:
+            verification_event_id = str(uuid.uuid4())
+            record = self.get_run(run_id)
+            self.ledger.append(
+                run_id,
+                "CLAIM_BACKTRACKED",
+                {
+                    "verification_status": verification.status,
+                    "artifacts": [
+                        self._reference(
+                            verification_digest,
+                            event_id=verification_event_id,
+                            producing_tool="lineage.backtrack",
+                        )
+                    ],
+                },
+                expected_sequence=record.last_sequence_number,
+                event_id=verification_event_id,
+            )
         record = self.get_run(run_id)
-        self.ledger.append(
-            run_id,
-            "CLAIM_BACKTRACKED",
-            {
-                "verification_status": verification.status,
-                "artifacts": [
-                    self._reference(
-                        verification_digest,
-                        event_id=verification_event_id,
-                        producing_tool="lineage.backtrack",
-                    )
-                ],
-            },
-            expected_sequence=record.last_sequence_number,
-            event_id=verification_event_id,
-        )
-        for status in (RunStatus.EVALUATING, RunStatus.REPORTING, RunStatus.COMPLETED):
-            self.transition(run_id, status)
+        remaining = {
+            RunStatus.BACKTRACKING: (
+                RunStatus.EVALUATING,
+                RunStatus.REPORTING,
+                RunStatus.COMPLETED,
+            ),
+            RunStatus.EVALUATING: (RunStatus.REPORTING, RunStatus.COMPLETED),
+            RunStatus.REPORTING: (RunStatus.COMPLETED,),
+            RunStatus.COMPLETED: (),
+        }
+        for status in remaining.get(record.current_status, ()):
+            record = self.transition(run_id, status)
         return self.get_run(run_id)
+
+    def cancel(self, run_id: str) -> RunRecord:
+        record = self.get_run(run_id)
+        if record.current_status is RunStatus.CANCELLED:
+            return record
+        validate_transition(record.current_status, RunStatus.CANCELLED)
+        self.jobs.request_cancel(run_id)
+        return self.transition(run_id, RunStatus.CANCELLED, reason="cancel requested")
+
+    def recover_scheduled_jobs(self) -> tuple[str, ...]:
+        recovered = []
+        for run_id in self.ledger.run_ids():
+            record = self.get_run(run_id)
+            if record.current_status is RunStatus.SCHEDULED:
+                self.jobs.enqueue(
+                    run_id,
+                    max_attempts=record.spec.task.max_infrastructure_attempts,
+                )
+                recovered.append(run_id)
+        return tuple(recovered)
 
     def transition(
         self, run_id: str, requested: RunStatus, *, reason: str | None = None
@@ -222,7 +333,12 @@ class RunService:
         for event in self.ledger.all_events(run_id):
             for value in event.payload.get("artifacts", []):
                 reference = ArtifactReference.model_validate(value)
-                self.artifacts.get_bytes(reference.digest)
+                try:
+                    self.artifacts.get_bytes(reference.digest)
+                except (OSError, ValueError) as error:
+                    raise ArtifactExecutionError(
+                        f"artifact {reference.digest} failed integrity validation"
+                    ) from error
                 references.append(reference)
         return tuple(references)
 
