@@ -44,6 +44,8 @@ The expanded foundation will add dedicated architecture, experiment-design, and 
 
 **Completion criteria:** the interface can preserve and validate outputs for frozen packets, record failures, and replay saved responses. The local Ollama adapter, versioned prompt, Pydantic response contract, and content-hashed run records are implemented. A model qualification run and the cohort matrix remain before Phase 3 is complete. No agent framework, debate, or evaluator-driven correction loop is introduced.
 
+The optional tool-enabled extension begins here. A local deny-by-default gateway may expose typed, read-only computational biology tools with bounded calls and an auditable trace. Tool access must be treated as a declared condition; the packet-only MVP remains the cleanest primary comparison.
+
 ## Phase 4 — Intervention Engine
 
 - Implement an identity control, explanation withholding, and explanation shuffling first.

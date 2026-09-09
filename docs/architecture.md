@@ -34,7 +34,9 @@ Apply one deterministic transformation to an evidence packet. An intervention re
 
 ### Scientist
 
-Render a versioned prompt, call one LLM independently for each packet, preserve the raw response, and validate a structured claim contract. It has no tools, memory across conditions, debate roles, or access to control outputs.
+Render a versioned prompt, call one LLM independently for each packet, preserve the raw response, and validate a structured claim contract. It has no memory across conditions, debate roles, or access to control outputs.
+
+The optional tool-enabled extension routes requests through a local, deny-by-default gateway. Requests and results are typed JSON records; each tool has a versioned handler, bounded calls, and an auditable result hash. Evaluation policies can allow packet inspection, while researcher policies can allow additional deterministic RDKit inspection. Neither permits arbitrary shell or Python execution, network access, retraining, explanation regeneration, cross-packet access, or policy changes.
 
 ### Evaluation
 
@@ -48,4 +50,4 @@ Read manifests and derived metrics to create tables, plots, and a minimal static
 
 Each stage writes a new artifact rather than modifying an upstream artifact. Manifests include artifact hashes and the code revision. Large artifacts live outside Git; small configurations, schemas, prompts, provenance records, and summary results may be version-controlled.
 
-The first implementation milestone covers only the predictor boundary: raw Tox21 CSV to a validated NR-AhR table, scaffold split, fingerprint matrix, fitted model, metrics, and a manifest.
+The first implementation milestone covers the predictor boundary and validated TreeSHAP packet artifacts. The scientist boundary additionally has a local adapter, structured response contract, and content-hashed run records; model qualification and cohort collection remain future work.
