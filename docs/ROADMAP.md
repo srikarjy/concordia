@@ -1,6 +1,6 @@
 # Concordia Roadmap
 
-This is a research plan, not a record of completed experiments. The current scope is documentation only. Each subsequent phase must meet its completion criteria before the next dependent phase begins. Null or negative findings are valid outcomes.
+This is a research plan and implementation record. Phase 0 and the baseline portion of Phase 1 are complete; Phase 2 evidence generation is implemented for development artifacts and is being hardened for the frozen study cohort. No scientist-LLM robustness result has been produced. Each subsequent phase must meet its completion criteria before the next dependent phase begins. Null or negative findings are valid outcomes.
 
 ## Phase 0 — Repository Foundation
 
@@ -8,7 +8,7 @@ Current deliverables: project README, this roadmap, MIT license, and practical G
 
 The expanded foundation will add dedicated architecture, experiment-design, and reproducibility documents; minimal package metadata and editor configuration; and documented directories for configuration, external data, processed data, frozen evidence, experiment manifests, reports, and tests. Future source boundaries are `predictors`, `explanations`, `evidence`, `scientist`, `interventions`, `evaluation`, and `reporting`. Empty directories need only placeholders; no implementation files are needed for scaffolding.
 
-**Completion criteria:** the initial documentation clearly distinguishes plans from results, specifies one scientist LLM plus a deterministic evaluator, and contains no executable project code. Complete the expanded skeleton before implementation when that work is authorized. Do not install speculative dependencies.
+**Completion criteria:** the initial documentation clearly distinguishes plans from results, specifies one scientist LLM plus a deterministic evaluator, and contains no unnecessary service architecture. Complete.
 
 ## Phase 1 — Baseline Toxicity Predictor
 
@@ -20,7 +20,7 @@ The expanded foundation will add dedicated architecture, experiment-design, and 
 - Evaluate discrimination and class-sensitive performance, including ROC-AUC and precision-recall measures with uncertainty where appropriate. Record probability limitations.
 - Persist the model, split manifest, preprocessing configuration, environment, and performance artifacts.
 
-**Completion criteria:** a reproducible baseline artifact predicts held-out valid molecules; split and label audits pass; performance and limitations are reported without selecting the test cohort based on favorable outcomes. Freeze the approximately 30-molecule study cohort separately from training.
+**Completion criteria:** a reproducible baseline artifact predicts held-out valid molecules; split and label audits pass; performance and limitations are reported without selecting the test cohort based on favorable outcomes. Met for the baseline artifact. Freeze the approximately 30-molecule study cohort separately from training before the MVP.
 
 ## Phase 2 — XAI Evidence Generation
 
@@ -31,7 +31,7 @@ The expanded foundation will add dedicated architecture, experiment-design, and 
 - Serialize stable explanation artifacts and frozen packets containing molecule, prediction, metadata, attributions, and a fixed selection of curated documents.
 - Start with approximately eight real supporting documents. Record source, version, excerpt boundaries, usage rights, and evidence identifiers. Define exact packet schemas in this phase, not in the initial repository setup.
 
-**Completion criteria:** every cohort molecule has a traceable model explanation and content-hashed packet; packets can be replayed without retraining, regenerating explanations, or retrieving new documents.
+**Completion criteria:** every cohort molecule has a traceable model explanation and content-hashed packet; packets can be replayed without retraining, regenerating explanations, or retrieving new documents. Development runs now emit validated TreeSHAP artifacts and packet manifests. The cohort-level completion gate remains open until the study cohort and permitted evidence documents are frozen.
 
 ## Phase 3 — Scientist LLM Interface
 

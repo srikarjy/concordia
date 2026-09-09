@@ -9,7 +9,7 @@ from pathlib import Path
 from concordia.artifacts import sha256_file
 from concordia.config import load_baseline_config
 from concordia.evidence.build import build_packets
-from concordia.explanations.tree_shap import generate_tree_shap
+from concordia.explanations.tree_shap import generate_tree_shap, validate_tree_shap
 from concordia.predictors.baseline import train_baseline
 from concordia.predictors.data import download_file
 from concordia.reporting.demo import write_demo_report
@@ -30,6 +30,8 @@ def build_parser() -> argparse.ArgumentParser:
     explain.add_argument("--output", type=Path, required=True)
     explain.add_argument("--background-size", type=int, default=128)
     explain.add_argument("--limit", type=int)
+    validate = subparsers.add_parser("validate-explanations", help="validate TreeSHAP artifacts")
+    validate.add_argument("--manifest", type=Path, required=True)
     packets = subparsers.add_parser("build-packets", help="build frozen evidence packets")
     packets.add_argument("--molecules", type=Path, required=True)
     packets.add_argument("--shap-values", type=Path, required=True)
@@ -85,6 +87,8 @@ def main() -> None:
                 indent=2,
             )
         )
+    elif args.command == "validate-explanations":
+        print(json.dumps(validate_tree_shap(args.manifest), indent=2))
     elif args.command == "demo":
         print(json.dumps({"report": str(write_demo_report(args.output))}, indent=2))
 

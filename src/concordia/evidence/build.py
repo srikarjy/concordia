@@ -8,6 +8,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from concordia.artifacts import sha256_file, write_json
 from concordia.evidence.packets import packet_from_row, write_packet
 
 
@@ -32,6 +33,7 @@ def build_packets(
     output = Path(output_directory)
     output.mkdir(parents=True, exist_ok=True)
     index_path = output / "index.jsonl"
+    packet_records: list[dict[str, str]] = []
     with index_path.open("w", encoding="utf-8") as handle:
         for row_index, (_, row) in enumerate(molecules.iterrows()):
             packet = packet_from_row(
@@ -40,15 +42,23 @@ def build_packets(
                 shap_version="recorded_tree_shap",
             )
             packet_path = write_packet(packet, output / "packets")
-            handle.write(
-                json.dumps(
-                    {
-                        "molecule_id": packet.molecule_id,
-                        "packet_hash": packet.content_hash(),
-                        "path": str(packet_path.relative_to(output)),
-                    },
-                    sort_keys=True,
-                )
-                + "\n"
-            )
+            record = {
+                "molecule_id": packet.molecule_id,
+                "packet_hash": packet.content_hash(),
+                "path": str(packet_path.relative_to(output)),
+            }
+            packet_records.append(record)
+            handle.write(json.dumps(record, sort_keys=True) + "\n")
+    manifest = {
+        "schema_version": 1,
+        "stage": "frozen_evidence_packets",
+        "molecules_path": str(molecules_path),
+        "molecules_sha256": sha256_file(molecules_path),
+        "shap_values_path": str(shap_values_path),
+        "shap_values_sha256": sha256_file(shap_values_path),
+        "packet_count": len(packet_records),
+        "index_sha256": sha256_file(index_path),
+        "packets": packet_records,
+    }
+    write_json(output / "manifest.json", manifest)
     return {"output_directory": str(output), "packet_count": len(molecules)}

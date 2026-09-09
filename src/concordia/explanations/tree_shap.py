@@ -122,3 +122,34 @@ def generate_tree_shap(
         "explained_rows": len(molecules),
         "max_error": max_error,
     }
+
+
+def validate_tree_shap(manifest_path: str | Path) -> dict[str, str | int | float]:
+    """Validate hashes, dimensions, finiteness, and reconstruction metadata."""
+    manifest_file = Path(manifest_path)
+    manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+    base = manifest_file.parent
+    values_path = base / manifest["artifacts"]["values"]["path"]
+    records_path = base / manifest["artifacts"]["records"]["path"]
+    if sha256_file(values_path) != manifest["artifacts"]["values"]["sha256"]:
+        raise ValueError("SHAP values checksum does not match manifest")
+    if sha256_file(records_path) != manifest["artifacts"]["records"]["sha256"]:
+        raise ValueError("SHAP records checksum does not match manifest")
+    values = np.load(values_path, allow_pickle=False)
+    records = [json.loads(line) for line in records_path.read_text(encoding="utf-8").splitlines()]
+    if values.ndim != 2 or len(records) != values.shape[0]:
+        raise ValueError("SHAP values and records are not aligned")
+    if values.shape[1] != int(manifest["feature_count"]):
+        raise ValueError("SHAP feature count does not match manifest")
+    errors = np.asarray([float(record["reconstruction_error"]) for record in records])
+    if not np.isfinite(values).all() or not np.isfinite(errors).all():
+        raise ValueError("SHAP artifact contains non-finite values")
+    max_error = float(np.max(np.abs(errors))) if len(errors) else 0.0
+    if max_error > 1e-4:
+        raise ValueError(f"SHAP reconstruction error exceeds tolerance: {max_error}")
+    return {
+        "manifest": str(manifest_file),
+        "explained_rows": int(values.shape[0]),
+        "feature_count": int(values.shape[1]),
+        "max_reconstruction_error": max_error,
+    }

@@ -91,4 +91,8 @@ def write_packet(packet: EvidencePacket, directory: str | Path) -> Path:
 
 
 def read_packet(path: str | Path) -> EvidencePacket:
-    return EvidencePacket.model_validate_json(Path(path).read_text(encoding="utf-8"))
+    packet = EvidencePacket.model_validate_json(Path(path).read_text(encoding="utf-8"))
+    expected_hash = Path(path).stem
+    if packet.content_hash() != expected_hash:
+        raise ValueError(f"Packet hash mismatch for {path}")
+    return packet
