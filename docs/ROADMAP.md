@@ -42,7 +42,7 @@ The expanded foundation will add dedicated architecture, experiment-design, and 
 - Preserve exact requests, raw responses, parsed claims, validation failures, provider metadata, and any retries. Predefine retry limits and failure handling to avoid selective inclusion.
 - Record model identifiers and generation parameters, including temperature; assess repeated calls under the same settings. Each condition starts without previous responses in context.
 
-**Completion criteria:** the interface can preserve and validate outputs for frozen packets, record failures, and replay saved responses. No agent framework, debate, or evaluator-driven correction loop is introduced.
+**Completion criteria:** the interface can preserve and validate outputs for frozen packets, record failures, and replay saved responses. The local Ollama adapter, versioned prompt, Pydantic response contract, and content-hashed run records are implemented. A model qualification run and the cohort matrix remain before Phase 3 is complete. No agent framework, debate, or evaluator-driven correction loop is introduced.
 
 ## Phase 4 — Intervention Engine
 

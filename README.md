@@ -2,7 +2,7 @@
 
 Concordia evaluates whether a scientist LLM remains faithful to molecular-model explanations under controlled XAI evidence corruption.
 
-**Status: Phases 0–1 are complete and Phase 2 is in development.** The repository contains reproducible Tox21/NR-AhR preparation, scaffold splitting, Morgan fingerprints, a Random Forest baseline, validated TreeSHAP development artifacts, frozen packet manifests, tests, and the research design for the later scientist-LLM study. No LLM robustness result is claimed yet.
+**Status: Phases 0–2 are complete and Phase 3 is in development.** The repository contains reproducible Tox21/NR-AhR preparation, scaffold splitting, Morgan fingerprints, a Random Forest baseline, validated TreeSHAP development artifacts, frozen packet manifests, a local structured scientist interface, tests, and the research design for the later intervention study. No LLM robustness result is claimed yet.
 
 ## Why Concordia?
 
@@ -151,7 +151,7 @@ under artifacts/; its manifest records checksums and environment metadata.
 
 ## Current Status
 
-Phase 0 established architecture, project boundaries, reproducibility design, and experiment structure. Phase 1 provides a tested baseline predictor and a real-data audit. Phase 2 now provides validated TreeSHAP and packet-manifest tooling for development artifacts. The central LLM robustness experiment begins after the approximately 30-molecule cohort and evidence set are frozen. There are no measured Concordia robustness findings.
+Phase 0 established architecture, project boundaries, reproducibility design, and experiment structure. Phase 1 provides a tested baseline predictor and a real-data audit. Phase 2 provides validated TreeSHAP and packet-manifest tooling for development artifacts. Phase 3 now provides a local structured scientist adapter and content-hashed response records. The central LLM robustness experiment begins after the approximately 30-molecule cohort and evidence set are frozen. There are no measured Concordia robustness findings.
 
 ## Non-Goals
 

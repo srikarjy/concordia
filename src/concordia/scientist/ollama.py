@@ -26,6 +26,7 @@ def generate_local(
     temperature: float = 0.0,
     seed: int | None = None,
     timeout_seconds: float = 300.0,
+    host: str = "http://127.0.0.1:11434",
 ) -> ScientistGeneration:
     """Call Ollama once; transport failures and schema failures remain explicit."""
     if os.environ.get("OLLAMA_NO_CLOUD") != "1":
@@ -39,7 +40,9 @@ def generate_local(
     if seed is not None:
         options["seed"] = seed
     started = time.monotonic()
-    client = Client(host="http://127.0.0.1:11434", timeout=timeout_seconds)
+    if not host.startswith("http://127.0.0.1") and not host.startswith("http://localhost"):
+        raise ValueError("Local scientist backend must use loopback host")
+    client = Client(host=host, timeout=timeout_seconds)
     response = client.chat(
         model=model,
         messages=render_messages(packet),
@@ -50,6 +53,7 @@ def generate_local(
     raw = response.message.content
     metadata = {
         "runtime": "ollama",
+        "host": host,
         "model_requested": model,
         "prompt_version": PROMPT_VERSION,
         "temperature": temperature,
