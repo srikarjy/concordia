@@ -10,6 +10,7 @@ from concordia.artifacts import sha256_file
 from concordia.config import load_baseline_config
 from concordia.evidence.build import build_packets
 from concordia.explanations.tree_shap import generate_tree_shap, validate_tree_shap
+from concordia.genomics.demo import run_genomic_fixture_demo
 from concordia.predictors.baseline import train_baseline
 from concordia.predictors.data import download_file
 from concordia.reporting.demo import write_demo_report
@@ -42,6 +43,12 @@ def build_parser() -> argparse.ArgumentParser:
     demo.add_argument("--output", type=Path, default=Path("reports/demo.html"))
     doctor = subparsers.add_parser("doctor", help="check local scientist runtime prerequisites")
     doctor.add_argument("--config", type=Path, default=Path("configs/scientist_local.yaml"))
+    genomic_demo = subparsers.add_parser(
+        "genomic-demo", help="run the software-only genomic evidence vertical slice"
+    )
+    genomic_demo.add_argument(
+        "--output", type=Path, default=Path("artifacts/genomic_fixture_demo")
+    )
     return parser
 
 
@@ -96,6 +103,8 @@ def main() -> None:
         print(json.dumps({"report": str(write_demo_report(args.output))}, indent=2))
     elif args.command == "doctor":
         print(json.dumps(check_local_runtime(args.config), indent=2))
+    elif args.command == "genomic-demo":
+        print(json.dumps(run_genomic_fixture_demo(args.output), indent=2))
 
 
 if __name__ == "__main__":

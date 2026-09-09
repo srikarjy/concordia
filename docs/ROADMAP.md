@@ -110,6 +110,8 @@ Produce reproducible figures and experiment tables, an architecture diagram, a m
 
 This is a separate follow-up study, not part of the Tox21 MVP and not a replacement for Chemprop. Evo 2 models nucleotide sequences rather than small molecules, so this phase changes the scientific domain while testing whether Concordia's evidence-intervention framework generalizes.
 
+A zero-cost software vertical slice now validates DNA and variant contracts, records deterministic fixture scores, performs position-level mutational scans, stores content-addressed artifacts, constructs a provenance path, and refuses to treat fixture-backed claims as scientific evidence. Actual Evo 2 inference and biological validation remain future work requiring compatible compute and a declared genomic task.
+
 - Select a validated genomic prediction or variant-scoring task with real labeled data. Sequence generation alone is not a suitable predictor/XAI experiment.
 - Freeze the exact Evo 2 checkpoint/runtime, DNA input, task-specific output, and local forward-pass artifacts. Hosted Evo 2 generation does not expose the layer-output interface needed for this plan.
 - Select an established attribution or deterministic perturbation method appropriate to the validated genomic task; do not present raw embeddings as explanations and do not invent a new XAI method.

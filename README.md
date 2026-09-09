@@ -147,6 +147,12 @@ under artifacts/; its manifest records checksums and environment metadata.
 
 Before a local scientist run, check the runtime with `OLLAMA_NO_CLOUD=1 concordia doctor`. This command only inspects the local Ollama installation; it does not download a model or contact a hosted service. The MVP scientist receives frozen packets directly and has no tool access during evaluation.
 
+The zero-cost genomic vertical slice exercises validated DNA input, an Evo2-compatible recorded-fixture adapter, deterministic in-silico mutagenesis, content-addressed artifacts, an evidence graph, and claim backtracking:
+
+    .venv/bin/concordia genomic-demo
+
+The command labels every fixture artifact as unsuitable for scientific use. It validates the software contract and does not represent an Evo2 experiment or biological finding.
+
 ## Roadmap
 
 [The detailed roadmap](docs/ROADMAP.md) progresses from foundation through baseline prediction, XAI evidence, scientist interface, interventions, deterministic evaluation, the small experiment, and findings. A stronger predictor and static HTML presentation follow the baseline study.
