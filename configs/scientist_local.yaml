@@ -1,0 +1,14 @@
+schema_version: 1
+runtime: ollama
+host: http://127.0.0.1:11434
+cloud_allowed: false
+model: qwen3:4b
+temperature: 0.0
+seed: 1729
+repetitions: 3
+prompt_version: scientist-v1
+claim_schema_version: 1
+notes:
+  - "Model weights are downloaded separately and must be recorded by digest."
+  - "Each condition is an independent call with no shared conversation history."
+  - "This configuration is a candidate until model qualification is complete."

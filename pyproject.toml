@@ -1,0 +1,46 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "concordia-xai"
+version = "0.1.0"
+description = "Controlled evaluation of scientist LLM robustness to molecular-model explanations"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = { file = "LICENSE" }
+authors = [{ name = "srikar jy" }]
+dependencies = [
+  "joblib>=1.4,<2",
+  "numpy>=2.0,<3",
+  "pandas>=2.2,<4",
+  "pydantic>=2.10,<3",
+  "pyyaml>=6.0,<7",
+  "rdkit>=2025.3,<2027",
+  "scikit-learn>=1.7,<2",
+]
+
+[project.optional-dependencies]
+xai = ["shap>=0.48,<1"]
+scientist = ["ollama>=0.4,<1"]
+dev = [
+  "pytest>=8.4,<10",
+  "ruff>=0.12,<1",
+]
+
+[project.scripts]
+concordia = "concordia.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/concordia"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

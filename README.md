@@ -2,7 +2,7 @@
 
 Concordia evaluates whether a scientist LLM remains faithful to molecular-model explanations under controlled XAI evidence corruption.
 
-**Status: initial architecture and documentation only.** No molecular models, LLM integrations, evaluators, or experiments are implemented. This initial repository contains a project overview and a phased research plan.
+**Status: Phase 1 baseline implemented; the LLM intervention study is not yet run.** The repository now contains reproducible Tox21/NR-AhR preparation, scaffold splitting, Morgan fingerprints, a Random Forest baseline, artifact manifests, tests, and the research design for the later scientist-LLM study. No LLM robustness result is claimed yet.
 
 ## Why Concordia?
 
@@ -55,11 +55,11 @@ The planned MVP uses Tox21, initially the NR-AhR assay, with approximately 30 he
 - One explanation method: SHAP / TreeSHAP for the baseline's fingerprint features.
 - Frozen packets containing molecule identity, prediction probability, assay, model identity, attribution evidence, and experiment metadata.
 - Approximately eight curated supporting documents, with provenance and fixed excerpts.
-- One scientist LLM accessed through a direct provider API with structured outputs.
+- One scientist LLM accessed through a local runtime with structured outputs; the first backend will be Ollama, with the runtime and model recorded in each manifest.
 - Control, explanation-withheld, and explanation-shuffled conditions, with repeated calls where useful to estimate variability.
 - Deterministic comparisons, manual scientific scoring where necessary, and a reproducible findings report.
 
-No results are available. Deterministic corruption follows the minimal experiment once the initial conditions work.
+The predictor baseline is implemented and has been run on the downloaded archive. SHAP evidence, scientist responses, interventions, and Concordia robustness results are not yet available. Deterministic corruption follows the minimal experiment once the initial conditions work.
 
 ## Architecture
 
@@ -68,7 +68,7 @@ No results are available. Deterministic corruption follows the minimal experimen
 | Predictor | Produce an assay-specific prediction and probability from a validated molecule. |
 | Explanation engine | Generate existing XAI attributions for the fixed predictor and input. |
 | Evidence packet builder | Freeze prediction, explanation, document excerpts, identifiers, and provenance for replay. |
-| Scientist LLM | Interpret one supplied packet and return structured scientific claims. |
+| Scientist LLM | Interpret one supplied packet through one local, stateless model call and return structured scientific claims. |
 | Intervention engine | Transform only designated evidence fields and record the transformation. |
 | Claim parser | Validate the response contract using Pydantic; preserve invalid raw responses and validation failures. |
 | Deterministic evaluator | Compare validated claims using fixed rules and, where needed, separately supplied human annotations. |
@@ -104,24 +104,46 @@ Randomness in data splitting, training, explanation generation, donor selection,
 
 ### MVP / baseline
 
-Planned: Python, RDKit, MoleculeNet / Tox21, Morgan fingerprints, scikit-learn Random Forest, SHAP / TreeSHAP, a direct LLM provider API, structured outputs, and Pydantic. Analysis may use NumPy, pandas or Polars, and SciPy as needed. Optional experiment tracking will select either MLflow or Weights & Biases only if useful.
+Planned and partially implemented: Python, RDKit, MoleculeNet / Tox21, Morgan fingerprints, scikit-learn Random Forest, SHAP / TreeSHAP, a local Ollama runtime, JSON Schema, and Pydantic. Analysis uses NumPy and pandas initially and may add SciPy or DuckDB for larger reports. No hosted tracking service is required.
 
 ### Later extension
 
 Chemprop v2, PyTorch, and Integrated Gradients / Captum will be considered after the baseline evaluation framework works. These tools are not implemented or installed by this setup.
 
+An optional post-MVP study may test framework generalization on a real genomic task using Evo 2 local forward outputs. Because Evo 2 consumes DNA rather than molecular SMILES, it is a separate research extension rather than part of the Tox21 predictor stack. It requires a validated genomic task, an established attribution method, and suitable FP8 hardware.
+
 ## Repository Structure
 
 ```text
 concordia/
-├── README.md          Project scope, architecture, and planned experiment
-├── LICENSE            MIT license
-├── .gitignore         Local files and generated artifact exclusions
-└── docs/
-    └── ROADMAP.md     Phased deliverables and completion criteria
+├── configs/           Versioned experiment configuration
+├── data/              External, processed, and frozen evidence locations
+├── experiments/       Run manifests and ignored bulk outputs
+├── reports/           Shareable static reports
+├── src/concordia/     Predictor and future scientist/evaluation modules
+├── tests/              Unit and integration checks
+├── README.md          Project scope and usage
+└── docs/              Architecture, design, reproducibility, and roadmap
 ```
 
-The existing roadmap location is retained. The broader source, configuration, data, experiment, report, and test skeleton is deferred in keeping with this initial documentation-only scope.
+Large datasets, model binaries, raw responses, and generated artifacts are kept out of Git; manifests and checksums remain reviewable.
+
+## Try the local demo
+
+The demo requires no dataset, model weights, credentials, or network access.
+From the repository root, run:
+
+    uv sync
+    .venv/bin/concordia demo
+    open reports/demo.html
+
+For the real baseline, download the configured Tox21 archive and run:
+
+    .venv/bin/concordia download
+    .venv/bin/concordia train-baseline
+
+The model and data remain local. The baseline command writes ignored artifacts
+under artifacts/; its manifest records checksums and environment metadata.
 
 ## Roadmap
 
@@ -129,7 +151,7 @@ The existing roadmap location is retained. The broader source, configuration, da
 
 ## Current Status
 
-This stage establishes architecture, project boundaries, reproducibility design, and experiment structure in documentation. Implementation starts in a later stage. There are no measured performance or robustness claims.
+Phase 0 established architecture, project boundaries, reproducibility design, and experiment structure. Phase 1 now provides a tested baseline predictor and a real-data audit. The central LLM robustness experiment begins after SHAP evidence and frozen packets are implemented. There are no measured Concordia robustness findings.
 
 ## Non-Goals
 

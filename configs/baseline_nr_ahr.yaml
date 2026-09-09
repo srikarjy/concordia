@@ -1,0 +1,29 @@
+schema_version: 1
+dataset:
+  name: tox21
+  assay: NR-AhR
+  url: https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/tox21.csv.gz
+  raw_path: data/raw/tox21.csv.gz
+  checksum_sha256: 45d09792492ce049039dd24aa27b07fc79ce20c573187d4d90bcd178c0c0d360
+molecules:
+  canonicalize: true
+  include_chirality: true
+fingerprint:
+  kind: morgan
+  radius: 2
+  n_bits: 2048
+  include_chirality: true
+split:
+  strategy: scaffold
+  seed: 1729
+  train_fraction: 0.8
+  validation_fraction: 0.1
+  test_fraction: 0.1
+model:
+  kind: random_forest
+  seed: 1729
+  n_estimators: 500
+  class_weight: balanced_subsample
+  n_jobs: 1
+artifacts:
+  directory: artifacts/baseline_nr_ahr

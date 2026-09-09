@@ -102,6 +102,21 @@ Produce reproducible figures and experiment tables, an architecture diagram, a m
 
 **Completion criteria:** readers can understand the scientific question, inspect evidence behind conclusions, and reproduce the reported analysis from saved artifacts. No React application or dashboard is required.
 
+## Phase 10 — Optional Genomic Generalization with Evo 2
+
+This is a separate follow-up study, not part of the Tox21 MVP and not a replacement for Chemprop. Evo 2 models nucleotide sequences rather than small molecules, so this phase changes the scientific domain while testing whether Concordia's evidence-intervention framework generalizes.
+
+- Select a validated genomic prediction or variant-scoring task with real labeled data. Sequence generation alone is not a suitable predictor/XAI experiment.
+- Freeze the exact Evo 2 checkpoint/runtime, DNA input, task-specific output, and local forward-pass artifacts. Hosted Evo 2 generation does not expose the layer-output interface needed for this plan.
+- Select an established attribution or deterministic perturbation method appropriate to the validated genomic task; do not present raw embeddings as explanations and do not invent a new XAI method.
+- Build a genomic evidence-packet schema without changing the core guarantees: one scientist LLM, independent conditions, frozen evidence, controlled withheld/shuffled interventions, and deterministic comparison.
+- Validate biological scope, sequence orientation, windowing, reference assembly, variant representation, output calibration, attribution target, and leakage controls before collecting LLM responses.
+- Treat Evo 2 outputs as model evidence rather than biological truth. Independently validate any biological interpretation used in the study.
+
+Local Evo 2 NIM forward inference requires supported FP8 hardware. The documented 40B deployment requires either two H100 80 GB GPUs or one H200 141 GB GPU; the 7B option supports a smaller documented FP8 hardware set. Use hosted generation only for API exploration, not as a substitute for forward outputs.
+
+**Entry criteria:** Phases 0–7 are complete, the molecular study has stable packet/intervention/evaluation interfaces, a concrete genomic task and dataset have been chosen, and suitable local compute is available. **Completion criteria:** the genomic predictor and explanation have their own empirical validation, every packet is replayable, and cross-domain conclusions distinguish Evo 2/task effects from Concordia framework effects.
+
 ## Artifact and Reproducibility Contract
 
 Future configuration files will select assay, dataset version, seeds, model/XAI settings, prompt, generation parameters, intervention mapping, and repetitions without containing secrets. Future data documentation will distinguish external raw inputs, processed derivatives, and frozen evidence; provenance and redistribution rights must be recorded.

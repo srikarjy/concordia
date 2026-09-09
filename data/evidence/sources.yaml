@@ -1,0 +1,49 @@
+schema_version: 1
+status: candidate_sources_only
+retrieved_utc: 2026-09-08
+sources:
+  - evidence_id: literature:pmid-35566372
+    pmid: "35566372"
+    title: "Identifying Protein Features and Pathways Responsible for Toxicity Using Machine Learning and Tox21: Implications for Predictive Toxicology"
+    journal: "Molecules"
+    publication_date: "2022-05-08"
+    doi: "10.3390/molecules27093021"
+    url: "https://pubmed.ncbi.nlm.nih.gov/35566372/"
+    intended_role: "Tox21 machine-learning context and limitations"
+    use_status: "candidate; rights and excerpt to be reviewed"
+  - evidence_id: literature:pmid-38569320
+    pmid: "38569320"
+    title: "In Silico and In Vitro multiple analysis approach for screening naturally derived ligands for red seabream aryl hydrocarbon receptor"
+    journal: "Ecotoxicology and Environmental Safety"
+    publication_date: "2024-04-15"
+    doi: "10.1016/j.ecoenv.2024.116262"
+    url: "https://pubmed.ncbi.nlm.nih.gov/38569320/"
+    intended_role: "AhR ligand screening context; distinguish assay activity from mechanism"
+    use_status: "candidate; species and endpoint scope must be made explicit"
+  - evidence_id: literature:pmid-38657698
+    pmid: "38657698"
+    title: "AhR agonists screening and identification in indoor dust based on non-target chemical analysis by GC-Q-TOFMS and biological effect evaluation referring to ToxCast/Tox21 database"
+    journal: "Chemosphere"
+    publication_date: "2024-06"
+    doi: "10.1016/j.chemosphere.2024.142108"
+    url: "https://pubmed.ncbi.nlm.nih.gov/38657698/"
+    intended_role: "ToxCast/Tox21 AhR screening and biological validation context"
+    use_status: "candidate; rights and excerpt to be reviewed"
+  - evidence_id: literature:pmid-38904418
+    pmid: "38904418"
+    title: "Emerging investigator series: nontargeted screening of aryl hydrocarbon receptor agonists in endangered beluga whales from the St. Lawrence Estuary: beyond legacy contaminants"
+    journal: "Environmental Science: Processes & Impacts"
+    publication_date: "2024-09-18"
+    doi: "10.1039/D4EM00243A"
+    url: "https://pubmed.ncbi.nlm.nih.gov/38904418/"
+    intended_role: "AhR agonist screening context and biological interpretation limits"
+    use_status: "candidate; wildlife context must not be generalized to human toxicity"
+  - evidence_id: literature:pmid-39500119
+    pmid: "39500119"
+    title: "The mode of toxic action of ionic liquids: Narrowing down possibilities using high-throughput, in vitro cell-based bioassays"
+    journal: "Environment International"
+    publication_date: "2024-11"
+    doi: "10.1016/j.envint.2024.109089"
+    url: "https://pubmed.ncbi.nlm.nih.gov/39500119/"
+    intended_role: "Assay specificity, cytotoxicity, and mode-of-action caveats"
+    use_status: "candidate; rights and excerpt to be reviewed"
