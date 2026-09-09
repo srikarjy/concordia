@@ -10,7 +10,7 @@ from typing import Any
 from concordia.evidence.schema import EvidencePacket
 from concordia.scientist.prompt import PROMPT_VERSION, render_messages, render_tool_messages
 from concordia.scientist.schema import ScientistResponse
-from concordia.scientist.session import ScientistTurn, ToolSessionResult, run_bounded_session
+from concordia.scientist.session import ToolSessionResult, run_bounded_session
 from concordia.scientist.tools import ToolGateway
 
 
@@ -54,7 +54,9 @@ def generate_local(
     response = client.chat(
         model=model,
         messages=render_messages(packet),
-        format=ScientistResponse.model_json_schema(),
+        # Ollama's grammar support varies by model; validate the full Pydantic
+        # contract after generation while requesting provider-compatible JSON.
+        format="json",
         options=options,
         stream=False,
     )
@@ -103,7 +105,7 @@ def generate_local_tool_session(
         response = client.chat(
             model=model,
             messages=messages,
-            format=ScientistTurn.model_json_schema(),
+            format="json",
             options=options,
             stream=False,
         )
