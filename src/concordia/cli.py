@@ -67,6 +67,13 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser(
         "list-tools", help="list the declared local scientific tool contracts"
     )
+    qualify = subparsers.add_parser(
+        "qualify-scientist", help="qualify local models on a frozen genomic fixture"
+    )
+    qualify.add_argument("--state-root", type=Path, default=Path(".concordia/qualification"))
+    qualify.add_argument("--model", action="append", required=True)
+    qualify.add_argument("--repetitions", type=int, default=2)
+    qualify.add_argument("--seed", type=int, default=1729)
     return parser
 
 
@@ -173,6 +180,16 @@ def main() -> None:
             for definition in build_default_registry().definitions()
         ]
         print(json.dumps({"schema_version": 1, "tools": manifests}, indent=2))
+    elif args.command == "qualify-scientist":
+        from concordia.scientist.local_qualification import run_local_qualification
+
+        result = run_local_qualification(
+            args.state_root,
+            tuple(args.model),
+            repetitions=args.repetitions,
+            seed=args.seed,
+        )
+        print(json.dumps(result, indent=2))
 
 
 if __name__ == "__main__":

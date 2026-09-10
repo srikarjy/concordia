@@ -135,6 +135,14 @@ Concordia includes immutable execution contracts, a versioned registry, deny-by-
 
 Every integrated tool call records its exact request and result in the event ledger, stores its result in content-addressed storage, and emits a small provenance graph joining the tool run to the artifact. This local boundary executes trusted in-process handlers in a separate process; it is not a hardened container or a substitute for an external CellForge deployment when hostile code must run. All current genomic tool outputs are fixture-backed or deterministic software checks and remain ineligible for scientific conclusions. See [the execution-boundary documentation](docs/cellforge.md).
 
+### Local seed scientist and qualification
+
+The genomic seed runtime now accepts four typed turns, preserves prompts and raw responses, validates evidence references, and routes bounded tool requests through the local executor. Each session starts with fresh messages. Model-proposed claims have no verification-status field; deterministic infrastructure retains that responsibility.
+
+`concordia qualify-scientist --model MODEL --repetitions 2` runs installed Ollama candidates against a frozen software fixture and stores separate validity, tool-use, reference, stability, latency, token, and memory measurements. Set `OLLAMA_NO_CLOUD=1`. Completed executions can be replayed without inference. See [the runtime and qualification guide](docs/seed-scientist.md).
+
+Phase 5 remains open: neither installed candidate passed the first JSON-mode qualification. Both `phi3:latest` repetitions timed out, and both `gemma3:270m` repetitions produced truncated JSON. No seed model has been selected, and these software qualification outcomes are not genomic findings.
+
 ## Interactive Workspace
 
 The planned React and TypeScript workspace will open directly into an active scientific run and provide:
