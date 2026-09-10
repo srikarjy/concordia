@@ -74,6 +74,12 @@ def build_parser() -> argparse.ArgumentParser:
     qualify.add_argument("--model", action="append", required=True)
     qualify.add_argument("--repetitions", type=int, default=2)
     qualify.add_argument("--seed", type=int, default=1729)
+    colony_demo = subparsers.add_parser(
+        "colony-demo", help="run the bounded two-generation software colony"
+    )
+    colony_demo.add_argument(
+        "--state-root", type=Path, default=Path(".concordia/colony-demo")
+    )
     return parser
 
 
@@ -190,6 +196,10 @@ def main() -> None:
             seed=args.seed,
         )
         print(json.dumps(result, indent=2))
+    elif args.command == "colony-demo":
+        from concordia.colonies.demo import run_colony_fixture_demo
+
+        print(json.dumps(run_colony_fixture_demo(args.state_root), indent=2))
 
 
 if __name__ == "__main__":

@@ -52,6 +52,7 @@ def _child_execute(
     timeout_seconds: float,
     output_bytes: int,
     send_connection: Any,
+    ready_event: Any,
     stdout_path: str,
     stderr_path: str,
 ) -> None:
@@ -67,6 +68,7 @@ def _child_execute(
         contextlib.redirect_stdout(stdout_handle),
         contextlib.redirect_stderr(stderr_handle),
     ):
+        ready_event.set()
         try:
             validated_input = definition.input_model.model_validate(arguments)
             output = definition.handler(validated_input, context)
@@ -137,6 +139,7 @@ class LocalExecutionAdapter:
             stdout_path = sandbox_root / "stdout.txt"
             stderr_path = sandbox_root / "stderr.txt"
             receive_connection, send_connection = multiprocessing.Pipe(duplex=False)
+            ready_event = multiprocessing.get_context("spawn").Event()
             context = ExecutionContext(
                 artifact_root=self.artifact_root,
                 workspace_root=self.workspace_root,
@@ -153,12 +156,26 @@ class LocalExecutionAdapter:
                     request.budget.timeout_seconds,
                     request.budget.output_bytes,
                     send_connection,
+                    ready_event,
                     str(stdout_path),
                     str(stderr_path),
                 ),
             )
             process.start()
             send_connection.close()
+            startup_timeout = min(max(request.budget.timeout_seconds * 10, 1), 10)
+            if not ready_event.wait(startup_timeout):
+                process.terminate()
+                process.join(2)
+                return self._result(
+                    request,
+                    started,
+                    status=ExecutionStatus.FAILED,
+                    error_code="SANDBOX_START_FAILED",
+                    error_message="sandbox did not become ready before the startup deadline",
+                    stdout=self._bounded_log(stdout_path, request.budget.output_bytes),
+                    stderr=self._bounded_log(stderr_path, request.budget.output_bytes),
+                )
             deadline = time.monotonic() + request.budget.timeout_seconds
             payload: bytes | None = None
             while time.monotonic() < deadline:

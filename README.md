@@ -4,7 +4,7 @@ Concordia Colony is a provenance-first scientific platform for testing, tracing,
 
 One seed scientist creates a bounded colony of isolated workflow variants. Each descendant inherits a versioned digital genome, uses approved computational biology tools inside a sandbox, and produces structured claims. Deterministic infrastructure verifies evidence paths, calculates fitness, selects surviving workflows, and records the complete lineage.
 
-> **Current status:** the repository contains a working molecular evidence baseline, the first zero-cost genomic evidence vertical slice, the durable local backend foundation, provenance-aware project ingestion, and a local CellForge-compatible tool-execution boundary. An external CellForge runtime is not required or currently integrated. Colony evolution, real Evo2 execution, cross-method validation, and the interactive frontend are planned. No genomic or scientist-model research result is claimed.
+> **Current status:** the repository contains a working molecular evidence baseline, the first zero-cost genomic evidence vertical slice, durable local orchestration, provenance-aware project ingestion, a local CellForge-compatible boundary, a qualified local seed runtime, and bounded deterministic colony evolution. An external CellForge runtime is not required or currently integrated. Real Evo2 execution, cross-method validation, and the interactive frontend are planned. No genomic or scientist-model research result is claimed.
 
 ## Problem
 
@@ -143,6 +143,12 @@ The genomic seed runtime now accepts four typed turns, preserves prompts and raw
 
 Phase 5 is complete for the local software fixture. After preserving failed `phi3:latest` and `gemma3:270m` attempts, `qwen3:1.7b` passed the versioned two-repetition protocol and is pinned by checkpoint digest. Both accepted repetitions produced valid JSON, successful graph requests, schema-valid scoped claims, correct evidence references, and identical final responses. These qualification measurements establish protocol compatibility only; they are not genomic findings or evidence of biological judgment.
 
+### Bounded colony evolution
+
+Phase 6 implements immutable versioned digital genomes, eight allowlisted single-field mutation operators, complete mutation records, a generation barrier, bounded sequential or local concurrent execution, cancellation, restart recovery, member-budget and stagnation stops, extinction records, and deterministic survivor selection. Each worker receives only its own genome, isolation identity, and the same frozen task artifact; peer claims and outputs are absent from the worker contract.
+
+Fitness retains all declared scientific-quality, reliability, penalty, runtime, token, and compute components. The documented `weighted-fitness-v1` calculation and identifier tie-break make selection reproducible from saved member-output artifacts. The included colony executor is an explicitly labeled deterministic software fixture. It exercises orchestration and cannot produce scientific support. See [the colony documentation](docs/colonies.md).
+
 ## Interactive Workspace
 
 The planned React and TypeScript workspace will open directly into an active scientific run and provide:
@@ -198,6 +204,7 @@ uv sync --extra dev --extra xai --extra scientist
 .venv/bin/concordia genomic-demo
 .venv/bin/concordia ingest-project
 .venv/bin/concordia list-tools
+.venv/bin/concordia colony-demo
 ```
 
 Start the local control plane on the loopback interface:

@@ -36,7 +36,7 @@ The local adapter validates the tool allowlist, exact version, required capabili
 
 ## Security boundary and limits
 
-The design is deny-by-default and excludes arbitrary shell, arbitrary Python, undeclared tools, and network-enabled local policies. Repository paths, when a future tool needs them, must be relative to explicit readable roots and resolve to regular files without parent traversal or symlink escape. Timeout termination and output limits preserve bounded partial logs for diagnosis.
+The design is deny-by-default and excludes arbitrary shell, arbitrary Python, undeclared tools, and network-enabled local policies. Repository paths, when a future tool needs them, must be relative to explicit readable roots and resolve to regular files without parent traversal or symlink escape. A separately bounded process-startup deadline ends when the child signals readiness; the declared tool timeout then bounds handler execution. Timeout termination and output limits preserve bounded partial logs for diagnosis.
 
 The local adapter is process isolation for trusted Concordia handlers, not a container, virtual machine, or kernel-enforced hostile-code sandbox. On Linux it applies an address-space limit; on supported Unix systems it applies a CPU limit. Filesystem allowlists are validated by the parent but are not an OS-level jail. Use a future external CellForge adapter when the threat model includes untrusted executable code.
 

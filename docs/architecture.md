@@ -32,6 +32,12 @@ The genomic scientist uses a provider-neutral model protocol and a separate tool
 
 The local model adapter validates loopback endpoints and records checkpoint identity. The runtime rejects undeclared claim references and self-assigned verification fields, but does not infer scientific truth from response text. Qualification uses deterministic metrics on a frozen fixture task. `qwen3:1.7b` is the selected local seed for the software protocol and is pinned by checkpoint digest; this does not qualify its biological judgment.
 
+### Colony scheduler
+
+The colony scheduler stores its history in a separate append-only SQLite/WAL ledger and reconstructs genomes, mutations, members, generation selections, extinction, and terminal state from events. Every genome, mutation, frozen task, and member output is also content-addressed. A generation cannot reproduce until all scheduled members have reached a terminal execution state and selection has been recorded.
+
+Member execution is an explicit isolation boundary: the request contains one immutable genome, one task-artifact digest, one unique isolation identity, and no peer results. Executors are created per member. Local concurrency is bounded to four and defaults to one. The current deterministic fixture executor validates scheduler behavior only; it is not the qualified Qwen runtime and its outputs are always ineligible for scientific use. Selection uses saved measurements and deterministic code, never a language model. Details are in [`docs/colonies.md`](colonies.md).
+
 ### Project ingestion
 
 Project ingestion uses deterministic format parsers rather than a language model. A source file is stored by SHA-256, parsed into accepted or rejected extraction candidates, and connected through `quotedFrom`, `wasGeneratedBy`, and `used` edges to its exact source span, parser run, and source file. The graph records assertions with validation state; it does not promote extracted text into unquestioned biological fact.
