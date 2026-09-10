@@ -4,6 +4,14 @@ Concordia can be published as a CPU Docker Space for the saved scientific worksp
 
 The current public deployment is [srikarjy025/concordia-colony](https://srikarjy025-concordia-colony.hf.space). It intentionally excludes API credentials, local Qwen artifacts, real Evo2 execution, and State model weights.
 
+Its curated OpenAPI tool document is served from `/api/tools/openapi.json`. The
+contract contains six read-only evidence-inspection operations and is safe to
+import into OpenAPI-compatible clients. It does not expose the mutable local run
+API, arbitrary sequences, CellForge execution, or either model runtime. See
+[`tool-integration.md`](tool-integration.md).
+The same deployment serves `/privacy` for clients that require a public privacy
+notice.
+
 ## ZeroGPU qualification surface
 
 A separate public Gradio Space, [srikarjy025/concordia-evo2-forward](https://huggingface.co/spaces/srikarjy025/concordia-evo2-forward), contains bounded hardware and runtime qualification endpoints. It accepts no DNA and performs no model inference. The initial measured allocation was an NVIDIA RTX PRO 6000 Blackwell Server Edition MIG instance with 50,868,518,912 bytes of memory, CUDA 12.8, compute capability 12.0, and BF16 support. The immutable summary is recorded in `reports/evo2-zerogpu-hardware-probe.json`.
@@ -21,6 +29,8 @@ docker run --rm -p 7860:7860 concordia-workspace
 ```
 
 Open `http://127.0.0.1:7860`. The container runs `concordia serve-workspace` on port 7860 and builds the workspace from content-addressed local artifacts at startup.
+The runtime process uses a dedicated non-root user and can write only its local
+`.concordia` state directory within the application tree.
 
 ## Publish to a Space
 

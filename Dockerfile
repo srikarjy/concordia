@@ -13,5 +13,9 @@ RUN pip install --no-cache-dir -r requirements-space.txt
 COPY src ./src
 RUN python -c "from concordia.api.workspace import create_workspace_app; create_workspace_app('/tmp/concordia-space-smoke')"
 COPY --from=frontend-build /build/frontend/dist ./frontend/dist
+RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin concordia \
+    && mkdir -p /app/.concordia \
+    && chown -R concordia:concordia /app/.concordia
+USER concordia
 EXPOSE 7860
 CMD ["uvicorn", "concordia.api.workspace:create_workspace_app", "--factory", "--host", "0.0.0.0", "--port", "7860"]

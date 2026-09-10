@@ -248,6 +248,11 @@ Run the local worker in another terminal:
 
 The interactive saved workspace is served on port 7860 by `serve-workspace` and opens directly into claims, lineage, provenance, sequence/counterfactual tracks, artifacts, and event replay. It is read-only fixture mode. The CPU Docker image and Hugging Face Space upload procedure are documented in [docs/deployment.md](docs/deployment.md).
 
+The public workspace also publishes a curated, GET-only OpenAPI tool contract at
+`/api/tools/openapi.json`. It exposes inspection of saved fixture evidence only;
+run mutation, arbitrary sequences, model inference, and sandbox execution are
+excluded. See [read-only tool integration](docs/tool-integration.md).
+
 Then create a durable fixture run:
 
 ```bash

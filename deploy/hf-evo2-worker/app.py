@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import importlib.util
 import platform
+from copy import deepcopy
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -74,8 +76,9 @@ def _evo2_package_root() -> Path:
     return Path(next(iter(spec.submodule_search_locations)))
 
 
-def qualify_runtime() -> dict[str, Any]:
-    """Verify pinned runtime and checkpoint bytes without loading the model."""
+@lru_cache(maxsize=1)
+def _qualify_runtime_once() -> dict[str, Any]:
+    """Verify the immutable deployed runtime once without loading the model."""
 
     selected_paths: dict[str, Path] = {}
     imports_succeeded = False
@@ -105,7 +108,7 @@ def qualify_runtime() -> dict[str, Any]:
         __import__("vortex")
         imports_succeeded = True
     except Exception as exc:
-        import_error = f"{type(exc).__name__}: {exc}"
+        import_error = f"{type(exc).__name__}: runtime verification failed"
 
     return build_runtime_qualification(
         selected_paths,
@@ -115,6 +118,12 @@ def qualify_runtime() -> dict[str, Any]:
         imports_succeeded=imports_succeeded,
         import_error=import_error,
     )
+
+
+def qualify_runtime() -> dict[str, Any]:
+    """Return a copy of the process-cached immutable qualification record."""
+
+    return deepcopy(_qualify_runtime_once())
 
 
 with gr.Blocks(title="Concordia Evo2 Forward Worker") as demo:
