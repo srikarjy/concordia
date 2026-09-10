@@ -86,6 +86,8 @@ Every extracted entity records its repository-relative path, source digest, pars
 
 ## Cross-Verification
 
+The deterministic verifier now checks independent evidence families, artifact integrity across every provenance branch, counterfactual requirements, contradictions, and exact model/assay scope. See [verification contracts](docs/verification.md) and [Evo 2 reading and future scope](docs/evo2-reading.md).
+
 Evidence is grouped by method family so several related attribution algorithms are not mistaken for independent confirmation. Planned families include:
 
 1. Counterfactual evidence from controlled in-silico mutagenesis.

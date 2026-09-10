@@ -14,7 +14,7 @@ class BacktrackingResult(BaseModel):
 
     claim_node_id: str
     target_node_id: str
-    status: Literal["SUPPORTED", "UNVERIFIABLE", "MISSING_EVIDENCE"]
+    status: Literal["PARTIALLY_SUPPORTED", "UNVERIFIABLE", "MISSING_EVIDENCE"]
     path: tuple[str, ...] = ()
     scientific_use_allowed: bool
     reasons: tuple[str, ...] = ()
@@ -60,7 +60,8 @@ def backtrack_claim(
     return BacktrackingResult(
         claim_node_id=claim_node_id,
         target_node_id=target_node_id,
-        status="SUPPORTED",
+        status="PARTIALLY_SUPPORTED",
         path=path,
-        scientific_use_allowed=True,
+        scientific_use_allowed=False,
+        reasons=("path existence alone does not establish scientific support",),
     )
