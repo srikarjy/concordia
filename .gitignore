@@ -13,6 +13,7 @@ htmlcov/
 build/
 dist/
 node_modules/
+*.tsbuildinfo
 playwright-report/
 test-results/
 .ipynb_checkpoints/
