@@ -13,7 +13,7 @@ Concordia Colony is a provenance-first scientific platform for testing, tracing,
 
 One seed scientist creates a bounded colony of isolated workflow variants. Each descendant inherits a versioned digital genome, uses approved computational biology tools inside a sandbox, and produces structured claims. Deterministic infrastructure verifies evidence paths, calculates fitness, selects surviving workflows, and records the complete lineage.
 
-> **Current status:** the repository contains a working molecular evidence baseline, genomic evidence contracts, durable local orchestration, provenance-aware project ingestion, a local CellForge-compatible boundary, a qualified local seed runtime, bounded deterministic colony evolution, independent evidence verification, and a built interactive workspace. An external CellForge runtime and real Evo2 execution are not required for the local demonstration. Real scientific validation remains pending; no genomic or scientist-model research result is claimed.
+> **Current status:** the repository contains a working molecular evidence baseline, genomic evidence contracts, durable local orchestration, provenance-aware project ingestion, a local CellForge-compatible boundary, a qualified local seed runtime, bounded colony evolution, independent evidence verification, and a built interactive workspace. The local demonstration needs neither an external CellForge service nor Evo2 hardware. A two-variant HBB pilot protocol is frozen and an optional NVIDIA-hosted Evo2 forward adapter is ready, but no real Evo2 output has been collected; no genomic finding is claimed.
 
 ## Problem
 
@@ -150,7 +150,7 @@ Every integrated tool call records its exact request and result in the event led
 
 ### Local seed scientist and qualification
 
-The genomic seed runtime now accepts four typed turns, preserves prompts and raw responses, validates evidence references, and routes bounded tool requests through the local executor. Each session starts with fresh messages. Model-proposed claims have no verification-status field; deterministic infrastructure retains that responsibility.
+The genomic seed runtime now accepts four typed turns, preserves prompts and raw responses, validates evidence references, and routes bounded tool requests through the local executor. Each session starts with fresh messages. Model-proposed claims have no verification-status field; deterministic infrastructure retains that responsibility. Ollama remains the local default. An optional OpenRouter adapter accepts only `openrouter/free` or explicit `:free` models, records the resolved model identity, and never acts as the scientific verifier.
 
 `concordia qualify-scientist --model MODEL --repetitions 2` runs installed Ollama candidates against a frozen software fixture and stores separate validity, tool-use, reference, stability, latency, token, and memory measurements. Set `OLLAMA_NO_CLOUD=1`. Completed executions can be replayed without inference. See [the runtime and qualification guide](docs/seed-scientist.md).
 
@@ -160,7 +160,7 @@ Phase 5 is complete for the local software fixture. After preserving failed `phi
 
 Phase 6 implements immutable versioned digital genomes, eight allowlisted single-field mutation operators, complete mutation records, a generation barrier, bounded sequential or local concurrent execution, cancellation, restart recovery, member-budget and stagnation stops, extinction records, and deterministic survivor selection. Each worker receives only its own genome, isolation identity, and the same frozen task artifact; peer claims and outputs are absent from the worker contract.
 
-Fitness retains all declared scientific-quality, reliability, penalty, runtime, token, and compute components. The documented `weighted-fitness-v1` calculation and identifier tie-break make selection reproducible from saved member-output artifacts. The included colony executor is an explicitly labeled deterministic software fixture. It exercises orchestration and cannot produce scientific support. See [the colony documentation](docs/colonies.md).
+Fitness retains all declared scientific-quality, reliability, penalty, runtime, token, and compute components. The documented `weighted-fitness-v1` calculation and identifier tie-break make selection reproducible from saved member-output artifacts. The deterministic executor remains available for replay. A measured local-scientist executor now runs one fresh Ollama session per member and derives fitness only from saved protocol measurements. A three-member `qwen3:1.7b` software run completed with valid schemas, references, and tool calls; its scientific components remained zero because the task was a fixture. See [the colony documentation](docs/colonies.md).
 
 ## Interactive Workspace
 
@@ -208,6 +208,12 @@ The zero-cost genomic slice implements:
 
 The recorded fixture validates software behavior only. It is not an Evo2 result.
 
+### Real-study and virtual-cell boundaries
+
+The frozen HBB promoter pilot files under `configs/studies/` pin two ClinVar variants, exact GRCh38 coordinates, 8,192-base Ensembl window hashes, cohort rules, data-use terms, checkpoint, scoring target, evidence families, hypothesis, and uncertainty policy before any Evo2 outcome is inspected. The NVIDIA adapter persists the exact request and returned NPZ tensors, derives mean next-base log likelihood from `output_layer`, and has no fixture fallback. It requires a user-supplied `NVIDIA_API_KEY`; credentials are never stored.
+
+Arc State is a separate single-cell perturbation domain. Concordia now has a persist-first virtual-cell sandbox contract for AnnData identity, gene order, cell context, perturbation, checkpoint, resources, and prediction artifacts. Its runnable recorded fixture contains no cellular predictions and cannot support scientific use. Real State execution and evaluation require separately licensed weights, real held-out perturbation data, and compatible compute. See [the State boundary](docs/state-sandbox.md).
+
 ## Local Quickstart
 
 ```bash
@@ -218,7 +224,10 @@ uv sync --extra dev --extra xai --extra scientist
 .venv/bin/concordia ingest-project
 .venv/bin/concordia list-tools
 .venv/bin/concordia colony-demo
+.venv/bin/concordia qwen-colony-demo
 .venv/bin/concordia serve-workspace
+.venv/bin/mypy src/concordia
+(cd frontend && npm test)
 ```
 
 Start the local control plane on the loopback interface:

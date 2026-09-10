@@ -41,3 +41,5 @@ The design is deny-by-default and excludes arbitrary shell, arbitrary Python, un
 The local adapter is process isolation for trusted Concordia handlers, not a container, virtual machine, or kernel-enforced hostile-code sandbox. On Linux it applies an address-space limit; on supported Unix systems it applies a CPU limit. Filesystem allowlists are validated by the parent but are not an OS-level jail. Use a future external CellForge adapter when the threat model includes untrusted executable code.
 
 No current tool output is evidence of biological truth. Fixture scoring and fixture mutational scans always set `scientific_use_allowed=false`, and deterministic validation only establishes software or provenance properties.
+
+The separate [Arc State boundary](state-sandbox.md) applies the same persist-first and resource-bounded principles to virtual-cell prediction contracts. Its current recorded runner is deliberately not registered as a scientific CellForge tool because no State runtime, licensed checkpoint, or real AnnData input is installed.

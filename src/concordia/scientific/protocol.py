@@ -46,6 +46,72 @@ class StudyProtocol(BaseModel):
         return self
 
 
+class StudyVariantInput(BaseModel):
+    """A reference-validated variant window selected before model scoring."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: Literal[1] = 1
+    source_id: str = Field(min_length=1)
+    source_url: str = Field(pattern=r"^https://")
+    transcript_hgvs: str = Field(min_length=1)
+    assembly: str = Field(min_length=1)
+    chromosome: str = Field(min_length=1)
+    genomic_position_one_based: int = Field(ge=1)
+    zero_based_position: int = Field(ge=0)
+    reference: str = Field(pattern=r"^[ACGT]$")
+    alternate: str = Field(pattern=r"^[ACGT]$")
+    window_start: int = Field(ge=0)
+    window_end: int = Field(ge=1)
+    variant_offset: int = Field(ge=0)
+    sequence_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    sequence_source_url: str = Field(pattern=r"^https://")
+    reference_validated: Literal[True]
+
+    @model_validator(mode="after")
+    def validate_coordinates(self) -> StudyVariantInput:
+        if self.genomic_position_one_based != self.zero_based_position + 1:
+            raise ValueError("one-based and zero-based positions disagree")
+        if self.window_end <= self.window_start:
+            raise ValueError("window end must be greater than window start")
+        if self.variant_offset != self.zero_based_position - self.window_start:
+            raise ValueError("variant offset does not match genomic window")
+        if self.variant_offset >= self.window_end - self.window_start:
+            raise ValueError("variant lies outside its declared window")
+        return self
+
+
+class StudyInputManifest(BaseModel):
+    """Frozen cohort inputs without model outcomes or selected success cases."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: Literal[1] = 1
+    cohort_id: str = Field(min_length=1)
+    status: Literal["FROZEN"]
+    frozen_at: str = Field(min_length=1)
+    assembly: str = Field(min_length=1)
+    coordinate_convention: Literal["zero_based_half_open"] = "zero_based_half_open"
+    window_size: int = Field(ge=1)
+    selection_policy: tuple[str, ...] = Field(min_length=1)
+    exclusions: tuple[str, ...] = Field(min_length=1)
+    data_use_terms: tuple[str, ...] = Field(min_length=1)
+    variants: tuple[StudyVariantInput, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def validate_manifest(self) -> StudyInputManifest:
+        identifiers: set[str] = set()
+        for variant in self.variants:
+            if variant.source_id in identifiers:
+                raise ValueError("study variant identifiers must be unique")
+            identifiers.add(variant.source_id)
+            if variant.assembly != self.assembly:
+                raise ValueError("variant assembly does not match cohort assembly")
+            if variant.window_end - variant.window_start != self.window_size:
+                raise ValueError("variant window does not match cohort window size")
+        return self
+
+
 class ProtocolGate:
     """Deterministic gate preventing fixture artifacts from entering real studies."""
 

@@ -145,10 +145,12 @@ def describe_molecule(arguments: dict[str, Any]) -> dict[str, Any]:
     return {
         "canonical_smiles": Chem.MolToSmiles(molecule, canonical=True),
         "heavy_atom_count": int(Descriptors.HeavyAtomCount(molecule)),
-        "molecular_weight": float(Descriptors.MolWt(molecule)),
-        "logp": float(Descriptors.MolLogP(molecule)),
-        "rotatable_bonds": int(Descriptors.NumRotatableBonds(molecule)),
-        "ring_count": int(Descriptors.RingCount(molecule)),
+        "molecular_weight": float(Descriptors.MolWt(molecule)),  # type: ignore[attr-defined]
+        "logp": float(Descriptors.MolLogP(molecule)),  # type: ignore[attr-defined]
+        "rotatable_bonds": int(
+            Descriptors.NumRotatableBonds(molecule)  # type: ignore[attr-defined]
+        ),
+        "ring_count": int(Descriptors.RingCount(molecule)),  # type: ignore[attr-defined]
     }
 
 

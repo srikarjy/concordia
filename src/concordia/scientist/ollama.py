@@ -60,7 +60,7 @@ def generate_local(
         options=options,
         stream=False,
     )
-    raw = response.message.content
+    raw = response.message.content or ""
     metadata = {
         "runtime": "ollama",
         "host": host,
@@ -109,7 +109,7 @@ def generate_local_tool_session(
             options=options,
             stream=False,
         )
-        return response.message.content
+        return response.message.content or ""
 
     result = run_bounded_session(packet, gateway, initial_messages, model_turn)
     metadata = {

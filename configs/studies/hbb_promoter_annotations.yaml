@@ -1,0 +1,38 @@
+schema_version: 1
+annotation_set_id: encode-k562-dnase-hbb-pilot-v1
+status: SOURCE_VALIDATED_AWAITING_MODEL_COMPARISON
+retrieved_at: "2026-09-10"
+source:
+  experiment_accession: ENCSR000EOT
+  experiment_url: https://www.encodeproject.org/experiments/ENCSR000EOT/
+  file_accession: ENCFF185XRG
+  file_url: https://www.encodeproject.org/files/ENCFF185XRG/@@download/ENCFF185XRG.bed.gz
+  assay: DNase-seq
+  biosample: K562
+  biosample_type: cell_line
+  assembly: GRCh38
+  output_type: peaks
+  file_format: narrowPeak
+  file_size: 1821516
+  source_md5: 04653af177917b3dda96b9454fd8f90e
+  downloaded_sha256: f1556859e79bfd2f27adf1758144d12a7a05f2dd2824ee6d4fe0ae8008f6f474
+  data_use: "ENCODE released data are available for unrestricted use; cite ENCODE and the accession."
+query:
+  chromosome: chr11
+  start: 5223002
+  end: 5231253
+  coordinate_convention: zero_based_half_open
+  extraction_rule: "chromosome equals chr11 and peak_start < 5231253 and peak_end > 5223002"
+  extracted_rows_sha256: a09b92a2bc822978e73c5355d8a08b78d39c99d9d4d18d56972f0d62450a5b9a
+intervals:
+  - start: 5224620
+    end: 5225000
+    signal_value: 1.55798
+  - start: 5225620
+    end: 5225800
+    signal_value: 2.28503
+variant_overlap:
+  VCV000015471.124: false
+  VCV000015464.124: false
+assessment: "Do not assign support or contradiction until real Evo2 attribution regions are available under the frozen protocol."
+scientific_use_allowed: true

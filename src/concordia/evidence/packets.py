@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Literal, cast
 
 import numpy as np
 import pandas as pd
 
 from concordia.evidence.schema import (
     Attribution,
+    DocumentEvidence,
     EvidencePacket,
     ExplanationEvidence,
     PredictionEvidence,
@@ -65,6 +67,9 @@ def packet_from_row(
             top_positive=top_positive,
             top_negative=top_negative,
         )
+    predicted_label = int(row["prediction"])
+    if predicted_label not in {0, 1}:
+        raise ValueError("prediction label must be zero or one")
     return EvidencePacket(
         packet_id=f"{row['molecule_id']}:control",
         molecule_id=str(row["molecule_id"]),
@@ -73,10 +78,10 @@ def packet_from_row(
             model_id=str(row["model_id"]),
             assay=str(row["assay"]),
             probability=float(row["prediction_probability"]),
-            predicted_label=int(row["prediction"]),
+            predicted_label=cast(Literal[0, 1], predicted_label),
         ),
         explanation=explanation,
-        documents=tuple(documents),
+        documents=tuple(DocumentEvidence.model_validate(value) for value in documents),
     )
 
 

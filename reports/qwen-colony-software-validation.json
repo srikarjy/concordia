@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10",
+  "command": "OLLAMA_NO_CLOUD=1 concordia qwen-colony-demo --model qwen3:1.7b --seed 1729",
+  "model": "qwen3:1.7b",
+  "checkpoint_sha256": "3d0b790534fe4b79525fc3692950408dca41171676ed7e21db57af5c65ef6ab6",
+  "task_artifact_digest": "6ecba6e0d4316f23031f7363b88ee6474a954c595464bda9cd27571d632c8d7a",
+  "execution_mode": "local_scientist",
+  "scientific_use_allowed": false,
+  "member_count": 3,
+  "schema_valid_member_count": 3,
+  "successful_tool_member_count": 3,
+  "survivor_id": "16d700461ce32483c0a2739f",
+  "members": [
+    {
+      "member_id": "07a69d4b752ee2c727b3795f",
+      "fitness_observation_digest": "a9f62d66688df4912d7b3574ed47e33c863bcac8b6f3435391e9eb097cd180fa",
+      "weighted_score": 0.51351356,
+      "runtime_seconds": 19.459308041987242,
+      "token_usage": 4718
+    },
+    {
+      "member_id": "16d700461ce32483c0a2739f",
+      "fitness_observation_digest": "fd179d52e4931311c21e8c1d5f04ed5beacd6a8c75b94832d4108af323227c46",
+      "weighted_score": 0.51505821,
+      "runtime_seconds": 14.825360957009252,
+      "token_usage": 4718
+    },
+    {
+      "member_id": "b4acedc861764dd5d097b7e4",
+      "fitness_observation_digest": "28e225fa8fb24e3b9acad377b90b37069f8104e9fbea994559803e006a8a0768",
+      "weighted_score": 0.51496075,
+      "runtime_seconds": 15.117764376002015,
+      "token_usage": 4716
+    }
+  ],
+  "limitations": [
+    "This run measures software protocol behavior on a recorded fixture task.",
+    "Counterfactual, attribution, cross-verification, and stability components remain zero.",
+    "No genomic or biological finding may be inferred from this record."
+  ]
+}

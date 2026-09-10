@@ -9,6 +9,8 @@ from collections.abc import Sequence
 from typing import Any, Protocol
 from urllib.parse import urlsplit
 
+import httpx
+
 from concordia.scientist.contracts import ModelResponse
 
 
@@ -167,5 +169,98 @@ class OllamaScientistAdapter:
                 "done_reason": payload.get("done_reason"),
                 "total_duration_nanoseconds": payload.get("total_duration"),
                 "provider_response": payload,
+            },
+        )
+
+
+class OpenRouterScientistAdapter:
+    """Optional zero-cost hosted scientist transport; never used as a verifier."""
+
+    endpoint = "https://openrouter.ai/api/v1/chat/completions"
+
+    def __init__(
+        self,
+        model: str = "openrouter/free",
+        *,
+        api_key: str | None = None,
+        timeout_seconds: float = 120.0,
+        temperature: float = 0.0,
+        transport: httpx.BaseTransport | None = None,
+    ):
+        if model != "openrouter/free" and not model.endswith(":free"):
+            raise ValueError("zero-cost OpenRouter adapter requires a free model")
+        self._model = model
+        self._api_key = (
+            os.environ.get("OPENROUTER_API_KEY") if api_key is None else api_key
+        )
+        self.timeout_seconds = timeout_seconds
+        self.temperature = temperature
+        self._transport = transport
+
+    @property
+    def request_settings(self) -> dict[str, Any]:
+        return {
+            "endpoint": self.endpoint,
+            "model": self._model,
+            "temperature": self.temperature,
+            "stream": False,
+            "zero_cost_only": True,
+            "transport_version": "openrouter-chat-v1",
+        }
+
+    @property
+    def model_identity(self) -> str:
+        return self._model
+
+    @property
+    def checkpoint_digest(self) -> None:
+        return None
+
+    def generate(
+        self,
+        messages: Sequence[dict[str, str]],
+        response_schema: dict[str, Any],
+    ) -> ModelResponse:
+        if not self._api_key:
+            raise RuntimeError("OPENROUTER_API_KEY is required for the hosted scientist")
+        started = time.monotonic()
+        with httpx.Client(
+            timeout=self.timeout_seconds,
+            transport=self._transport,
+        ) as client:
+            response = client.post(
+                self.endpoint,
+                headers={"Authorization": f"Bearer {self._api_key}"},
+                json={
+                    "model": self._model,
+                    "messages": list(messages),
+                    "temperature": self.temperature,
+                    "stream": False,
+                    "response_format": {"type": "json_object"},
+                },
+            )
+        response.raise_for_status()
+        payload = response.json()
+        choices = payload.get("choices") or []
+        raw = choices[0].get("message", {}).get("content") if choices else None
+        if not isinstance(raw, str):
+            raise RuntimeError("OpenRouter returned no text response")
+        usage = payload.get("usage") or {}
+        resolved_model = str(payload.get("model") or self._model)
+        return ModelResponse(
+            raw_response=raw,
+            model_identity=resolved_model,
+            checkpoint_digest=None,
+            elapsed_seconds=time.monotonic() - started,
+            input_tokens=usage.get("prompt_tokens"),
+            output_tokens=usage.get("completion_tokens"),
+            metadata={
+                "runtime": "openrouter",
+                "transport_version": "openrouter-chat-v1",
+                "model_requested": self._model,
+                "model_resolved": resolved_model,
+                "response_id": payload.get("id"),
+                "response_schema": response_schema,
+                "zero_cost_only": True,
             },
         )

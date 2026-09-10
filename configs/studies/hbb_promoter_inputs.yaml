@@ -1,0 +1,50 @@
+schema_version: 1
+cohort_id: clinvar-hbb-promoter-pilot-v1
+status: FROZEN
+frozen_at: "2026-09-10"
+assembly: GRCh38
+coordinate_convention: zero_based_half_open
+window_size: 8192
+selection_policy:
+  - "Pilot includes ClinVar single-nucleotide HBB promoter variants with precise GRCh38 coordinates."
+  - "At least one cited submission must describe functional expression evidence."
+  - "Selection was frozen before any Evo2 output was obtained or inspected."
+exclusions:
+  - "Imprecise coordinates, non-SNV alleles, reference mismatches, and variants outside the HBB promoter pilot scope."
+  - "No candidate may be added or removed based on Evo2 scores or attribution appearance."
+data_use_terms:
+  - "ClinVar public data; attribute ClinVar and original submitters. Not for direct diagnostic use."
+  - "Ensembl REST GRCh38 sequence retrieval; sequence identity is fixed by SHA-256."
+variants:
+  - schema_version: 1
+    source_id: VCV000015471.124
+    source_url: https://www.ncbi.nlm.nih.gov/clinvar/variation/15471/
+    transcript_hgvs: NM_000518.5(HBB):c.-78A>G
+    assembly: GRCh38
+    chromosome: "11"
+    genomic_position_one_based: 5227099
+    zero_based_position: 5227098
+    reference: T
+    alternate: C
+    window_start: 5223002
+    window_end: 5231194
+    variant_offset: 4096
+    sequence_sha256: 073522100ed6c5062b9e6df551c16424874c797ca96819493c6d61d32261dd0f
+    sequence_source_url: https://rest.ensembl.org/sequence/region/human/11:5223003-5231194:1?coord_system_version=GRCh38
+    reference_validated: true
+  - schema_version: 1
+    source_id: VCV000015464.124
+    source_url: https://www.ncbi.nlm.nih.gov/clinvar/variation/15464/
+    transcript_hgvs: NM_000518.5(HBB):c.-137C>G
+    assembly: GRCh38
+    chromosome: "11"
+    genomic_position_one_based: 5227158
+    zero_based_position: 5227157
+    reference: G
+    alternate: C
+    window_start: 5223061
+    window_end: 5231253
+    variant_offset: 4096
+    sequence_sha256: 36ef75caf587cd61f5f370f342a41a115bc37873c404f5a5e39f93e7e3856725
+    sequence_source_url: https://rest.ensembl.org/sequence/region/human/11:5223062-5231253:1?coord_system_version=GRCh38
+    reference_validated: true

@@ -23,10 +23,10 @@ The [official inference repository](https://github.com/arcinstitute/evo2#require
 
 ## Beyond Phase 10
 
-1. Complete an experimentally grounded regulatory-variant study with audited licensing, immutable real scores, independent annotations, and a frozen protocol.
-2. Integrate the qualified Qwen scientist into each process-isolated colony member and replace simulated colony fitness observations with measured execution records.
-3. Add Evo 2 SAE feature inspection as a separate interpretation target with layer and SAE-checkpoint provenance.
-4. Compare compatible sequence-to-function models only after documenting target equivalence and training-data dependence.
+1. Complete the frozen HBB promoter pilot with immutable real scores and independent annotation artifacts; expand beyond two variants only under a newly frozen protocol.
+2. Extend the measured Qwen colony from one software generation to repeated real-evidence generations after scientific inputs exist.
+3. Execute Evo 2 SAE feature inspection under the implemented layer and SAE-checkpoint provenance contract.
+4. Select a compatible sequence-to-function comparator only after freezing the implemented target-equivalence and training-independence contract.
 5. Add collaboration, authenticated private projects, and scalable graph projections only after local performance measurements justify them.
 
 Each extension needs an acceptance test, a resource budget, and an explicit scientific validity gate. No additional paid infrastructure is assumed.
@@ -36,3 +36,9 @@ Each extension needs an acceptance test, a resource budget, and an explicit scie
 `StudyProtocol` now records the dataset license, inclusion/exclusion criteria, checkpoint, target, assembly, 8,192-base (or declared) window, coordinate convention, evidence families, hypothesis, and uncertainty method. `ProtocolGate` must freeze this record before any evidence is admitted and rejects fixture, synthetic, recorded-fixture, and ineligible outputs.
 
 `RealEvo2Scorer` is a strict adapter for an externally executed forward pass. It validates checkpoint identity, scoring target, input sequence hash, real execution mode, and scientific-use eligibility; it never falls back to the deterministic scorer. Actual checkpoint execution remains hardware- and dataset-dependent.
+
+`NvidiaHostedEvo2Runner` targets the trial-hosted `arc/evo2-7b-forward` endpoint. It persists the request before execution, stores the returned NPZ bytes by SHA-256, validates `output_layer` shape and finiteness, and computes `mean_next_base_log_likelihood` using the documented nucleotide-token indices. It requires `NVIDIA_API_KEY`; no credential is stored. No call has been made in this repository state, so there is still no real Evo2 result.
+
+The frozen pilot uses ClinVar accessions `VCV000015471.124` and `VCV000015464.124`. Their GRCh38 reference alleles were checked against separately retrieved 8,192-base Ensembl windows before freeze. A released K562 DNase-seq narrowPeak file (`ENCFF185XRG`, experiment `ENCSR000EOT`) was checksum-validated and contains two intervals in the union of those windows; neither interval overlaps the variant base itself. This negative overlap is preserved. Its relationship to attribution is not assessed until real Evo2 output exists. ClinVar assertions and ENCODE annotations remain contextual evidence requiring exact provenance; neither is accepted as causal proof.
+
+Typed post-Phase-10 contracts now reject fixture-backed SAE features and require exact Evo2 layer, SAE checkpoint, sequence digest, activation threshold, and positions. Cross-model evidence must predeclare distinct checkpoints, target equivalence, and training independence, and its recorded effect must exactly equal alternate minus reference. No real SAE or comparator output has been collected.

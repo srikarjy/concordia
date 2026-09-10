@@ -75,8 +75,11 @@ class MemberExecutionOutput(BaseModel):
     tool_trace: tuple[str, ...]
     observation: FitnessObservation
     scientific_use_allowed: Literal[False] = False
-    execution_mode: Literal["deterministic_colony_fixture"] = (
+    execution_mode: Literal["deterministic_colony_fixture", "local_scientist"] = (
         "deterministic_colony_fixture"
+    )
+    scientist_execution_artifact_digest: str | None = Field(
+        default=None, pattern=SHA256_PATTERN
     )
 
 
@@ -139,4 +142,3 @@ class ColonyState(BaseModel):
     selections: tuple[GenerationSelection, ...]
     event_count: int = Field(ge=1)
     terminal_reason: str | None = None
-

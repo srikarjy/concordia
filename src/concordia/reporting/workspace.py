@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from concordia.colonies.scheduler import ColonyScheduler
 from concordia.colonies.schema import ColonySpec
@@ -34,7 +34,11 @@ def build_workspace(root: str | Path) -> dict[str, Any]:
         objects[digest] = value
         return digest
 
-    def envelope(kind: str, payload: Any, parents: tuple[str, ...] = ()) -> str:
+    def envelope(
+        kind: Literal["sequence", "model", "annotation", "literature", "evidence", "claim"],
+        payload: Any,
+        parents: tuple[str, ...] = (),
+    ) -> str:
         return save(
             ProvenanceArtifact(
                 kind=kind,

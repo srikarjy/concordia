@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import hashlib
-from typing import Protocol
+from typing import Any, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -19,6 +19,13 @@ class SequenceScore(BaseModel):
     score: float = Field(allow_inf_nan=False)
     target: str
     scientific_use_allowed: bool
+    input_artifact_digest: str | None = Field(
+        default=None, pattern=r"^[0-9a-f]{64}$"
+    )
+    output_artifact_digest: str | None = Field(
+        default=None, pattern=r"^[0-9a-f]{64}$"
+    )
+    runtime_metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class SequenceScorer(Protocol):

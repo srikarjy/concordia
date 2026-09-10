@@ -88,6 +88,15 @@ def build_parser() -> argparse.ArgumentParser:
     colony_demo.add_argument(
         "--state-root", type=Path, default=Path(".concordia/colony-demo")
     )
+    qwen_colony = subparsers.add_parser(
+        "qwen-colony-demo",
+        help="run a measured local-model colony on the software evidence fixture",
+    )
+    qwen_colony.add_argument(
+        "--state-root", type=Path, default=Path(".concordia/qwen-colony-demo")
+    )
+    qwen_colony.add_argument("--model", default="qwen3:1.7b")
+    qwen_colony.add_argument("--seed", type=int, default=1729)
     return parser
 
 
@@ -207,17 +216,30 @@ def main() -> None:
     elif args.command == "qualify-scientist":
         from concordia.scientist.local_qualification import run_local_qualification
 
-        result = run_local_qualification(
+        qualification_result = run_local_qualification(
             args.state_root,
             tuple(args.model),
             repetitions=args.repetitions,
             seed=args.seed,
         )
-        print(json.dumps(result, indent=2))
+        print(json.dumps(qualification_result, indent=2))
     elif args.command == "colony-demo":
         from concordia.colonies.demo import run_colony_fixture_demo
 
         print(json.dumps(run_colony_fixture_demo(args.state_root), indent=2))
+    elif args.command == "qwen-colony-demo":
+        from concordia.colonies.qwen_demo import run_qwen_colony_demo
+
+        print(
+            json.dumps(
+                run_qwen_colony_demo(
+                    args.state_root,
+                    model=args.model,
+                    seed=args.seed,
+                ),
+                indent=2,
+            )
+        )
 
 
 if __name__ == "__main__":

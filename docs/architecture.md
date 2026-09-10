@@ -36,7 +36,7 @@ The local model adapter validates loopback endpoints and records checkpoint iden
 
 The colony scheduler stores its history in a separate append-only SQLite/WAL ledger and reconstructs genomes, mutations, members, generation selections, extinction, and terminal state from events. Every genome, mutation, frozen task, and member output is also content-addressed. A generation cannot reproduce until all scheduled members have reached a terminal execution state and selection has been recorded.
 
-Member execution is an explicit isolation boundary: the request contains one immutable genome, one task-artifact digest, one unique isolation identity, and no peer results. Executors are created per member. Local concurrency is bounded to four and defaults to one. The current deterministic fixture executor validates scheduler behavior only; it is not the qualified Qwen runtime and its outputs are always ineligible for scientific use. Selection uses saved measurements and deterministic code, never a language model. Details are in [`docs/colonies.md`](colonies.md).
+Member execution is an explicit isolation boundary: the request contains one immutable genome, one task-artifact digest, one unique isolation identity, and no peer results. Executors are created per member. Local concurrency is bounded to four and defaults to one. The deterministic fixture executor validates scheduler behavior. The optional local-scientist executor runs a fresh pinned Ollama session per member and records only mechanically measured fitness components. Both remain ineligible for scientific use on fixture tasks. Selection uses saved measurements and deterministic code, never a language model. Details are in [`docs/colonies.md`](colonies.md).
 
 ### Project ingestion
 

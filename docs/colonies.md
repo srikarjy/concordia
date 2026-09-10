@@ -23,3 +23,17 @@ Run:
 ```
 
 The command creates a three-member colony, runs two generations, and reports selections and event counts. The executor is `deterministic_colony_fixture`; all outputs set `scientific_use_allowed=false`. This proves orchestration, isolation, ancestry, replay, and deterministic selection only. It does not run Qwen or Evo2 and cannot establish a genomic finding.
+
+## Measured local-scientist execution
+
+Run the qualified checkpoint through three isolated member sessions:
+
+```bash
+OLLAMA_NO_CLOUD=1 .venv/bin/concordia qwen-colony-demo \
+  --model qwen3:1.7b --seed 1729 \
+  --state-root .concordia/qwen-colony-demo
+```
+
+Each member receives only the common frozen task plus its own genome. The genome controls the allowlisted workflow, tool policy, resource ceiling, and uncertainty version. Each member gets a fresh Ollama conversation and a separate sandbox directory. The executor persists the scientist execution record, then measures schema validity, evidence-reference coverage, tool success, runtime, tokens, and artifact integrity. It does not ask the model to score truth.
+
+The recorded 10 September 2026 acceptance run completed three members. All three produced valid final schemas and references after successful graph tool calls. The selected member had weighted score `0.51505821`; the other scores were `0.51496075` and `0.51351356`. Scientific-quality components requiring real evidence and repeated-run stability remained zero, and every output was marked ineligible for scientific use. The exact software summary is in `reports/qwen-colony-software-validation.json`; raw responses remain in ignored local content-addressed storage.

@@ -12,6 +12,7 @@ license = { file = "LICENSE" }
 authors = [{ name = "srikar jy" }]
 dependencies = [
   "fastapi>=0.116,<1",
+  "httpx>=0.28,<1",
   "joblib>=1.4,<2",
   "numpy>=2.0,<3",
   "pandas>=2.2,<4",
@@ -26,7 +27,6 @@ dependencies = [
 xai = ["shap>=0.48,<1"]
 scientist = ["ollama>=0.4,<1"]
 dev = [
-  "httpx>=0.28,<1",
   "mypy>=1.18,<2",
   "pytest>=8.4,<10",
   "ruff>=0.12,<1",
@@ -49,3 +49,6 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+ignore_missing_imports = true

@@ -1,0 +1,22 @@
+schema_version: 1
+protocol_id: hbb-promoter-evo2-pilot-v1
+dataset_id: clinvar-hbb-promoter-pilot-v1
+dataset_license: "ClinVar public data with requested source attribution; ENCODE released data are unrestricted with citation requested."
+inclusion_criteria:
+  - "Frozen variants in hbb_promoter_inputs.yaml only."
+  - "Reference allele must match the SHA-256-pinned GRCh38 sequence window."
+exclusion_criteria:
+  - "Any fixture, synthetic, failed-integrity, or post-outcome-selected record."
+  - "Any variant or annotation outside the frozen assembly and window."
+model_checkpoint: arc/evo2-7b-forward
+scoring_target: mean_next_base_log_likelihood
+assembly: GRCh38
+window_size: 8192
+coordinate_convention: zero_based_half_open
+evidence_families:
+  - counterfactual
+  - biological_annotation
+  - literature
+hypothesis: "Within the frozen HBB promoter pilot, Evo2 likelihood perturbations may identify regions that overlap independently sourced regulatory evidence; agreement is not causal proof."
+uncertainty_method: "Report both variants, all failed calls, per-window perturbations, missing annotations, contradictions, and deterministic reruns without outcome-based replacement."
+status: FROZEN
