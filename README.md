@@ -4,7 +4,7 @@ Concordia Colony is a provenance-first scientific platform for testing, tracing,
 
 One seed scientist creates a bounded colony of isolated workflow variants. Each descendant inherits a versioned digital genome, uses approved computational biology tools inside a sandbox, and produces structured claims. Deterministic infrastructure verifies evidence paths, calculates fitness, selects surviving workflows, and records the complete lineage.
 
-> **Current status:** the repository contains a working molecular evidence baseline, the first zero-cost genomic evidence vertical slice, the durable local backend foundation, and provenance-aware project ingestion. Colony evolution, CellForge integration, real Evo2 execution, cross-method validation, and the interactive frontend are planned. No genomic or scientist-model research result is claimed.
+> **Current status:** the repository contains a working molecular evidence baseline, the first zero-cost genomic evidence vertical slice, the durable local backend foundation, provenance-aware project ingestion, and a local CellForge-compatible tool-execution boundary. An external CellForge runtime is not required or currently integrated. Colony evolution, real Evo2 execution, cross-method validation, and the interactive frontend are planned. No genomic or scientist-model research result is claimed.
 
 ## Problem
 
@@ -32,7 +32,7 @@ flowchart LR
     I[DNA, variants, papers, project files] --> G[Evidence graph]
     G --> S[Seed scientist]
     S --> C[Bounded colony]
-    C --> F[CellForge sandboxes]
+    C --> F[Local CellForge-compatible executor]
     F --> T[Evo2 and verification tools]
     T --> G
     G --> V[Deterministic backtracking and fitness]
@@ -40,7 +40,7 @@ flowchart LR
     V --> R[Interactive report]
 ```
 
-CellForge owns isolated tool execution. Concordia owns run orchestration, digital genomes, evidence lineage, structured claims, deterministic verification, colony selection, and reporting.
+The implemented local adapter owns process-isolated execution of trusted, registered tools. Its contracts are designed so an external CellForge runtime can replace it later. Concordia owns run orchestration, digital genomes, evidence lineage, structured claims, deterministic verification, colony selection, and reporting.
 
 ## Digital Evolution
 
@@ -107,7 +107,7 @@ The target is a modular monolith with isolated workers:
 - DuckDB and Parquet evidence-graph projections;
 - SHA-256 content-addressed artifact storage;
 - versioned tool registry and policy engine;
-- CellForge execution adapter;
+- local CellForge-compatible execution adapter;
 - Server-Sent Events for live progress;
 - deterministic fitness, lineage, and replay services;
 - structured logs and local resource accounting.
@@ -128,6 +128,12 @@ create run → persist genomic input → schedule durable job → claim worker l
 ```
 
 The fixture scorer remains software-only, and every artifact produced by this path has `scientific_use_allowed=false`. Only explicitly classified infrastructure failures are retried; validation, artifact, model, policy, and scientific-tool failures are preserved without automatic reruns.
+
+### Implemented scientific tool boundary
+
+Concordia includes immutable execution contracts, a versioned registry, deny-by-default policies, per-tool resource budgets, and a local child-process adapter. The initial registered tools are `sequence.validate`, `variant.normalize`, `artifact.verify`, `graph.query`, `lineage.backtrack`, `evidence.verify`, and `xai.mutational_scan`. Requests cannot name arbitrary shell commands or Python code. Network access is denied, repository paths are allowlisted and checked against traversal and symlink escape, timeouts terminate child processes, and bounded partial logs survive failures.
+
+Every integrated tool call records its exact request and result in the event ledger, stores its result in content-addressed storage, and emits a small provenance graph joining the tool run to the artifact. This local boundary executes trusted in-process handlers in a separate process; it is not a hardened container or a substitute for an external CellForge deployment when hostile code must run. All current genomic tool outputs are fixture-backed or deterministic software checks and remain ineligible for scientific conclusions. See [the execution-boundary documentation](docs/cellforge.md).
 
 ## Interactive Workspace
 
@@ -183,6 +189,7 @@ uv sync --extra dev --extra xai --extra scientist
 .venv/bin/ruff check src tests
 .venv/bin/concordia genomic-demo
 .venv/bin/concordia ingest-project
+.venv/bin/concordia list-tools
 ```
 
 Start the local control plane on the loopback interface:

@@ -64,6 +64,9 @@ def build_parser() -> argparse.ArgumentParser:
     ingest.add_argument(
         "--state-root", type=Path, default=Path(".concordia/ingestion")
     )
+    subparsers.add_parser(
+        "list-tools", help="list the declared local scientific tool contracts"
+    )
     return parser
 
 
@@ -162,6 +165,14 @@ def main() -> None:
                 indent=2,
             )
         )
+    elif args.command == "list-tools":
+        from concordia.cellforge.registry import build_default_registry
+
+        manifests = [
+            definition.manifest()
+            for definition in build_default_registry().definitions()
+        ]
+        print(json.dumps({"schema_version": 1, "tools": manifests}, indent=2))
 
 
 if __name__ == "__main__":

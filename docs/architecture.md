@@ -7,7 +7,8 @@ flowchart LR
     A[FastAPI control plane] --> S[Run service]
     S --> L[Append-only SQLite ledger]
     S --> C[Content-addressed store]
-    S --> G[Genomic fixture tools]
+    S --> X[Local execution adapter]
+    X --> G[Registered genomic tools]
     G --> E[Evidence graph]
     E --> V[Deterministic backtracking]
     L --> P[State reconstruction and replay]
@@ -15,7 +16,15 @@ flowchart LR
 
 The HTTP control plane persists inputs and schedules work without executing the scientific stage in the request process. SQLite events, rather than a mutable run row, are authoritative. The operational jobs table tracks queue state, bounded attempts, cancellation, and expiring leases; it does not replace the event history. A separate local worker claims jobs, heartbeats its lease, resumes stale executions from recorded events, and retries only failures explicitly classified as infrastructure failures.
 
-Each state change is checked before append; event sequence numbers provide optimistic concurrency; and artifact references identify their producing event and tool. Server-Sent Events use sequence numbers as event IDs, accept `Last-Event-ID`, bound each database read, emit idle heartbeats, and close after terminal delivery. The server binds to `127.0.0.1` by default. CellForge execution remains planned.
+Each state change is checked before append; event sequence numbers provide optimistic concurrency; and artifact references identify their producing event and tool. Server-Sent Events use sequence numbers as event IDs, accept `Last-Event-ID`, bound each database read, emit idle heartbeats, and close after terminal delivery. The server binds to `127.0.0.1` by default.
+
+### Tool-execution boundary
+
+The external CellForge runtime is unavailable, so Concordia implements the full local side of that boundary behind typed `ExecutionRequest`, `ExecutionResult`, `SandboxPolicy`, `ResourceBudget`, and tool-registry contracts. The local adapter accepts only trusted handlers registered by exact name and version, validates their Pydantic input and output schemas, checks capabilities and resource ceilings, and runs them in spawned child processes. Tool requests and immutable results are connected to both the run event ledger and a provenance graph.
+
+The policy is fail-closed: the local adapter supports deny-only networking, no arbitrary commands or source code, and no filesystem access unless a tool explicitly declares read-only access and the request provides repository-relative allowlisted roots. Parent traversal, absolute paths, and symlink escapes are rejected before execution. Timeouts terminate the child, output and logs are bounded, and partial logs are retained. OS resource limits are applied where supported.
+
+This is a useful isolation boundary for Concordia's own trusted tools, not a hardened hostile-code sandbox. The handler code and Python runtime remain part of the trusted computing base; filesystem enforcement is pre-execution policy validation rather than a kernel jail. A future CellForge adapter can implement the same contracts without changing domain logic or persisted records. Details and limitations are in [`docs/cellforge.md`](cellforge.md).
 
 ### Ingestion boundary
 
