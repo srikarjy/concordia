@@ -11,6 +11,7 @@ ENV PYTHONPATH=/app/src PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 COPY requirements-space.txt ./
 RUN pip install --no-cache-dir -r requirements-space.txt
 COPY src ./src
+RUN python -c "from concordia.api.workspace import create_workspace_app; create_workspace_app('/tmp/concordia-space-smoke')"
 COPY --from=frontend-build /build/frontend/dist ./frontend/dist
 EXPOSE 7860
 CMD ["uvicorn", "concordia.api.workspace:create_workspace_app", "--factory", "--host", "0.0.0.0", "--port", "7860"]
