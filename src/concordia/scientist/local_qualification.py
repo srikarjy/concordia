@@ -27,6 +27,7 @@ from concordia.scientist.contracts import (
     ScientistExecutionRecord,
     ScientistExecutionStatus,
 )
+from concordia.scientist.genomic_prompt import GENOMIC_PROMPT_VERSION
 from concordia.scientist.qualification import (
     QualificationCriteria,
     qualify_records,
@@ -54,6 +55,7 @@ def run_local_qualification(
         "criteria": criteria.model_dump(mode="json"),
         "models": models, "repetitions": repetitions, "seed": seed,
         "transport_version": "ollama-json-v1",
+        "prompt_version": GENOMIC_PROMPT_VERSION,
         "task": task.model_dump(mode="json"),
     })
     qualifications = []

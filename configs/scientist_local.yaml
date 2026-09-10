@@ -2,13 +2,17 @@ schema_version: 1
 runtime: ollama
 host: http://127.0.0.1:11434
 cloud_allowed: false
-model: qwen3:4b
+model: qwen3:1.7b
+checkpoint_sha256: 3d0b790534fe4b79525fc3692950408dca41171676ed7e21db57af5c65ef6ab6
 temperature: 0.0
 seed: 1729
 repetitions: 3
-prompt_version: scientist-v1
+prompt_version: genomic-scientist-v3
 claim_schema_version: 1
+qualification_protocol: local-genomic-qualification-v1
+qualification_report_sha256: c681b6a4e70146feee373179ff78e7bf86a99e3d5c112087da80fb855bcea33c
 notes:
   - "Model weights are downloaded separately and must be recorded by digest."
   - "Each condition is an independent call with no shared conversation history."
-  - "This configuration is a candidate until model qualification is complete."
+  - "Selected from the installed candidates using the frozen software qualification task."
+  - "Qualification establishes protocol compatibility, not biological judgment."

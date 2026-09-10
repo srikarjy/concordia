@@ -141,7 +141,7 @@ The genomic seed runtime now accepts four typed turns, preserves prompts and raw
 
 `concordia qualify-scientist --model MODEL --repetitions 2` runs installed Ollama candidates against a frozen software fixture and stores separate validity, tool-use, reference, stability, latency, token, and memory measurements. Set `OLLAMA_NO_CLOUD=1`. Completed executions can be replayed without inference. See [the runtime and qualification guide](docs/seed-scientist.md).
 
-Phase 5 remains open: neither installed candidate passed the first JSON-mode qualification. Both `phi3:latest` repetitions timed out, and both `gemma3:270m` repetitions produced truncated JSON. No seed model has been selected, and these software qualification outcomes are not genomic findings.
+Phase 5 is complete for the local software fixture. After preserving failed `phi3:latest` and `gemma3:270m` attempts, `qwen3:1.7b` passed the versioned two-repetition protocol and is pinned by checkpoint digest. Both accepted repetitions produced valid JSON, successful graph requests, schema-valid scoped claims, correct evidence references, and identical final responses. These qualification measurements establish protocol compatibility only; they are not genomic findings or evidence of biological judgment.
 
 ## Interactive Workspace
 

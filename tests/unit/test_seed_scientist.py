@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 from pathlib import Path
+from subprocess import CompletedProcess
 from typing import Any
 
 import pytest
@@ -26,6 +27,7 @@ from concordia.scientist.contracts import (
     ModelResponse,
     ScientistExecutionStatus,
 )
+from concordia.scientist.doctor import check_local_runtime
 from concordia.scientist.qualification import qualify_records, select_model
 from concordia.scientist.runtime import SeedScientistRuntime
 
@@ -363,3 +365,24 @@ def test_qualification_command_reuses_saved_executions(tmp_path, monkeypatch) ->
     replayed = local_qualification.run_local_qualification(root, ("fixture",), repetitions=1)
     assert first == replayed
     assert first["report"]["selected_model"] is None
+
+
+def test_doctor_verifies_pinned_local_checkpoint(tmp_path, monkeypatch) -> None:
+    config = tmp_path / "scientist.yaml"
+    config.write_text(
+        "runtime: ollama\nhost: http://127.0.0.1:11434\nmodel: qwen3:1.7b\n"
+        f"checkpoint_sha256: {'a' * 64}\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("OLLAMA_NO_CLOUD", "1")
+    monkeypatch.setattr("shutil.which", lambda _: "/usr/local/bin/ollama")
+
+    def completed(command, **kwargs):
+        if command[1] == "list":
+            return CompletedProcess(command, 0, "NAME ID SIZE\nqwen3:1.7b id 1GB\n", "")
+        return CompletedProcess(command, 0, f"FROM /models/sha256-{'a' * 64}\n", "")
+
+    monkeypatch.setattr("subprocess.run", completed)
+    result = check_local_runtime(config)
+    assert result["checkpoint_matches"] is True
+    assert result["message"] == "Qualified local model and pinned checkpoint are ready."

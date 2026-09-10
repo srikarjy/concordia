@@ -30,7 +30,7 @@ This is a useful isolation boundary for Concordia's own trusted tools, not a har
 
 The genomic scientist uses a provider-neutral model protocol and a separate tool-executor protocol. Its four turn variants distinguish general tool calls, graph requests, verification requests, and final proposed claims. Prompts, exact model inputs, raw outputs, policy, budgets, validation errors, and result references are stored in content-addressed artifacts. The qualification command connects final execution records to the durable ledger. It uses a dedicated local state directory; it is not yet a scheduled scientist job in the general genomic worker.
 
-The local model adapter validates loopback endpoints and records checkpoint identity. The runtime rejects undeclared claim references and self-assigned verification fields, but does not infer scientific truth from response text. Qualification uses deterministic metrics on a frozen fixture task. A qualified model is still required before the colony phase.
+The local model adapter validates loopback endpoints and records checkpoint identity. The runtime rejects undeclared claim references and self-assigned verification fields, but does not infer scientific truth from response text. Qualification uses deterministic metrics on a frozen fixture task. `qwen3:1.7b` is the selected local seed for the software protocol and is pinned by checkpoint digest; this does not qualify its biological judgment.
 
 ### Project ingestion
 

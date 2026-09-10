@@ -68,7 +68,12 @@ class OllamaScientistAdapter:
         if self.seed is not None:
             options["seed"] = self.seed
         return {
-            "host": self.host, "model": self._model, "format": "json", "stream": False,
+            "host": self.host,
+            "model": self._model,
+            "format": "json",
+            "stream": False,
+            "think": False,
+            "keep_alive": "1s",
             "timeout_seconds": self.timeout_seconds,
             "options": options,
             "transport_version": "ollama-json-v1",
@@ -124,6 +129,8 @@ class OllamaScientistAdapter:
             format="json",
             options=options,
             stream=False,
+            think=False,
+            keep_alive="1s",
         )
         elapsed = time.monotonic() - started
         payload = response.model_dump(mode="json")

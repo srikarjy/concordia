@@ -159,7 +159,7 @@ def qualify_records(
         mean_input_tokens=mean(input_tokens) if input_tokens else None,
         mean_output_tokens=mean(output_tokens) if output_tokens else None,
         qualified=qualified,
-        selection_score=score,
+        selection_score=round(score, 10),
         execution_artifact_digests=tuple(
             record.artifact_digest
             for record in records
