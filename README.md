@@ -34,6 +34,8 @@ A researcher supplies a genomic region, variant, declared task, model configurat
 
 The output is a testable, evidence-traceable hypothesis or audit result—not a declaration of biological truth.
 
+Real-study admission is gated by a frozen `StudyProtocol`. The protocol records licensing, cohort criteria, model target, genomic coordinates, evidence families, hypotheses, and uncertainty analysis before outcomes are imported. Fixture, synthetic, and ineligible model outputs are rejected by the gate.
+
 ## System Overview
 
 ```mermaid

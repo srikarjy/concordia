@@ -30,3 +30,9 @@ The [official inference repository](https://github.com/arcinstitute/evo2#require
 5. Add collaboration, authenticated private projects, and scalable graph projections only after local performance measurements justify them.
 
 Each extension needs an acceptance test, a resource budget, and an explicit scientific validity gate. No additional paid infrastructure is assumed.
+
+## Implemented post-Phase-10 gates
+
+`StudyProtocol` now records the dataset license, inclusion/exclusion criteria, checkpoint, target, assembly, 8,192-base (or declared) window, coordinate convention, evidence families, hypothesis, and uncertainty method. `ProtocolGate` must freeze this record before any evidence is admitted and rejects fixture, synthetic, recorded-fixture, and ineligible outputs.
+
+`RealEvo2Scorer` is a strict adapter for an externally executed forward pass. It validates checkpoint identity, scoring target, input sequence hash, real execution mode, and scientific-use eligibility; it never falls back to the deterministic scorer. Actual checkpoint execution remains hardware- and dataset-dependent.

@@ -163,7 +163,9 @@ class LocalExecutionAdapter:
             )
             process.start()
             send_connection.close()
-            startup_timeout = min(max(request.budget.timeout_seconds * 10, 1), 10)
+            # Process creation is outside the handler budget; allow slow CI hosts
+            # to initialize the child before applying the declared tool timeout.
+            startup_timeout = min(max(request.budget.timeout_seconds * 10, 5), 15)
             if not ready_event.wait(startup_timeout):
                 process.terminate()
                 process.join(2)
