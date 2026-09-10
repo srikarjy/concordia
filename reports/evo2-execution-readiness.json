@@ -16,7 +16,7 @@
     "filename": "evo2_7b.pt",
     "byte_size": 13766621200,
     "sha256": "c66645929dc1b9c631f5be656da8726f38946315dc9167000a615dd626fcecf4",
-    "bytes_staged_and_verified": false
+    "bytes_staged_and_verified": true
   },
   "scoring": {
     "target": "mean_next_base_log_likelihood",
@@ -29,17 +29,24 @@
   "frozen_input_windows_retrieved_and_verified": true,
   "zerogpu": {
     "candidate_hardware": true,
-    "measured_python_version": "3.10.13",
-    "official_python_requirement_met": false,
-    "evo2_installed": false,
+    "measured_python_version": "3.12.12",
+    "official_python_requirement_met": true,
+    "evo2_installed": true,
+    "evo2_version": "0.6.0",
+    "vtx_version": "1.1.0",
+    "flash_attention_version": "2.8.3",
+    "runtime_imports_verified": true,
+    "runtime_qualification_space_revision": "390013f35bef0874bbc9a24d49909d0ea14c6b18",
+    "checkpoint_deserialized": false,
+    "model_loaded": false,
     "numerical_compatibility_verified": false
   },
-  "readiness_status": "BLOCKED_BEFORE_EXECUTION",
+  "readiness_status": "READY_FOR_BOUNDED_MODEL_LOAD_QUALIFICATION",
   "execution_status": "NOT_RUN",
   "scientific_use_allowed": false,
   "blockers": [
-    "The pinned checkpoint bytes have not been staged and SHA-256 verified in the worker.",
-    "The measured worker used Python 3.10.13; pinned Evo2 0.6.0 requires Python 3.11 or 3.12.",
-    "Evo2 installation and numerical qualification have not run on the candidate GPU."
+    "The checkpoint has not been deserialized and the Evo2 model has not been loaded.",
+    "FlashAttention execution on the measured compute capability 12.0 GPU has not been qualified.",
+    "Numerical compatibility and frozen HBB forward scoring have not run."
   ]
 }

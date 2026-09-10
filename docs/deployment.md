@@ -6,9 +6,11 @@ The current public deployment is [srikarjy025/concordia-colony](https://srikarjy
 
 ## ZeroGPU qualification surface
 
-A separate public Gradio Space, [srikarjy025/concordia-evo2-forward](https://huggingface.co/spaces/srikarjy025/concordia-evo2-forward), contains a bounded GPU capability probe. It accepts no DNA and performs no model inference. The initial measured allocation was an NVIDIA RTX PRO 6000 Blackwell Server Edition MIG instance with 50,868,518,912 bytes of memory, CUDA 12.8, compute capability 12.0, and BF16 support. The immutable summary is recorded in `reports/evo2-zerogpu-hardware-probe.json`.
+A separate public Gradio Space, [srikarjy025/concordia-evo2-forward](https://huggingface.co/spaces/srikarjy025/concordia-evo2-forward), contains bounded hardware and runtime qualification endpoints. It accepts no DNA and performs no model inference. The initial measured allocation was an NVIDIA RTX PRO 6000 Blackwell Server Edition MIG instance with 50,868,518,912 bytes of memory, CUDA 12.8, compute capability 12.0, and BF16 support. The immutable summary is recorded in `reports/evo2-zerogpu-hardware-probe.json`.
 
-This measurement establishes candidate capacity only. Its Python 3.10.13 runtime is outside pinned Evo2 0.6.0's Python 3.11/3.12 requirement. Evo2 installation, checkpoint compatibility, causal token shifting, numerical correctness, and forward scoring are all still unverified. The Space must remain restricted to the frozen HBB inputs if a future execution boundary is added; it must never become an arbitrary-sequence public endpoint.
+Space revision `390013f35bef0874bbc9a24d49909d0ea14c6b18` passed the no-input runtime boundary with Python 3.12.12, PyTorch 2.8.0+cu128, Evo2 0.6.0 from the pinned source revision, Vortex 1.1.0, and a SHA-256-pinned FlashAttention 2.8.3 wheel. It also verified the 13,766,621,200-byte checkpoint and selected installed source files without deserializing model data. The preceding missing-FlashAttention import failure is retained in `reports/evo2-zerogpu-runtime-qualification.json`.
+
+This result establishes artifact and import compatibility only. Checkpoint deserialization, model loading, FlashAttention execution on compute capability 12.0, causal token shifting, numerical correctness, and forward scoring remain unverified. The Space must remain restricted to the frozen HBB inputs if an execution boundary is added; it must never become an arbitrary-sequence public endpoint.
 
 ## Build locally
 

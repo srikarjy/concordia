@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "observed_on": "2026-09-10",
+  "space_id": "srikarjy025/concordia-evo2-forward",
+  "space_url": "https://huggingface.co/spaces/srikarjy025/concordia-evo2-forward",
+  "protocol_id": "hbb-promoter-evo2-pilot-v2",
+  "attempts": [
+    {
+      "attempt_id": "python312-without-flash-attention",
+      "space_revision": "f8c0048c7a57763daaa0cc476c82252ee6503dc5",
+      "result": "FAILED_IMPORT",
+      "python_version": "3.12.12",
+      "torch_version": "2.8.0+cu128",
+      "torch_cxx11_abi": true,
+      "evo2_version": "0.6.0",
+      "vtx_version": "1.1.0",
+      "checkpoint_bytes_verified": true,
+      "failure": "ModuleNotFoundError: No module named 'flash_attn_2_cuda'",
+      "checkpoint_deserialized": false,
+      "model_loaded": false,
+      "forward_pass_executed": false,
+      "execution_status": "NOT_RUN",
+      "scientific_use_allowed": false
+    },
+    {
+      "attempt_id": "pinned-runtime-with-flash-attention",
+      "space_revision": "390013f35bef0874bbc9a24d49909d0ea14c6b18",
+      "result": "PASSED_RUNTIME_QUALIFICATION",
+      "python_version": "3.12.12",
+      "torch_version": "2.8.0+cu128",
+      "torch_cxx11_abi": true,
+      "cuda_runtime_version": "12.8",
+      "glibc_version": "2.41",
+      "evo2": {
+        "repository_url": "https://github.com/ArcInstitute/evo2.git",
+        "revision": "53f195997257c56c00e5ef8d33a54f5baad143a6",
+        "version": "0.6.0",
+        "selected_source_files_verified": true
+      },
+      "vtx_version": "1.1.0",
+      "flash_attention": {
+        "version": "2.8.3",
+        "wheel_platform": "cu12-torch2.8-cxx11abiTRUE-cp312-linux_x86_64",
+        "wheel_sha256": "f25da18657a87fc83dc1bfb8b7751b82246e9db355510226b674fd437c34b5fb"
+      },
+      "checkpoint": {
+        "repository_id": "arcinstitute/evo2_7b",
+        "revision": "bda0089f92582d5baabf0f22d9fc85f3588f6b58",
+        "filename": "evo2_7b.pt",
+        "byte_size": 13766621200,
+        "sha256": "c66645929dc1b9c631f5be656da8726f38946315dc9167000a615dd626fcecf4",
+        "bytes_verified": true
+      },
+      "checkpoint_config_verified": true,
+      "imports_succeeded": true,
+      "runtime_qualified": true,
+      "checkpoint_deserialized": false,
+      "model_loaded": false,
+      "forward_pass_executed": false,
+      "execution_status": "NOT_RUN",
+      "scientific_use_allowed": false
+    }
+  ],
+  "current_boundary": "READY_FOR_BOUNDED_MODEL_LOAD_QUALIFICATION",
+  "limitations": [
+    "Runtime qualification does not establish that FlashAttention kernels execute correctly on compute capability 12.0.",
+    "The checkpoint has not been deserialized and the Evo2 model has not been loaded.",
+    "No HBB sequence or other genomic input has been scored.",
+    "No scientific claim can be supported by this qualification record."
+  ]
+}

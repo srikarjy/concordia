@@ -1,3 +1,6 @@
 gradio==6.26.0
 spaces==0.51.3
 torch==2.8.0
+vtx==1.1.0
+flash-attn @ https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3%2Bcu12torch2.8cxx11abiTRUE-cp312-cp312-linux_x86_64.whl#sha256=f25da18657a87fc83dc1bfb8b7751b82246e9db355510226b674fd437c34b5fb
+evo2 @ git+https://github.com/ArcInstitute/evo2.git@53f195997257c56c00e5ef8d33a54f5baad143a6

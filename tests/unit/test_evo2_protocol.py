@@ -161,9 +161,30 @@ def test_evo2_readiness_record_preserves_pre_execution_blockers() -> None:
     )
 
     assert record["source"]["checkout_verified"]
-    assert not record["checkpoint"]["bytes_staged_and_verified"]
-    assert not record["zerogpu"]["official_python_requirement_met"]
-    assert not record["zerogpu"]["evo2_installed"]
-    assert record["readiness_status"] == "BLOCKED_BEFORE_EXECUTION"
+    assert record["checkpoint"]["bytes_staged_and_verified"]
+    assert record["zerogpu"]["official_python_requirement_met"]
+    assert record["zerogpu"]["evo2_installed"]
+    assert record["zerogpu"]["runtime_imports_verified"]
+    assert not record["zerogpu"]["checkpoint_deserialized"]
+    assert not record["zerogpu"]["model_loaded"]
+    assert record["readiness_status"] == "READY_FOR_BOUNDED_MODEL_LOAD_QUALIFICATION"
     assert record["execution_status"] == "NOT_RUN"
     assert not record["scientific_use_allowed"]
+
+
+def test_zerogpu_runtime_record_preserves_failure_and_no_execution() -> None:
+    record = json.loads(
+        (ROOT / "reports/evo2-zerogpu-runtime-qualification.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert record["attempts"][0]["result"] == "FAILED_IMPORT"
+    passed = record["attempts"][1]
+    assert passed["result"] == "PASSED_RUNTIME_QUALIFICATION"
+    assert passed["checkpoint"]["bytes_verified"]
+    assert not passed["checkpoint_deserialized"]
+    assert not passed["model_loaded"]
+    assert not passed["forward_pass_executed"]
+    assert passed["execution_status"] == "NOT_RUN"
+    assert not passed["scientific_use_allowed"]
