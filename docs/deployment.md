@@ -22,7 +22,7 @@ Create an empty Docker Space in your own Hugging Face namespace, set `HF_SPACE_I
 hf auth login
 hf upload "$HF_SPACE_ID" . \
   --type space \
-  --include Dockerfile README.md LICENSE pyproject.toml uv.lock src frontend \
+  --include Dockerfile README.md LICENSE pyproject.toml uv.lock src frontend configs docs reports \
   --exclude 'frontend/node_modules/**' --exclude 'frontend/dist/**' \
   --exclude '.concordia/**' --exclude 'data/raw/**' \
   --commit-message "Publish reproducible scientific workspace"
