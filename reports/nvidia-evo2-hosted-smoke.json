@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10",
+  "command": "concordia nvidia-evo2-smoke --state-root .concordia/nvidia-evo2-smoke-live-v1 --sequence ACGTACGT --num-tokens 8",
+  "model_id": "arc/evo2-40b-generate",
+  "endpoint": "https://health.api.nvidia.com/v1/biology/arc/evo2-40b/generate",
+  "execution_mode": "real_hosted_generation",
+  "scientific_use_allowed": false,
+  "input": {
+    "sequence_id": "synthetic:nvidia-evo2-smoke",
+    "assembly": "synthetic",
+    "region": "synthetic:0-8",
+    "strand": "+",
+    "sequence": "ACGTACGT"
+  },
+  "request_artifact_digest": "13c523ec2764a1f8c0df0dd677843e917cefc5577ed13609b6dadf809ca66279",
+  "response_artifact_digest": "2fb2b199b32d4aff7fca5321c52b8a6705732f4d4bcef93d735417671dd9bb7e",
+  "validation": {
+    "artifact_hashes_valid": true,
+    "generated_sequence": "GTGTGAAT",
+    "generated_length": 8,
+    "sampled_probability_count": 8,
+    "sampled_probabilities_bounded": true,
+    "elapsed_ms": 328
+  },
+  "limitations": [
+    "The input is a synthetic API smoke-test sequence.",
+    "Generated DNA is model output and does not establish biological function.",
+    "The hosted generation response does not supply the local forward tensors required by the frozen HBB study."
+  ]
+}

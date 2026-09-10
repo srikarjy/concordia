@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import httpx
 import pytest
@@ -11,6 +12,8 @@ from concordia.genomics.evo2_nvidia import (
 )
 from concordia.genomics.schema import GenomicSequence
 from concordia.storage.content import ContentAddressedStore
+
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def sequence() -> GenomicSequence:
@@ -81,3 +84,16 @@ def test_nvidia_hosted_forward_route_is_never_called(tmp_path) -> None:
             checkpoint="arc/evo2-7b-forward",
             target="mean_next_base_log_likelihood",
         )
+
+
+def test_committed_hosted_smoke_record_is_not_scientific_evidence() -> None:
+    report = json.loads(
+        (ROOT / "reports/nvidia-evo2-hosted-smoke.json").read_text(encoding="utf-8")
+    )
+
+    assert report["execution_mode"] == "real_hosted_generation"
+    assert report["scientific_use_allowed"] is False
+    assert report["input"]["assembly"] == "synthetic"
+    assert report["endpoint"].endswith("/generate")
+    assert len(report["request_artifact_digest"]) == 64
+    assert len(report["response_artifact_digest"]) == 64
