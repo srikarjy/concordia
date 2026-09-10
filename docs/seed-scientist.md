@@ -26,6 +26,15 @@ OLLAMA_NO_CLOUD=1 concordia qualify-scientist \
 
 The command freezes criteria and a software fixture task before inference, executes candidates sequentially, and writes an immutable report plus `qualification.json`, a replaceable convenience pointer. Raw artifacts and the event database remain in the selected directory. Do not run the general genomic worker against this dedicated qualification directory.
 
+The hosted fallback uses the same task, policy, artifact persistence, and deterministic scoring:
+
+```bash
+OPENROUTER_API_KEY=... .venv/bin/concordia qualify-openrouter \
+  --model openrouter/free --repetitions 1
+```
+
+The key is read only from the process environment. Because `openrouter/free` may resolve to different underlying models, the command permits only one repetition for that alias. Select one explicit `:free` model before measuring repeated-run stability. Hosted output remains software evidence and never verifies scientific truth.
+
 The declared acceptance thresholds are:
 
 | Component | Threshold and interpretation |

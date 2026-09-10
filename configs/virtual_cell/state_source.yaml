@@ -1,0 +1,11 @@
+schema_version: 1
+repository_url: https://github.com/ArcInstitute/state.git
+revision: 9bbfe78a434a55205e4de834e1ea99f85f7a3add
+package_name: arc-state
+package_version: 0.11.3
+python_constraint: ">=3.11,<3.13"
+source_license_digest: e66c269d4819aaab34b49ef5220c4ddab6756f21bb5180761a4eb8561f2b7bbd
+model_license_digest: 5f2422e25c47f3c0ffa1eb563ab8e3e708a357b5fe81594eef4ed3d298b21ca4
+acceptable_use_policy_digest: 9e4d733b1523d3fe415afaa0c7d6ebbfd01be9248b6a953aecf468def3dee7ab
+audited_at: "2026-09-10"
+model_terms_status: NOT_ACCEPTED

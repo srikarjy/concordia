@@ -212,12 +212,12 @@ The recorded fixture validates software behavior only. It is not an Evo2 result.
 
 The frozen HBB promoter pilot files under `configs/studies/` pin two ClinVar variants, exact GRCh38 coordinates, 8,192-base Ensembl window hashes, cohort rules, data-use terms, checkpoint, scoring target, evidence families, hypothesis, and uncertainty policy before any Evo2 outcome is inspected. The NVIDIA adapter persists the exact request and returned NPZ tensors, derives mean next-base log likelihood from `output_layer`, and has no fixture fallback. It requires a user-supplied `NVIDIA_API_KEY`; credentials are never stored.
 
-Arc State is a separate single-cell perturbation domain. Concordia now has a persist-first virtual-cell sandbox contract for AnnData identity, gene order, cell context, perturbation, checkpoint, resources, and prediction artifacts. Its runnable recorded fixture contains no cellular predictions and cannot support scientific use. Real State execution and evaluation require separately licensed weights, real held-out perturbation data, and compatible compute. See [the State boundary](docs/state-sandbox.md).
+Arc State is a separate single-cell perturbation domain. Concordia now has a persist-first virtual-cell sandbox contract plus bounded CELLxGENE ingestion. A frozen public 1,789-cell mouse thalamus H5AD supplies real `Control` and `SBE1/5` input provenance; the official State source is pinned and can be verified without execution. The recorded runner still contains no cellular predictions and cannot support scientific use. Real State execution requires separately accepted model terms, compatible weights and feature space, a held-out protocol, and suitable compute. See [the State boundary](docs/state-sandbox.md).
 
 ## Local Quickstart
 
 ```bash
-uv sync --extra dev --extra xai --extra scientist
+uv sync --extra dev --extra xai --extra scientist --extra virtual-cell
 .venv/bin/pytest
 .venv/bin/ruff check src tests
 .venv/bin/concordia genomic-demo
@@ -225,6 +225,7 @@ uv sync --extra dev --extra xai --extra scientist
 .venv/bin/concordia list-tools
 .venv/bin/concordia colony-demo
 .venv/bin/concordia qwen-colony-demo
+.venv/bin/concordia cellxgene-state-demo
 .venv/bin/concordia serve-workspace
 .venv/bin/mypy src/concordia
 (cd frontend && npm test)

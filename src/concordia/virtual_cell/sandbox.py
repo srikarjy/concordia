@@ -27,6 +27,7 @@ class StateSandbox:
 
     def execute(self, request: StatePredictionRequest) -> StatePredictionResult:
         self.artifacts.get_bytes(request.input.adata_digest)
+        self.artifacts.get_bytes(request.checkpoint_digest)
         request_digest = self.artifacts.put_json(request.model_dump(mode="json"))
         result = self.runner.predict(request, request_digest, self.artifacts)
         if result.request_id != request.request_id:

@@ -82,6 +82,16 @@ def build_parser() -> argparse.ArgumentParser:
     qualify.add_argument("--model", action="append", required=True)
     qualify.add_argument("--repetitions", type=int, default=2)
     qualify.add_argument("--seed", type=int, default=1729)
+    hosted_qualify = subparsers.add_parser(
+        "qualify-openrouter",
+        help="qualify a free OpenRouter scientist on the frozen software fixture",
+    )
+    hosted_qualify.add_argument(
+        "--state-root", type=Path, default=Path(".concordia/openrouter-qualification")
+    )
+    hosted_qualify.add_argument("--model", action="append")
+    hosted_qualify.add_argument("--repetitions", type=int, default=1)
+    hosted_qualify.add_argument("--seed", type=int, default=1729)
     colony_demo = subparsers.add_parser(
         "colony-demo", help="run the bounded two-generation software colony"
     )
@@ -97,6 +107,28 @@ def build_parser() -> argparse.ArgumentParser:
     )
     qwen_colony.add_argument("--model", default="qwen3:1.7b")
     qwen_colony.add_argument("--seed", type=int, default=1729)
+    state_demo = subparsers.add_parser(
+        "cellxgene-state-demo",
+        help="ingest the frozen real CELLxGENE input and run the State contract fixture",
+    )
+    state_demo.add_argument(
+        "--state-root", type=Path, default=Path(".concordia/cellxgene-state-demo")
+    )
+    state_demo.add_argument(
+        "--manifest",
+        type=Path,
+        default=Path("configs/virtual_cell/cellxgene_shh_e12_5.yaml"),
+    )
+    state_checkout = subparsers.add_parser(
+        "verify-state-checkout",
+        help="verify a pinned State source checkout without executing it",
+    )
+    state_checkout.add_argument("--checkout", type=Path, required=True)
+    state_checkout.add_argument(
+        "--pin",
+        type=Path,
+        default=Path("configs/virtual_cell/state_source.yaml"),
+    )
     return parser
 
 
@@ -223,6 +255,18 @@ def main() -> None:
             seed=args.seed,
         )
         print(json.dumps(qualification_result, indent=2))
+    elif args.command == "qualify-openrouter":
+        from concordia.scientist.local_qualification import (
+            run_openrouter_qualification,
+        )
+
+        qualification_result = run_openrouter_qualification(
+            args.state_root,
+            tuple(args.model or ("openrouter/free",)),
+            repetitions=args.repetitions,
+            seed=args.seed,
+        )
+        print(json.dumps(qualification_result, indent=2))
     elif args.command == "colony-demo":
         from concordia.colonies.demo import run_colony_fixture_demo
 
@@ -240,6 +284,25 @@ def main() -> None:
                 indent=2,
             )
         )
+    elif args.command == "cellxgene-state-demo":
+        from concordia.virtual_cell.demo import run_cellxgene_state_demo
+
+        print(
+            json.dumps(
+                run_cellxgene_state_demo(args.state_root, args.manifest),
+                indent=2,
+            )
+        )
+    elif args.command == "verify-state-checkout":
+        import yaml
+
+        from concordia.virtual_cell import StateCheckoutVerifier, StateSourcePin
+
+        pin = StateSourcePin.model_validate(
+            yaml.safe_load(args.pin.read_text(encoding="utf-8"))
+        )
+        checkout_verification = StateCheckoutVerifier().verify(args.checkout, pin)
+        print(json.dumps(checkout_verification.model_dump(mode="json"), indent=2))
 
 
 if __name__ == "__main__":

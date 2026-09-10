@@ -1,9 +1,10 @@
-"""Local infrastructure orchestration for genomic scientist qualification."""
+"""Artifact-preserving orchestration for scientist-model qualification."""
 
 from __future__ import annotations
 
 import json
 import uuid
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -21,7 +22,11 @@ from concordia.graph.schema import EvidenceGraph
 from concordia.runtime.contracts import ArtifactReference, RunStatus
 from concordia.runtime.service import CreateRunRequest, RunService
 from concordia.scheduling.jobs import JobState
-from concordia.scientist.adapters import OllamaScientistAdapter
+from concordia.scientist.adapters import (
+    OllamaScientistAdapter,
+    OpenRouterScientistAdapter,
+    ScientistModelAdapter,
+)
 from concordia.scientist.contracts import (
     GenomicScientistTask,
     ScientistExecutionRecord,
@@ -43,6 +48,54 @@ def run_local_qualification(
     repetitions: int = 2,
     seed: int = 1729,
 ) -> dict[str, Any]:
+    return _run_qualification(
+        state_root,
+        models,
+        repetitions=repetitions,
+        seed=seed,
+        backend="ollama",
+        transport_version="ollama-json-v1",
+        adapter_factory=lambda model, candidate_seed: OllamaScientistAdapter(
+            model, temperature=0, seed=candidate_seed
+        ),
+    )
+
+
+def run_openrouter_qualification(
+    state_root: str | Path,
+    models: tuple[str, ...] = ("openrouter/free",),
+    *,
+    repetitions: int = 1,
+    seed: int = 1729,
+) -> dict[str, Any]:
+    if "openrouter/free" in models and repetitions != 1:
+        raise ValueError(
+            "openrouter/free may resolve to different models; qualify it once or select "
+            "one explicit :free model"
+        )
+    return _run_qualification(
+        state_root,
+        models,
+        repetitions=repetitions,
+        seed=seed,
+        backend="openrouter",
+        transport_version="openrouter-chat-v1",
+        adapter_factory=lambda model, candidate_seed: OpenRouterScientistAdapter(
+            model, temperature=0
+        ),
+    )
+
+
+def _run_qualification(
+    state_root: str | Path,
+    models: tuple[str, ...],
+    *,
+    repetitions: int,
+    seed: int,
+    backend: str,
+    transport_version: str,
+    adapter_factory: Callable[[str, int], ScientistModelAdapter],
+) -> dict[str, Any]:
     if not models:
         raise ValueError("at least one candidate model is required")
     if repetitions < 1 or repetitions > 10:
@@ -54,14 +107,24 @@ def run_local_qualification(
     protocol_digest = runs.artifacts.put_json({
         "criteria": criteria.model_dump(mode="json"),
         "models": models, "repetitions": repetitions, "seed": seed,
-        "transport_version": "ollama-json-v1",
+        "backend": backend,
+        "transport_version": transport_version,
         "prompt_version": GENOMIC_PROMPT_VERSION,
         "task": task.model_dump(mode="json"),
     })
     qualifications = []
     for model in models:
         records = tuple(
-            _run_candidate(runs, root, task, model, repetition, seed)
+            _run_candidate(
+                runs,
+                root,
+                task,
+                model,
+                repetition,
+                seed,
+                backend,
+                adapter_factory,
+            )
             for repetition in range(repetitions)
         )
         qualifications.append(qualify_records(records, criteria))
@@ -131,11 +194,15 @@ def _run_candidate(
     model: str,
     repetition: int,
     seed: int,
+    backend: str,
+    adapter_factory: Callable[[str, int], ScientistModelAdapter],
 ) -> ScientistExecutionRecord:
-    safe_model = model.replace("/", "_")
+    safe_model = model.replace("/", "_").replace(":", "_")
     scheduled = runs.create_scheduled(
         CreateRunRequest(
-            idempotency_key=f"scientist-qualification:{safe_model}:{repetition}:{seed}",
+            idempotency_key=(
+                f"scientist-qualification:{backend}:{safe_model}:{repetition}:{seed}"
+            ),
             protocol_version="genomic-scientist-qualification-v1",
             policy_version="seed-scientist-tools-v1",
             sequence=GenomicSequence(
@@ -158,12 +225,14 @@ def _run_candidate(
                 return saved.model_copy(update={"artifact_digest": digest})
         raise ValueError("partial qualification requires inspection; inference is not retried")
     lease = runs.jobs.claim(
-        f"scientist-{safe_model}-{repetition}", run_id=scheduled.spec.run_id,
+        f"scientist-{backend}-{safe_model}-{repetition}",
+        run_id=scheduled.spec.run_id,
         lease_seconds=1800,
     )
     if lease is None:
         raise RuntimeError("qualification run could not claim its local lease")
     runs.transition(scheduled.spec.run_id, RunStatus.EXECUTING)
+    adapter = adapter_factory(model, seed)
     policy = SandboxPolicy(
         policy_version="seed-scientist-tools-v1",
         allowed_tools=frozenset({"graph.query", "evidence.verify"}),
@@ -179,7 +248,7 @@ def _run_candidate(
         temporary_root=root / "sandboxes",
     )
     runtime = SeedScientistRuntime(
-        OllamaScientistAdapter(model, temperature=0, seed=seed),
+        adapter,
         ToolExecutionService(runs, local_tools),
         runs.artifacts,
         policy,

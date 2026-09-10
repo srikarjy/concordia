@@ -20,6 +20,10 @@ class StateInputArtifact(BaseModel):
     preprocessing_version: str = Field(min_length=1)
     cell_context_key: str = Field(min_length=1)
     perturbation_key: str = Field(min_length=1)
+    gene_identifier_key: str = Field(default="var_names", min_length=1)
+    feature_matrix_key: str = Field(default="X", min_length=1)
+    source_dataset_id: str | None = None
+    source_dataset_version_id: str | None = None
 
 
 class StatePerturbation(BaseModel):

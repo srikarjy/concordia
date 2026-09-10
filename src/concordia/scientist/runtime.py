@@ -123,7 +123,7 @@ class SeedScientistRuntime:
                     )
                 )
                 status = ScientistExecutionStatus.FAILED_MODEL
-                terminal_reason = "local model call failed"
+                terminal_reason = "scientist model call failed"
                 break
             raw_digest = self.artifacts.put_bytes(
                 model_response.raw_response.encode("utf-8")

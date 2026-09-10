@@ -17,7 +17,7 @@ class QualificationCriteria(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     schema_version: Literal[1] = 1
-    criteria_version: str = "local-genomic-qualification-v1"
+    criteria_version: str = "genomic-scientist-qualification-v1"
     minimum_json_valid_rate: float = Field(default=1.0, ge=0, le=1)
     minimum_tool_request_valid_rate: float = Field(default=0.5, ge=0, le=1)
     minimum_claim_schema_valid_rate: float = Field(default=1.0, ge=0, le=1)

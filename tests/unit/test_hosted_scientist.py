@@ -6,6 +6,7 @@ import httpx
 import pytest
 
 from concordia.scientist.adapters import OpenRouterScientistAdapter
+from concordia.scientist.local_qualification import run_openrouter_qualification
 
 
 def test_openrouter_adapter_accepts_only_free_models_and_requires_key() -> None:
@@ -38,3 +39,8 @@ def test_openrouter_adapter_preserves_resolved_identity_without_secret() -> None
     assert result.model_identity == "qwen/qwen3-4b:free"
     assert result.input_tokens == 12
     assert "test-secret" not in json.dumps(result.model_dump(mode="json"))
+
+
+def test_free_router_cannot_be_treated_as_one_repeated_checkpoint(tmp_path) -> None:
+    with pytest.raises(ValueError, match="different models"):
+        run_openrouter_qualification(tmp_path, repetitions=2)

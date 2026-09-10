@@ -15,10 +15,13 @@ from concordia.virtual_cell import (
 
 def request(store: ContentAddressedStore) -> StatePredictionRequest:
     adata = store.put_bytes(b"recorded fixture, not an AnnData scientific input")
+    checkpoint = store.put_json(
+        {"kind": "fixture-checkpoint-marker", "contains_model_weights": False}
+    )
     return StatePredictionRequest(
         request_id="state-fixture-1",
         model_id="arc-state-contract-fixture",
-        checkpoint_digest="a" * 64,
+        checkpoint_digest=checkpoint,
         input=StateInputArtifact(
             adata_digest=adata,
             cell_count=8,
@@ -56,6 +59,17 @@ def test_state_sandbox_rejects_missing_input_artifact(tmp_path: Path) -> None:
     store = ContentAddressedStore(tmp_path / "artifacts")
     value = request(store).model_dump(mode="json")
     value["input"]["adata_digest"] = "f" * 64
+
+    with pytest.raises(FileNotFoundError):
+        StateSandbox(store, RecordedStateFixtureRunner()).execute(
+            StatePredictionRequest.model_validate(value)
+        )
+
+
+def test_state_sandbox_rejects_missing_checkpoint_artifact(tmp_path: Path) -> None:
+    store = ContentAddressedStore(tmp_path / "artifacts")
+    value = request(store).model_dump(mode="json")
+    value["checkpoint_digest"] = "f" * 64
 
     with pytest.raises(FileNotFoundError):
         StateSandbox(store, RecordedStateFixtureRunner()).execute(

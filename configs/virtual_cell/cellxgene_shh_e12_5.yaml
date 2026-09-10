@@ -1,0 +1,27 @@
+schema_version: 1
+collection_id: d5cad3f0-56b6-4fbe-8f2b-be92a8c7820f
+collection_version_id: 07a35908-e342-40d0-b03c-65d65ddc3c1a
+dataset_id: 6de332e1-465e-4243-9412-6fdc7497e99d
+dataset_version_id: d1acb78a-7d9e-4d4f-8ec3-0db5861aebea
+collection_url: https://cellxgene.cziscience.com/collections/d5cad3f0-56b6-4fbe-8f2b-be92a8c7820f
+asset_url: https://datasets.cellxgene.cziscience.com/d1acb78a-7d9e-4d4f-8ec3-0db5861aebea.h5ad
+asset_byte_size: 29755471
+asset_sha256: ce35cc657c7fa35fae2e829bf7699f4e85d2f7180aebd275797d612a47bddd73
+expected_cell_count: 1789
+expected_gene_count: 30198
+expected_gene_order_digest: b48ffde81d19458e5809335e3e93b32fc98f9af429c04a509f748781ca2aa8f8
+expected_obs_schema_digest: 9ae74beaae6846678b72c712b0555b036fa3ae1ce9bb2fa400253794e841ea92
+perturbation_key: knockout
+cell_context_key: cell_type
+required_perturbations:
+  - Control
+  - SBE1/5
+census_version: "2025-11-08"
+retrieved_at: "2026-09-10"
+publication_doi: 10.1101/2022.02.18.481097
+max_download_bytes: 50000000
+scientific_use_allowed: true
+limitations:
+  - "The source is real public mouse thalamus data, not a State model output."
+  - "The H5AD contains 30,198 features; compatibility with a particular State checkpoint is not established."
+  - "The SBE1/5 perturbation is not interchangeable with the Replogle-Nadig benchmark used by State examples."
