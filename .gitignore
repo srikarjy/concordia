@@ -12,6 +12,9 @@ htmlcov/
 .concordia/
 build/
 dist/
+node_modules/
+playwright-report/
+test-results/
 .ipynb_checkpoints/
 .idea/
 .vscode/

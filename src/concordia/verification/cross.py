@@ -113,6 +113,7 @@ class VerificationPolicy(Frozen):
 class EvidenceCheck(Frozen):
     evidence_id: str
     family: EvidenceFamily
+    method: str
     assessment: str
     valid: bool
     source_path: tuple[str, ...] = ()
@@ -206,6 +207,7 @@ def verify_claim(
             EvidenceCheck(
                 evidence_id=evidence.evidence_id,
                 family=evidence.family,
+                method=evidence.method,
                 assessment=evidence.assessment,
                 valid=valid,
                 source_path=path,

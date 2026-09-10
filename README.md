@@ -1,10 +1,19 @@
+---
+title: Concordia Colony Scientific Workspace
+emoji: 🧬
+colorFrom: green
+colorTo: blue
+sdk: docker
+app_port: 7860
+---
+
 # Concordia Colony
 
 Concordia Colony is a provenance-first scientific platform for testing, tracing, and improving explanations produced around genomic foundation models.
 
 One seed scientist creates a bounded colony of isolated workflow variants. Each descendant inherits a versioned digital genome, uses approved computational biology tools inside a sandbox, and produces structured claims. Deterministic infrastructure verifies evidence paths, calculates fitness, selects surviving workflows, and records the complete lineage.
 
-> **Current status:** the repository contains a working molecular evidence baseline, the first zero-cost genomic evidence vertical slice, durable local orchestration, provenance-aware project ingestion, a local CellForge-compatible boundary, a qualified local seed runtime, and bounded deterministic colony evolution. An external CellForge runtime is not required or currently integrated. Real Evo2 execution, cross-method validation, and the interactive frontend are planned. No genomic or scientist-model research result is claimed.
+> **Current status:** the repository contains a working molecular evidence baseline, genomic evidence contracts, durable local orchestration, provenance-aware project ingestion, a local CellForge-compatible boundary, a qualified local seed runtime, bounded deterministic colony evolution, independent evidence verification, and a built interactive workspace. An external CellForge runtime and real Evo2 execution are not required for the local demonstration. Real scientific validation remains pending; no genomic or scientist-model research result is claimed.
 
 ## Problem
 
@@ -153,7 +162,7 @@ Fitness retains all declared scientific-quality, reliability, penalty, runtime, 
 
 ## Interactive Workspace
 
-The planned React and TypeScript workspace will open directly into an active scientific run and provide:
+The React and TypeScript workspace opens directly into a saved active scientific run and provides:
 
 - a WebGL colony lineage graph with generation replay;
 - a knowledge and provenance graph with semantic zoom;
@@ -207,6 +216,7 @@ uv sync --extra dev --extra xai --extra scientist
 .venv/bin/concordia ingest-project
 .venv/bin/concordia list-tools
 .venv/bin/concordia colony-demo
+.venv/bin/concordia serve-workspace
 ```
 
 Start the local control plane on the loopback interface:
@@ -220,6 +230,8 @@ Run the local worker in another terminal:
 ```bash
 .venv/bin/concordia run-worker
 ```
+
+The interactive saved workspace is served on port 7860 by `serve-workspace` and opens directly into claims, lineage, provenance, sequence/counterfactual tracks, artifacts, and event replay. It is read-only fixture mode. The CPU Docker image and Hugging Face Space upload procedure are documented in [docs/deployment.md](docs/deployment.md).
 
 Then create a durable fixture run:
 

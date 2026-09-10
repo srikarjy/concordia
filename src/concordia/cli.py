@@ -53,6 +53,14 @@ def build_parser() -> argparse.ArgumentParser:
     api = subparsers.add_parser("serve-api", help="serve the local durable run API")
     api.add_argument("--state-root", type=Path, default=Path(".concordia"))
     api.add_argument("--port", type=int, default=8000)
+    workspace_api = subparsers.add_parser(
+        "serve-workspace", help="serve the read-only saved scientific workspace"
+    )
+    workspace_api.add_argument(
+        "--state-root", type=Path, default=Path(".concordia/workspace")
+    )
+    workspace_api.add_argument("--frontend", type=Path, default=Path("frontend/dist"))
+    workspace_api.add_argument("--port", type=int, default=7860)
     worker = subparsers.add_parser("run-worker", help="run the durable local worker")
     worker.add_argument("--state-root", type=Path, default=Path(".concordia"))
     worker.add_argument("--owner")
@@ -142,6 +150,16 @@ def main() -> None:
         from concordia.api.app import create_app
 
         uvicorn.run(create_app(args.state_root), host="127.0.0.1", port=args.port)
+    elif args.command == "serve-workspace":
+        import uvicorn
+
+        from concordia.api.workspace import create_workspace_app
+
+        uvicorn.run(
+            create_workspace_app(args.state_root, args.frontend),
+            host="0.0.0.0",
+            port=args.port,
+        )
     elif args.command == "run-worker":
         from concordia.runtime.service import RunService
         from concordia.runtime.worker import LocalWorker
