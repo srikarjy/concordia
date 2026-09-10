@@ -129,6 +129,18 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=Path("configs/virtual_cell/state_source.yaml"),
     )
+    state_release = subparsers.add_parser(
+        "verify-state-release",
+        help="verify the selected State checkpoint and matched H5AD without executing them",
+    )
+    state_release.add_argument(
+        "--root", type=Path, default=Path(".concordia/external/state-k562")
+    )
+    state_release.add_argument(
+        "--manifest",
+        type=Path,
+        default=Path("configs/virtual_cell/state_k562_release.yaml"),
+    )
     nvidia_smoke = subparsers.add_parser(
         "nvidia-evo2-smoke",
         help="run the documented hosted Evo2 generation integration check",
@@ -313,6 +325,16 @@ def main() -> None:
         )
         checkout_verification = StateCheckoutVerifier().verify(args.checkout, pin)
         print(json.dumps(checkout_verification.model_dump(mode="json"), indent=2))
+    elif args.command == "verify-state-release":
+        import yaml
+
+        from concordia.virtual_cell import StateReleaseSelection, StateReleaseVerifier
+
+        selection = StateReleaseSelection.model_validate(
+            yaml.safe_load(args.manifest.read_text(encoding="utf-8"))
+        )
+        release_verification = StateReleaseVerifier().verify(args.root, selection)
+        print(json.dumps(release_verification.model_dump(mode="json"), indent=2))
     elif args.command == "nvidia-evo2-smoke":
         from concordia.genomics.evo2_nvidia import NvidiaHostedEvo2GenerationRunner
         from concordia.genomics.schema import GenomicSequence

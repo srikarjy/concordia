@@ -1,0 +1,71 @@
+schema_version: 1
+repository_id: arcinstitute/ST-HVG-Replogle
+repository_url: https://huggingface.co/arcinstitute/ST-HVG-Replogle
+revision: bb6a9562cbbf1fd152df14cc53b4cc7517c77175
+selected_on: "2026-09-10"
+terms:
+  status: ACCEPTED_BY_USER
+  accepted_on: "2026-09-10"
+  use_scope: NON_COMMERCIAL
+  commercial_use_allowed: false
+files:
+  - role: model_license
+    path: MODEL_LICENSE.md
+    byte_size: 9864
+    sha256: dc8c48e55fc4e4ecfb02cb2a1c592067d460466ac57679569501f50f112d8947
+    media_type: text/markdown
+  - role: acceptable_use_policy
+    path: MODEL_ACCEPTABLE_USE_POLICY.md
+    byte_size: 5130
+    sha256: 6eb675a79981d59923be82e3931ef45187b373d7dff04ec7497c897d17d35c51
+    media_type: text/markdown
+  - role: checkpoint
+    path: zeroshot/k562/checkpoints/best.ckpt
+    byte_size: 471699039
+    sha256: ca790099b46a87999bd030af24805cd48f8601b3d5eb17724ea4335dad3d7d60
+    media_type: application/octet-stream
+  - role: config
+    path: zeroshot/k562/config.yaml
+    byte_size: 2762
+    sha256: 3abd16c6fe9edda9b89bde4e2bfc0ba64c0cea590cccce7c93f0e49519acd71a
+    media_type: application/yaml
+  - role: dataset
+    path: zeroshot/k562/eval_best.ckpt/adata_real.h5ad
+    byte_size: 1527032508
+    sha256: d150cdd890c8c9434bed169697fd6a31059bedfc4bdd714b11f1c6a4ab3a7adf
+    media_type: application/x-hdf5
+  - role: batch_map
+    path: zeroshot/k562/batch_onehot_map.pkl
+    byte_size: 721431
+    sha256: 070ce5dbac74e075cb5c0caa64db93ef373d3a89b250b8db0ff273afbaac624c
+    media_type: application/octet-stream
+  - role: cell_type_map
+    path: zeroshot/k562/cell_type_onehot_map.pkl
+    byte_size: 1799
+    sha256: 33310f8b75e3011a02aaecc66e254026616113724f3fb35cdfb33e19068696f6
+    media_type: application/octet-stream
+  - role: data_module
+    path: zeroshot/k562/data_module.torch
+    byte_size: 1901
+    sha256: 88ac0680a6893b0a8bc0a86f1a10f680ea67bd086bf86dc4600f89e0a9ede5d0
+    media_type: application/octet-stream
+  - role: perturbation_map
+    path: zeroshot/k562/pert_onehot_map.pt
+    byte_size: 16746593
+    sha256: f5621cab243a5135014af3867f63f8bf75cff19aee06d0f29a1bdecd2dbf47d0
+    media_type: application/octet-stream
+  - role: feature_dimensions
+    path: zeroshot/k562/var_dims.pkl
+    byte_size: 155642
+    sha256: e37e133d276aca89ee193356a546a26376cd6757ddb02e068b1f09429918a269
+    media_type: application/octet-stream
+dataset:
+  cell_count: 188590
+  gene_count: 2000
+  gene_order_digest: b1f95fab12d9597ccfa2f6300c84edee44c1d26249ba5c1c27b6f3c9d0fa6a67
+  observation_schema_digest: 832d45bb7ad6b2245c8a8a00fc5c75f0fa23de836062a196f68d762ba7461ed0
+  cell_context_column: cell_line
+  cell_context_value: k562
+  perturbation_column: gene
+  control_label: non-targeting
+  control_count: 10691

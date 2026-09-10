@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "measured_on": "2026-09-10",
+  "space_repository_id": "srikarjy025/concordia-evo2-forward",
+  "space_url": "https://huggingface.co/spaces/srikarjy025/concordia-evo2-forward",
+  "space_revision": "1a558b1418666d45e6de90cb765804cec13573de",
+  "purpose": "evo2_7b_forward_hardware_qualification",
+  "python_version": "3.10.13",
+  "torch_version": "2.8.0+cu128",
+  "cuda_runtime_version": "12.8",
+  "cuda_available": true,
+  "device_name": "NVIDIA RTX PRO 6000 Blackwell Server Edition MIG 2g.48gb",
+  "compute_capability": [12, 0],
+  "total_memory_bytes": 50868518912,
+  "bf16_supported": true,
+  "candidate_environment": true,
+  "evo2_installed": false,
+  "forward_pass_executed": false,
+  "execution_status": "NOT_RUN",
+  "scientific_use_allowed": false,
+  "limitations": [
+    "This probe did not install or load Evo2.",
+    "This probe did not accept a sequence or execute a forward pass.",
+    "Hardware capacity does not establish runtime or numerical compatibility.",
+    "No genomic or biological conclusion can be drawn from this record."
+  ]
+}

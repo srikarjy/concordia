@@ -4,6 +4,12 @@ Concordia can be published as a CPU Docker Space for the saved scientific worksp
 
 The current public deployment is [srikarjy025/concordia-colony](https://srikarjy025-concordia-colony.hf.space). It intentionally excludes API credentials, local Qwen artifacts, real Evo2 execution, and State model weights.
 
+## ZeroGPU qualification surface
+
+A separate public Gradio Space, [srikarjy025/concordia-evo2-forward](https://huggingface.co/spaces/srikarjy025/concordia-evo2-forward), contains a bounded GPU capability probe. It accepts no DNA and performs no model inference. The initial measured allocation was an NVIDIA RTX PRO 6000 Blackwell Server Edition MIG instance with 50,868,518,912 bytes of memory, CUDA 12.8, compute capability 12.0, and BF16 support. The immutable summary is recorded in `reports/evo2-zerogpu-hardware-probe.json`.
+
+This measurement establishes candidate capacity only. Evo2 installation, checkpoint compatibility, causal token shifting, numerical correctness, and forward scoring are all still unverified. The Space must remain restricted to the frozen HBB inputs if a future execution boundary is added; it must never become an arbitrary-sequence public endpoint.
+
 ## Build locally
 
 ```bash

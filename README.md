@@ -13,7 +13,7 @@ Concordia Colony is a provenance-first scientific platform for testing, tracing,
 
 One seed scientist creates a bounded colony of isolated workflow variants. Each descendant inherits a versioned digital genome, uses approved computational biology tools inside a sandbox, and produces structured claims. Deterministic infrastructure verifies evidence paths, calculates fitness, selects surviving workflows, and records the complete lineage.
 
-> **Current status:** the repository contains a working molecular evidence baseline, genomic evidence contracts, durable local orchestration, provenance-aware project ingestion, a local CellForge-compatible boundary, a qualified local seed runtime, bounded colony evolution, independent evidence verification, and a built interactive workspace. The local demonstration needs neither an external CellForge service nor Evo2 hardware. A two-variant HBB pilot protocol is frozen and an optional NVIDIA-hosted Evo2 forward adapter is ready, but no real Evo2 output has been collected; no genomic finding is claimed.
+> **Current status:** the repository contains a working molecular evidence baseline, genomic evidence contracts, durable local orchestration, provenance-aware project ingestion, a local CellForge-compatible boundary, qualified local and free-hosted seed runtimes, bounded colony evolution, independent evidence verification, and a built interactive workspace. The local demonstration needs neither an external CellForge service nor Evo2 hardware. A two-variant HBB pilot protocol is frozen. NVIDIA hosted access has been validated for generation only, while hosted forward scoring fails closed; no real Evo2 score or genomic finding is claimed.
 
 ## Problem
 
@@ -212,7 +212,7 @@ The recorded fixture validates software behavior only. It is not an Evo2 result.
 
 The frozen HBB promoter pilot files under `configs/studies/` pin two ClinVar variants, exact GRCh38 coordinates, 8,192-base Ensembl window hashes, cohort rules, data-use terms, checkpoint, scoring target, evidence families, hypothesis, and uncertainty policy before any Evo2 outcome is inspected. NVIDIA's free hosted Evo2 surface currently documents generation, not the `/forward` tensors required by that protocol. Concordia therefore offers a non-scientific hosted-generation smoke test and fails closed for hosted forward scoring. A measured synthetic-input call passed the generation contract; its exact artifact identities and limitations are preserved in [`reports/nvidia-evo2-hosted-smoke.json`](reports/nvidia-evo2-hosted-smoke.json). Real study scoring still requires a verified local Evo2 NIM or another documented forward adapter. Credentials are read only from `NVIDIA_API_KEY`.
 
-Arc State is a separate single-cell perturbation domain. Concordia now has a persist-first virtual-cell sandbox contract plus bounded CELLxGENE ingestion. A frozen public 1,789-cell mouse thalamus H5AD supplies real `Control` and `SBE1/5` input provenance; the official State source is pinned and can be verified without execution. The recorded runner still contains no cellular predictions and cannot support scientific use. Real State execution requires separately accepted model terms, compatible weights and feature space, a held-out protocol, and suitable compute. See [the State boundary](docs/state-sandbox.md).
+Arc State is a separate single-cell perturbation domain. Concordia has a persist-first virtual-cell sandbox contract, bounded CELLxGENE ingestion, and a separately selected K562 release from `arcinstitute/ST-HVG-Replogle`. The selected checkpoint and matched 188,590-cell by 2,000-gene H5AD are pinned by revision, byte size, digest, and schema. The user accepted the applicable terms for non-commercial use on 10 September 2026; the historical source-code verification record remains `NOT_ACCEPTED` because it did not record that later release decision. Verification never deserializes the checkpoint or helper files, and no State prediction has been run. See [the State boundary](docs/state-sandbox.md).
 
 ## Local Quickstart
 
@@ -226,6 +226,7 @@ uv sync --extra dev --extra xai --extra scientist --extra virtual-cell
 .venv/bin/concordia colony-demo
 .venv/bin/concordia qwen-colony-demo
 .venv/bin/concordia cellxgene-state-demo
+.venv/bin/concordia verify-state-release --root .concordia/external/state-k562
 NVIDIA_API_KEY=... .venv/bin/concordia nvidia-evo2-smoke --sequence ACGTACGT
 .venv/bin/concordia serve-workspace
 .venv/bin/mypy src/concordia

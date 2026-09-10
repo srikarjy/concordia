@@ -46,6 +46,20 @@ git -C .concordia/external/state checkout 9bbfe78a434a55205e4de834e1ea99f85f7a3a
 
 The verifier rejects a wrong remote, revision, dirty tree, package identity, Python constraint, or changed license/policy file. State currently requires Python below 3.13, so its future execution environment must remain isolated from Concordia's Python 3.13 environment.
 
+## Selected K562 release
+
+`configs/virtual_cell/state_k562_release.yaml` is a distinct release-selection record. It does not alter the earlier `state_source.yaml` audit, whose `NOT_ACCEPTED` value remains an accurate historical statement about source verification. The release record states that the user accepted the applicable State terms on 10 September 2026 for non-commercial use only.
+
+The selected Hugging Face release is `arcinstitute/ST-HVG-Replogle` at revision `bb6a9562cbbf1fd152df14cc53b4cc7517c77175`. It pairs `zeroshot/k562/checkpoints/best.ckpt` with `zeroshot/k562/eval_best.ckpt/adata_real.h5ad`. The manifest pins the checkpoint, configuration, matched dataset, policy files, and required mapping files by canonical relative path, byte size, and SHA-256.
+
+Run the fail-closed verifier after staging the release:
+
+```bash
+.venv/bin/concordia verify-state-release --root .concordia/external/state-k562
+```
+
+The verifier rejects traversal, symlinks, missing files, size changes, and digest changes. It opens only the H5AD in read-only backed mode and verifies its 188,590-cell by 2,000-gene shape, gene order, observation schema, `k562` context, `gene` perturbation column, and 10,691 `non-targeting` controls. It does not deserialize the checkpoint, `.pt`, `.torch`, or pickle files. A passing result therefore reports `execution_status=NOT_RUN` and `scientific_use_allowed=false`.
+
 ## Real adapter requirements
 
 A real runner must use an exact State release and checkpoint under Arc's applicable noncommercial model/output license and acceptable-use policy. It must run with network disabled after all artifacts are staged, preserve the exact AnnData input and generated matrix, record the gene order, and keep failed or partial execution artifacts. Evaluation must use a predeclared held-out perturbation split and deterministic metrics from measured expression; another language model cannot decide accuracy.
@@ -54,4 +68,4 @@ State may contribute cross-scale contextual evidence to a future Concordia study
 
 ## Current limitation
 
-The source checkout and real AnnData input are now reproducibly verifiable, but State model weights are not installed and the model terms have not been accepted on the user's behalf. No prediction is produced. The CPU Hugging Face Space remains a saved, read-only software demonstration and does not execute State.
+The source checkout, selected K562 checkpoint, helper artifacts, and matched AnnData input are now reproducibly verifiable. The selected files have not been loaded, no prediction has been produced, and no held-out evaluation has been run. Execution must use an isolated Python 3.11 or 3.12 environment and remains limited to non-commercial use. The CPU Hugging Face Space is a saved, read-only software demonstration and does not execute State.
