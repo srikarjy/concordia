@@ -210,7 +210,7 @@ The recorded fixture validates software behavior only. It is not an Evo2 result.
 
 ### Real-study and virtual-cell boundaries
 
-The frozen HBB promoter pilot files under `configs/studies/` pin two ClinVar variants, exact GRCh38 coordinates, 8,192-base Ensembl window hashes, cohort rules, data-use terms, checkpoint, scoring target, evidence families, hypothesis, and uncertainty policy before any Evo2 outcome is inspected. The NVIDIA adapter persists the exact request and returned NPZ tensors, derives mean next-base log likelihood from `output_layer`, and has no fixture fallback. It requires a user-supplied `NVIDIA_API_KEY`; credentials are never stored.
+The frozen HBB promoter pilot files under `configs/studies/` pin two ClinVar variants, exact GRCh38 coordinates, 8,192-base Ensembl window hashes, cohort rules, data-use terms, checkpoint, scoring target, evidence families, hypothesis, and uncertainty policy before any Evo2 outcome is inspected. NVIDIA's free hosted Evo2 surface currently documents generation, not the `/forward` tensors required by that protocol. Concordia therefore offers a non-scientific hosted-generation smoke test and fails closed for hosted forward scoring. Real study scoring still requires a verified local Evo2 NIM or another documented forward adapter. Credentials are read only from `NVIDIA_API_KEY`.
 
 Arc State is a separate single-cell perturbation domain. Concordia now has a persist-first virtual-cell sandbox contract plus bounded CELLxGENE ingestion. A frozen public 1,789-cell mouse thalamus H5AD supplies real `Control` and `SBE1/5` input provenance; the official State source is pinned and can be verified without execution. The recorded runner still contains no cellular predictions and cannot support scientific use. Real State execution requires separately accepted model terms, compatible weights and feature space, a held-out protocol, and suitable compute. See [the State boundary](docs/state-sandbox.md).
 
@@ -226,6 +226,7 @@ uv sync --extra dev --extra xai --extra scientist --extra virtual-cell
 .venv/bin/concordia colony-demo
 .venv/bin/concordia qwen-colony-demo
 .venv/bin/concordia cellxgene-state-demo
+NVIDIA_API_KEY=... .venv/bin/concordia nvidia-evo2-smoke --sequence ACGTACGT
 .venv/bin/concordia serve-workspace
 .venv/bin/mypy src/concordia
 (cd frontend && npm test)

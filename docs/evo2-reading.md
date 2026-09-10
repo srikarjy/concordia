@@ -37,7 +37,17 @@ Each extension needs an acceptance test, a resource budget, and an explicit scie
 
 `RealEvo2Scorer` is a strict adapter for an externally executed forward pass. It validates checkpoint identity, scoring target, input sequence hash, real execution mode, and scientific-use eligibility; it never falls back to the deterministic scorer. Actual checkpoint execution remains hardware- and dataset-dependent.
 
-`NvidiaHostedEvo2Runner` targets the trial-hosted `arc/evo2-7b-forward` endpoint. It persists the request before execution, stores the returned NPZ bytes by SHA-256, validates `output_layer` shape and finiteness, and computes `mean_next_base_log_likelihood` using the documented nucleotide-token indices. It requires `NVIDIA_API_KEY`; no credential is stored. No call has been made in this repository state, so there is still no real Evo2 result.
+NVIDIA's current free hosted `arc/evo2-40b` page documents the `/generate` endpoint. The separate Evo2 NIM documentation exposes `/forward` for a deployed container; the hosted catalog does not document a corresponding forward route. Concordia removed its earlier unverified hosted-forward assumption. `NvidiaHostedEvo2GenerationRunner` now persists the exact request and raw response for a short real API smoke test, validates generated DNA and sampled probabilities, and always sets `scientific_use_allowed=false`. `NvidiaHostedEvo2Runner` fails closed with instructions to use a verified local NIM for the frozen study's likelihood target.
+
+Run the bounded hosted check only after creating a development key on NVIDIA's Evo2 page:
+
+```bash
+export NVIDIA_API_KEY='your-key'
+.venv/bin/concordia nvidia-evo2-smoke --sequence ACGTACGT --num-tokens 8
+unset NVIDIA_API_KEY
+```
+
+Never paste the key into chat or commit it. The generated sequence is a model output, not evidence of biological function. Completing the HBB study still requires local `/forward` tensors from compatible hardware and the frozen `mean_next_base_log_likelihood` protocol.
 
 The frozen pilot uses ClinVar accessions `VCV000015471.124` and `VCV000015464.124`. Their GRCh38 reference alleles were checked against separately retrieved 8,192-base Ensembl windows before freeze. A released K562 DNase-seq narrowPeak file (`ENCFF185XRG`, experiment `ENCSR000EOT`) was checksum-validated and contains two intervals in the union of those windows; neither interval overlaps the variant base itself. This negative overlap is preserved. Its relationship to attribution is not assessed until real Evo2 output exists. ClinVar assertions and ENCODE annotations remain contextual evidence requiring exact provenance; neither is accepted as causal proof.
 

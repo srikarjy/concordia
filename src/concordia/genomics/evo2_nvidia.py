@@ -1,36 +1,53 @@
-"""Optional NVIDIA-hosted Evo2 forward runner with immutable raw tensors."""
+"""NVIDIA-hosted Evo2 generation with an explicit forward-inference boundary."""
 
 from __future__ import annotations
 
-import base64
-import binascii
-import io
+import json
 import os
-import zipfile
-from typing import Any
+import time
+from typing import Any, Literal
 
 import httpx
-import numpy as np
+from pydantic import BaseModel, ConfigDict, Field
 
 from concordia.genomics.schema import GenomicSequence
 from concordia.storage.content import ContentAddressedStore
 
+SHA256_PATTERN = r"^[0-9a-f]{64}$"
 
-class NvidiaHostedEvo2Runner:
-    """Compute a declared likelihood target from NVIDIA's real Evo2 7B logits."""
 
-    checkpoint = "arc/evo2-7b-forward"
-    endpoint = "https://health.api.nvidia.com/v1/biology/arc/evo2-7b/forward"
-    target = "mean_next_base_log_likelihood"
-    max_encoded_bytes = 192 * 1024 * 1024
-    max_uncompressed_bytes = 256 * 1024 * 1024
+class NvidiaHostedGenerationResult(BaseModel):
+    """Validated development output that is never scientific evidence."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, allow_inf_nan=False)
+
+    schema_version: Literal[1] = 1
+    model_id: Literal["arc/evo2-40b-generate"] = "arc/evo2-40b-generate"
+    execution_mode: Literal["real_hosted_generation"] = "real_hosted_generation"
+    input_sequence_hash: str = Field(pattern=SHA256_PATTERN)
+    generated_sequence: str = Field(min_length=1)
+    sampled_probabilities: tuple[float, ...]
+    elapsed_ms: int | None = Field(default=None, ge=0)
+    elapsed_seconds: float = Field(ge=0)
+    request_artifact_digest: str = Field(pattern=SHA256_PATTERN)
+    response_artifact_digest: str = Field(pattern=SHA256_PATTERN)
+    scientific_use_allowed: Literal[False] = False
+    limitations: tuple[str, ...] = Field(min_length=1)
+
+
+class NvidiaHostedEvo2GenerationRunner:
+    """Call the documented free hosted generation API and preserve exact I/O."""
+
+    model_id = "arc/evo2-40b-generate"
+    endpoint = "https://health.api.nvidia.com/v1/biology/arc/evo2-40b/generate"
+    max_response_bytes = 16 * 1024 * 1024
 
     def __init__(
         self,
         artifacts: ContentAddressedStore,
         *,
         api_key: str | None = None,
-        timeout_seconds: float = 300.0,
+        timeout_seconds: float = 180.0,
         transport: httpx.BaseTransport | None = None,
     ):
         self.artifacts = artifacts
@@ -38,110 +55,119 @@ class NvidiaHostedEvo2Runner:
         self.timeout_seconds = timeout_seconds
         self._transport = transport
 
-    def score(
-        self, sequence: GenomicSequence, *, checkpoint: str, target: str
-    ) -> dict[str, Any]:
-        if checkpoint != self.checkpoint:
-            raise ValueError(f"hosted runner supports only {self.checkpoint}")
-        if target != self.target:
-            raise ValueError(f"hosted runner supports only {self.target}")
+    def generate(
+        self,
+        sequence: GenomicSequence,
+        *,
+        num_tokens: int = 8,
+        temperature: float = 0.7,
+        top_k: int = 3,
+        top_p: float = 0.0,
+        random_seed: int = 1729,
+    ) -> NvidiaHostedGenerationResult:
         if not self._api_key:
-            raise RuntimeError("NVIDIA_API_KEY is required for hosted Evo2 forward inference")
-
-        request_payload = {"sequence": sequence.sequence, "output_layers": ["output_layer"]}
+            raise RuntimeError("NVIDIA_API_KEY is required for hosted Evo2 generation")
+        if not 1 <= num_tokens <= 1_200:
+            raise ValueError("num_tokens must be between 1 and 1200")
+        if not 0 <= temperature <= 1.3:
+            raise ValueError("temperature must be between 0 and 1.3")
+        if not 0 <= top_k <= 6:
+            raise ValueError("top_k must be between 0 and 6")
+        if not 0 <= top_p <= 1:
+            raise ValueError("top_p must be between 0 and 1")
+        request_payload = {
+            "sequence": sequence.sequence,
+            "num_tokens": num_tokens,
+            "temperature": temperature,
+            "top_k": top_k,
+            "top_p": top_p,
+            "random_seed": random_seed,
+            "enable_logits": False,
+            "enable_sampled_probs": True,
+            "enable_elapsed_ms_per_token": True,
+        }
         request_digest = self.artifacts.put_json(
             {
                 "schema_version": 1,
-                "checkpoint": checkpoint,
-                "target": target,
+                "model_id": self.model_id,
                 "endpoint": self.endpoint,
+                "input_sequence": sequence.model_dump(mode="json"),
                 "request": request_payload,
+                "scientific_use_allowed": False,
             }
         )
-        with httpx.Client(
-            timeout=self.timeout_seconds,
-            transport=self._transport,
-        ) as client:
+        started = time.monotonic()
+        with httpx.Client(timeout=self.timeout_seconds, transport=self._transport) as client:
             response = client.post(
                 self.endpoint,
                 headers={"Authorization": f"Bearer {self._api_key}"},
                 json=request_payload,
             )
-        response.raise_for_status()
-        payload = response.json()
-        encoded = payload.get("data")
-        if not isinstance(encoded, str):
-            raise RuntimeError("NVIDIA Evo2 response did not contain encoded forward tensors")
-        if len(encoded) > self.max_encoded_bytes:
-            raise RuntimeError("NVIDIA Evo2 tensor response exceeded the configured limit")
+        elapsed_seconds = time.monotonic() - started
+        if len(response.content) > self.max_response_bytes:
+            raise RuntimeError("NVIDIA Evo2 generation response exceeded the configured limit")
+        response_digest = self.artifacts.put_bytes(response.content)
+        if response.is_error:
+            detail = response.text[:1_000].replace("\n", " ")
+            raise RuntimeError(f"NVIDIA Evo2 HTTP {response.status_code}: {detail}")
         try:
-            tensor_bytes = base64.b64decode(encoded, validate=True)
-        except (binascii.Error, ValueError) as error:
-            raise RuntimeError("NVIDIA Evo2 tensor payload was not valid base64") from error
-        tensor_digest = self.artifacts.put_bytes(tensor_bytes)
-        logits = self._load_output_logits(tensor_bytes, len(sequence.sequence))
-        score = self._mean_next_base_log_likelihood(logits, sequence.sequence)
-        return {
-            "model_id": checkpoint,
-            "execution_mode": "real",
-            "sequence_hash": sequence.content_hash(),
-            "score": score,
-            "target": target,
-            "scientific_use_allowed": True,
-            "input_artifact_digest": request_digest,
-            "output_artifact_digest": tensor_digest,
-            "runtime_metadata": {
-                "provider": "nvidia",
-                "endpoint": self.endpoint,
-                "elapsed_ms": payload.get("elapsed_ms"),
-                "output_layer": "output_layer",
-                "scoring_version": "mean-next-base-log-likelihood-v1",
-            },
-        }
-
-    @staticmethod
-    def _load_output_logits(tensor_bytes: bytes, sequence_length: int) -> np.ndarray:
-        try:
-            with zipfile.ZipFile(io.BytesIO(tensor_bytes)) as bundle:
-                if sum(item.file_size for item in bundle.infolist()) > (
-                    NvidiaHostedEvo2Runner.max_uncompressed_bytes
-                ):
-                    raise RuntimeError("Evo2 tensor archive exceeded the uncompressed limit")
-            with np.load(io.BytesIO(tensor_bytes), allow_pickle=False) as archive:
-                names = archive.files
-                if "output_layer" in names:
-                    raw = archive["output_layer"]
-                elif len(names) == 1:
-                    raw = archive[names[0]]
-                else:
-                    raise RuntimeError("forward tensor archive has no unambiguous output layer")
-                logits = np.asarray(raw, dtype=np.float64)
-        except RuntimeError:
-            raise
-        except Exception as error:
-            raise RuntimeError("NVIDIA Evo2 forward tensor archive is invalid") from error
-
-        if logits.ndim == 3 and logits.shape[1] == 1:
-            logits = logits[:, 0, :]
-        elif logits.ndim == 3 and logits.shape[0] == 1:
-            logits = logits[0, :, :]
-        if logits.ndim != 2 or logits.shape[0] != sequence_length or logits.shape[1] != 512:
+            payload = response.json()
+        except json.JSONDecodeError as error:
+            raise RuntimeError("NVIDIA Evo2 generation response was not JSON") from error
+        generated = payload.get("sequence")
+        if not isinstance(generated, str):
+            raise RuntimeError("NVIDIA Evo2 response contained no generated sequence")
+        generated = "".join(generated.upper().split())
+        invalid = sorted(set(generated) - set("ACGT"))
+        if invalid:
             raise RuntimeError(
-                "Evo2 output_layer must have shape [sequence_length, 1, 512]"
+                f"NVIDIA Evo2 generated unexpected DNA characters: {''.join(invalid)}"
             )
-        if not np.isfinite(logits).all():
-            raise RuntimeError("Evo2 output logits contain non-finite values")
-        return logits
-
-    @staticmethod
-    def _mean_next_base_log_likelihood(logits: np.ndarray, sequence: str) -> float:
-        if len(sequence) < 2:
-            raise ValueError("likelihood scoring requires at least two nucleotides")
-        target_indices = np.fromiter((ord(base) for base in sequence[1:]), dtype=np.int64)
-        predictions = logits[:-1]
-        maxima = predictions.max(axis=1)
-        log_denominator = maxima + np.log(
-            np.exp(predictions - maxima[:, np.newaxis]).sum(axis=1)
+        if len(generated) != num_tokens:
+            raise RuntimeError("NVIDIA Evo2 generated sequence length did not match num_tokens")
+        probabilities = payload.get("sampled_probs")
+        if (
+            not isinstance(probabilities, list)
+            or len(probabilities) != num_tokens
+            or any(
+                isinstance(value, bool)
+                or not isinstance(value, (int, float))
+                or not 0 <= float(value) <= 1
+                for value in probabilities
+            )
+        ):
+            raise RuntimeError("NVIDIA Evo2 sampled probabilities were invalid")
+        return NvidiaHostedGenerationResult(
+            input_sequence_hash=sequence.content_hash(),
+            generated_sequence=generated,
+            sampled_probabilities=tuple(float(value) for value in probabilities),
+            elapsed_ms=payload.get("elapsed_ms"),
+            elapsed_seconds=elapsed_seconds,
+            request_artifact_digest=request_digest,
+            response_artifact_digest=response_digest,
+            limitations=(
+                "Hosted generation is a software integration check, not an Evo2 forward score.",
+                "Generated DNA and sampled probabilities do not establish biological function.",
+                "The hosted trial does not expose the forward tensors required by the "
+                "frozen study.",
+            ),
         )
-        selected = predictions[np.arange(len(target_indices)), target_indices]
-        return float(np.mean(selected - log_denominator))
+
+
+class NvidiaHostedEvo2Runner:
+    """Fail-closed compatibility boundary for the undocumented hosted forward route."""
+
+    checkpoint = "arc/evo2-7b-forward"
+    target = "mean_next_base_log_likelihood"
+
+    def __init__(self, artifacts: ContentAddressedStore, **_: object):
+        self.artifacts = artifacts
+
+    def score(
+        self, sequence: GenomicSequence, *, checkpoint: str, target: str
+    ) -> dict[str, Any]:
+        del sequence, checkpoint, target
+        raise RuntimeError(
+            "NVIDIA's hosted Evo2 trial documents generation only; use a verified local "
+            "Evo2 NIM /forward endpoint for scientific scoring"
+        )

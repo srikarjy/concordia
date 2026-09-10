@@ -129,6 +129,16 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=Path("configs/virtual_cell/state_source.yaml"),
     )
+    nvidia_smoke = subparsers.add_parser(
+        "nvidia-evo2-smoke",
+        help="run the documented hosted Evo2 generation integration check",
+    )
+    nvidia_smoke.add_argument("--sequence", required=True)
+    nvidia_smoke.add_argument(
+        "--state-root", type=Path, default=Path(".concordia/nvidia-evo2-smoke")
+    )
+    nvidia_smoke.add_argument("--num-tokens", type=int, default=8)
+    nvidia_smoke.add_argument("--seed", type=int, default=1729)
     return parser
 
 
@@ -303,6 +313,22 @@ def main() -> None:
         )
         checkout_verification = StateCheckoutVerifier().verify(args.checkout, pin)
         print(json.dumps(checkout_verification.model_dump(mode="json"), indent=2))
+    elif args.command == "nvidia-evo2-smoke":
+        from concordia.genomics.evo2_nvidia import NvidiaHostedEvo2GenerationRunner
+        from concordia.genomics.schema import GenomicSequence
+        from concordia.storage.content import ContentAddressedStore
+
+        sequence = GenomicSequence(
+            sequence_id="synthetic:nvidia-evo2-smoke",
+            sequence=args.sequence,
+            assembly="synthetic",
+            region=f"synthetic:0-{len(''.join(args.sequence.split()))}",
+            strand="+",
+        )
+        smoke_result = NvidiaHostedEvo2GenerationRunner(
+            ContentAddressedStore(args.state_root / "artifacts")
+        ).generate(sequence, num_tokens=args.num_tokens, random_seed=args.seed)
+        print(json.dumps(smoke_result.model_dump(mode="json"), indent=2))
 
 
 if __name__ == "__main__":
