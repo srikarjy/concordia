@@ -227,6 +227,7 @@ uv sync --extra dev --extra xai --extra scientist --extra virtual-cell
 .venv/bin/concordia qwen-colony-demo
 .venv/bin/concordia cellxgene-state-demo
 .venv/bin/concordia verify-state-release --root .concordia/external/state-k562
+.venv/bin/concordia verify-evo2-source --checkout .concordia/external/evo2-source
 NVIDIA_API_KEY=... .venv/bin/concordia nvidia-evo2-smoke --sequence ACGTACGT
 .venv/bin/concordia serve-workspace
 .venv/bin/mypy src/concordia

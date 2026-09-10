@@ -21,6 +21,14 @@ These are Concordia design choices, not claims made by the paper:
 
 The [official inference repository](https://github.com/arcinstitute/evo2#requirements), checked 10 September 2026, documents Linux and CUDA. Its current 7B path supports bfloat16 without Transformer Engine; other listed checkpoints have stronger FP8 hardware requirements. This is more specific than the earlier repository-wide statement that all Evo 2 inference requires FP8 hardware. A free CPU Space can serve Concordia's recorded demonstration and verifier. It does not provide validated Evo 2 inference.
 
+## Pinned execution interpretation
+
+The execution audit pins the official repository at `53f195997257c56c00e5ef8d33a54f5baad143a6` (`evo2` 0.6.0) and the released `arcinstitute/evo2_7b` checkpoint repository at `bda0089f92582d5baabf0f22d9fc85f3588f6b58`. The 13,766,621,200-byte `evo2_7b.pt` checkpoint has SHA-256 `c66645929dc1b9c631f5be656da8726f38946315dc9167000a615dd626fcecf4` according to its immutable Hugging Face file metadata.
+
+The official scoring implementation applies `log_softmax` to logits at positions `0..L-2` and gathers observed token IDs at positions `1..L-1`. With no prepended BOS, an 8,192-base input therefore yields 8,191 next-token log-probabilities. Concordia's primary score is their arithmetic mean, and a variant effect is alternate minus reference. The final logit row is not a prediction for an observed input token and is excluded.
+
+The original frozen protocol used an adapter label rather than a released checkpoint identity and omitted these shift details. It remains unchanged for auditability. `configs/studies/hbb_promoter_evo2_protocol_v2.yaml` records the correction before any outcome, pins forward-strand-only scoring, disables optional kernels for qualification, and requires token IDs, per-position target log-probabilities, their float64 sum, and mean to be retained. Reverse-complement sensitivity is not silently introduced after results; it requires a separately frozen protocol.
+
 ## Beyond Phase 10
 
 1. Complete the frozen HBB promoter pilot with immutable real scores and independent annotation artifacts; expand beyond two variants only under a newly frozen protocol.

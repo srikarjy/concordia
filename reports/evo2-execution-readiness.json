@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "assessed_on": "2026-09-10",
+  "protocol_id": "hbb-promoter-evo2-pilot-v2",
+  "supersedes_protocol_id": "hbb-promoter-evo2-pilot-v1",
+  "paper_doi": "10.1038/s41586-026-10176-5",
+  "source": {
+    "repository_url": "https://github.com/ArcInstitute/evo2.git",
+    "revision": "53f195997257c56c00e5ef8d33a54f5baad143a6",
+    "package_version": "0.6.0",
+    "checkout_verified": true
+  },
+  "checkpoint": {
+    "repository_id": "arcinstitute/evo2_7b",
+    "revision": "bda0089f92582d5baabf0f22d9fc85f3588f6b58",
+    "filename": "evo2_7b.pt",
+    "byte_size": 13766621200,
+    "sha256": "c66645929dc1b9c631f5be656da8726f38946315dc9167000a615dd626fcecf4",
+    "bytes_staged_and_verified": false
+  },
+  "scoring": {
+    "target": "mean_next_base_log_likelihood",
+    "causal_token_shift": 1,
+    "sequence_length": 8192,
+    "scored_token_count": 8191,
+    "strand_mode": "forward_only",
+    "variant_delta": "alternate_minus_reference"
+  },
+  "frozen_input_windows_retrieved_and_verified": true,
+  "zerogpu": {
+    "candidate_hardware": true,
+    "measured_python_version": "3.10.13",
+    "official_python_requirement_met": false,
+    "evo2_installed": false,
+    "numerical_compatibility_verified": false
+  },
+  "readiness_status": "BLOCKED_BEFORE_EXECUTION",
+  "execution_status": "NOT_RUN",
+  "scientific_use_allowed": false,
+  "blockers": [
+    "The pinned checkpoint bytes have not been staged and SHA-256 verified in the worker.",
+    "The measured worker used Python 3.10.13; pinned Evo2 0.6.0 requires Python 3.11 or 3.12.",
+    "Evo2 installation and numerical qualification have not run on the candidate GPU."
+  ]
+}

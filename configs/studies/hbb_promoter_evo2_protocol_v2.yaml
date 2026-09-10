@@ -1,0 +1,76 @@
+schema_version: 2
+protocol_id: hbb-promoter-evo2-pilot-v2
+supersedes_protocol_id: hbb-promoter-evo2-pilot-v1
+correction_reason:
+  - "Protocol v1 named an adapter boundary instead of an immutable released checkpoint."
+  - "Protocol v1 did not state the causal token shift, strand treatment, BOS policy, or retained score artifacts."
+dataset_id: clinvar-hbb-promoter-pilot-v1
+dataset_license: "ClinVar public data with requested source attribution; ENCODE released data are unrestricted with citation requested."
+inclusion_criteria:
+  - "Frozen variants in hbb_promoter_inputs.yaml only."
+  - "Reference allele must match the SHA-256-pinned GRCh38 sequence window."
+exclusion_criteria:
+  - "Any fixture, synthetic, failed-integrity, or post-outcome-selected record."
+  - "Any variant or annotation outside the frozen assembly and window."
+model_checkpoint: arcinstitute/evo2_7b@bda0089f92582d5baabf0f22d9fc85f3588f6b58/evo2_7b.pt
+scoring_target: mean_next_base_log_likelihood
+assembly: GRCh38
+window_size: 8192
+coordinate_convention: zero_based_half_open
+evidence_families:
+  - counterfactual
+  - biological_annotation
+  - literature
+hypothesis: "Within the frozen HBB promoter pilot, Evo2 likelihood perturbations may identify regions that overlap independently sourced regulatory evidence; agreement is not causal proof."
+uncertainty_method: "Report both variants, all failed calls, forward-strand per-position likelihoods, missing annotations, contradictions, and deterministic reruns without outcome-based replacement. Reverse-complement sensitivity requires a future protocol and is not a post-outcome substitution."
+status: FROZEN
+source:
+  repository_url: https://github.com/ArcInstitute/evo2.git
+  revision: 53f195997257c56c00e5ef8d33a54f5baad143a6
+  package_name: evo2
+  package_version: 0.6.0
+  python_constraint: ">=3.11,<3.13"
+  files:
+    - path: LICENSE
+      byte_size: 25780
+      sha256: 5bb5812fc2bfb2d777fe5621767172f8ef30be62ad719c87e0f10832336a99e0
+    - path: pyproject.toml
+      byte_size: 743
+      sha256: 7cc6a516e1da69df2f87f6487f80bdc69a50b581c4a674a3313b4c9c23b5cddf
+    - path: evo2/models.py
+      byte_size: 12471
+      sha256: 0b757fcc42b37a52b0c3f508e876a52356331392ae8aa16a923576265043b78c
+    - path: evo2/scoring.py
+      byte_size: 7456
+      sha256: 17e6985cef3a62c2a488133ab5a65050dcf0abeec2f55d1c0b068dfe37c44de6
+    - path: evo2/configs/evo2-7b-1m.yml
+      byte_size: 1764
+      sha256: 9637f84ffd796f42cce3f926832b3999ff34a82686beba04505327162b288b1a
+checkpoint:
+  repository_id: arcinstitute/evo2_7b
+  revision: bda0089f92582d5baabf0f22d9fc85f3588f6b58
+  filename: evo2_7b.pt
+  byte_size: 13766621200
+  sha256: c66645929dc1b9c631f5be656da8726f38946315dc9167000a615dd626fcecf4
+  config_filename: config.json
+  config_byte_size: 87
+  config_sha256: 7f2e195e156de678b6d7db090dca19b37e88671f72ea7c9e1866e103946b69b2
+  license: Apache-2.0
+scoring:
+  target: mean_next_base_log_likelihood
+  tokenizer: CharLevelTokenizer-vocab-512
+  prepend_bos: false
+  causal_token_shift: 1
+  reduction: mean
+  strand_mode: forward_only
+  variant_delta: alternate_minus_reference
+  expected_sequence_length: 8192
+  expected_scored_token_count: 8191
+  use_optional_kernels: false
+  retained_score_artifacts:
+    - token_ids
+    - target_token_log_probabilities_float32
+    - sum_log_likelihood_float64
+    - mean_log_likelihood_float64
+execution_status: NOT_RUN
+scientific_use_allowed: false

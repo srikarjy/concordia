@@ -22,6 +22,9 @@ A passing hardware probe means only that the device is a candidate execution
 environment. It does not establish Evo2 runtime compatibility, artifact integrity,
 scientific validity, or a biological finding.
 
+The measured probe used Python 3.10.13. Pinned Evo2 0.6.0 requires Python 3.11
+or 3.12, so this initial runtime is not eligible for an installation attempt.
+
 The initial probe result is preserved in the main repository at
 `reports/evo2-zerogpu-hardware-probe.json`. The worker still has no Evo2 dependency,
 does not load a checkpoint, and exposes no sequence input.

@@ -21,7 +21,7 @@ class StudyProtocol(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    schema_version: Literal[1] = 1
+    schema_version: Literal[1, 2] = 1
     protocol_id: str = Field(min_length=1)
     dataset_id: str = Field(min_length=1)
     dataset_license: str = Field(min_length=1)

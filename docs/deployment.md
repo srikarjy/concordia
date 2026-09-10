@@ -8,7 +8,7 @@ The current public deployment is [srikarjy025/concordia-colony](https://srikarjy
 
 A separate public Gradio Space, [srikarjy025/concordia-evo2-forward](https://huggingface.co/spaces/srikarjy025/concordia-evo2-forward), contains a bounded GPU capability probe. It accepts no DNA and performs no model inference. The initial measured allocation was an NVIDIA RTX PRO 6000 Blackwell Server Edition MIG instance with 50,868,518,912 bytes of memory, CUDA 12.8, compute capability 12.0, and BF16 support. The immutable summary is recorded in `reports/evo2-zerogpu-hardware-probe.json`.
 
-This measurement establishes candidate capacity only. Evo2 installation, checkpoint compatibility, causal token shifting, numerical correctness, and forward scoring are all still unverified. The Space must remain restricted to the frozen HBB inputs if a future execution boundary is added; it must never become an arbitrary-sequence public endpoint.
+This measurement establishes candidate capacity only. Its Python 3.10.13 runtime is outside pinned Evo2 0.6.0's Python 3.11/3.12 requirement. Evo2 installation, checkpoint compatibility, causal token shifting, numerical correctness, and forward scoring are all still unverified. The Space must remain restricted to the frozen HBB inputs if a future execution boundary is added; it must never become an arbitrary-sequence public endpoint.
 
 ## Build locally
 

@@ -141,6 +141,16 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=Path("configs/virtual_cell/state_k562_release.yaml"),
     )
+    evo2_source = subparsers.add_parser(
+        "verify-evo2-source",
+        help="verify the pinned Evo2 source checkout without importing or executing it",
+    )
+    evo2_source.add_argument("--checkout", type=Path, required=True)
+    evo2_source.add_argument(
+        "--protocol",
+        type=Path,
+        default=Path("configs/studies/hbb_promoter_evo2_protocol_v2.yaml"),
+    )
     nvidia_smoke = subparsers.add_parser(
         "nvidia-evo2-smoke",
         help="run the documented hosted Evo2 generation integration check",
@@ -335,6 +345,19 @@ def main() -> None:
         )
         release_verification = StateReleaseVerifier().verify(args.root, selection)
         print(json.dumps(release_verification.model_dump(mode="json"), indent=2))
+    elif args.command == "verify-evo2-source":
+        import yaml
+
+        from concordia.genomics.evo2_protocol import (
+            Evo2SourceVerifier,
+            Evo2StudyProtocolV2,
+        )
+
+        protocol = Evo2StudyProtocolV2.model_validate(
+            yaml.safe_load(args.protocol.read_text(encoding="utf-8"))
+        )
+        source_verification = Evo2SourceVerifier().verify(args.checkout, protocol.source)
+        print(json.dumps(source_verification.model_dump(mode="json"), indent=2))
     elif args.command == "nvidia-evo2-smoke":
         from concordia.genomics.evo2_nvidia import NvidiaHostedEvo2GenerationRunner
         from concordia.genomics.schema import GenomicSequence
