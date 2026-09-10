@@ -33,7 +33,7 @@ OPENROUTER_API_KEY=... .venv/bin/concordia qualify-openrouter \
   --model openrouter/free --repetitions 1
 ```
 
-The key is read only from the process environment. Because `openrouter/free` may resolve to different underlying models, the command permits only one repetition for that alias. Select one explicit `:free` model before measuring repeated-run stability. Hosted output remains software evidence and never verifies scientific truth.
+The key is read only from the process environment. For a multi-turn session, the adapter records the model selected by `openrouter/free`, verifies its `:free` identity, and pins subsequent turns to that model. The command still permits only one repetition for the router alias because separate executions may resolve differently. Select one explicit `:free` model before measuring repeated-run stability. Hosted output remains software evidence and never verifies scientific truth.
 
 The declared acceptance thresholds are:
 
