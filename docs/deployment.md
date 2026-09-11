@@ -1,6 +1,6 @@
 # Free Hugging Face deployment
 
-Concordia can be published as a CPU Docker Space for the saved scientific workspace. The Space is deliberately read-only and serves the deterministic fixture demonstration; it does not download model weights, call Ollama, or claim Evo2 findings.
+Concordia can be published as a CPU Docker Space for the saved scientific workspace. The Space is deliberately read-only and serves the deterministic fixture demonstration; it does not download model weights, call Ollama, or claim Evo2 findings. The interface separates claim investigation, bounded sequence replay, colony evolution, and provenance into focused views instead of exposing a mutable research backend.
 
 The current public deployment is [srikarjy025/concordia-colony](https://srikarjy025-concordia-colony.hf.space). It intentionally excludes API credentials, local Qwen artifacts, real Evo2 execution, and State model weights.
 
@@ -11,6 +11,11 @@ API, arbitrary sequences, CellForge execution, or either model runtime. See
 [`tool-integration.md`](tool-integration.md).
 The same deployment serves `/privacy` for clients that require a public privacy
 notice.
+
+The sequence sandbox runs entirely in the loaded browser state. It selects from
+144 persisted fixture counterfactuals, performs no mutation API call, and labels
+every score as non-scientific. It is a safe interaction demonstration, not an
+Evo2 execution service and not a general-purpose code sandbox.
 
 ## ZeroGPU qualification surface
 

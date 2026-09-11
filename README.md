@@ -164,18 +164,16 @@ Fitness retains all declared scientific-quality, reliability, penalty, runtime, 
 
 ## Interactive Workspace
 
-The React and TypeScript workspace opens directly into a saved active scientific run and provides:
+The React and TypeScript workspace opens as a guided genomic mission-control view rather than a marketing page. Four focused workspaces provide:
 
-- a WebGL colony lineage graph with generation replay;
-- a knowledge and provenance graph with semantic zoom;
-- claim backtracking that illuminates complete evidence paths;
-- genomic sequence, variant, attribution, motif, and mutational-scan tracks;
-- parent-versus-descendant and method-versus-method comparisons;
-- a cross-verification matrix and live execution stream;
-- immutable artifact, genome, and policy inspectors;
-- and clear visualization of failed or extinct lineages.
+- an investigation flow from claim selection to deterministic decision and provenance;
+- a browser-local sequence sandbox that replays one of 144 persisted fixture substitutions without transmitting DNA or invoking a model;
+- a generation scrubber, descendant selection, component-level fitness display, and inspectable extinction reasons;
+- an interactive WebGL provenance graph with keyboard-accessible node controls and immutable artifact inspection;
+- a collapsible saved-event timeline; and
+- responsive layouts, keyboard focus states, and reduced-motion support.
 
-Scientific views must be rendered from saved artifacts and clearly distinguish demonstrations from measured results.
+Every view is rendered from saved artifacts. The sandbox validates the user interaction and provenance workflow only: its fixture scores have `scientific_use_allowed=false` and are neither Evo2 predictions nor biological effects.
 
 ## Current Implementation
 
