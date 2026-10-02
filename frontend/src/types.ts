@@ -35,3 +35,22 @@ export interface Workspace {
     mutations: Record<string, Json>[]; selections: {generation: number; survivor_ids: string[]}[] };
   study: { status: string; reason: string; protocol_status: string };
 }
+export interface Evo2GenerationResult {
+  schema_version: number; model_id: string; execution_mode: string;
+  input_sequence_hash: string; generated_sequence: string; sampled_probabilities: number[];
+  elapsed_ms: number | null; elapsed_seconds: number; request_artifact_digest: string;
+  response_artifact_digest: string; scientific_use_allowed: boolean; limitations: string[];
+}
+export interface Evo2ForwardScore {
+  model_id: string; execution_mode: string; sequence_hash: string; score: number;
+  target: string; scientific_use_allowed: boolean;
+  input_artifact_digest: string | null; output_artifact_digest: string | null;
+  runtime_metadata: {
+    elapsed_seconds?: number; scored_token_count?: number; limitations?: string[];
+    target_token_log_probabilities?: number[];
+  };
+}
+export interface Evo2ForwardJob {
+  job_id: string; status: string; submitted_at: number; completed_at: number | null;
+  result: Evo2ForwardScore | null; error: string | null;
+}

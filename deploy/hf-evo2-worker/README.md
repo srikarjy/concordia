@@ -26,6 +26,34 @@ A passing hardware probe means only that the device is a candidate execution
 environment. It does not establish Evo2 runtime compatibility, artifact integrity,
 scientific validity, or a biological finding.
 
+## Forward scoring (unverified)
+
+This Space also exposes a `score_sequence` function (Gradio `api_name`) that
+accepts an exact 8,192-base DNA sequence and attempts one real Evo2 7B forward
+pass under the frozen scoring protocol
+(`concordia.genomics.evo2_protocol.Evo2ScoringSemantics`). It is called by the
+main Concordia deployment's interactive `POST /nvidia/evo2/forward` endpoint
+when `CONCORDIA_EVO2_FORWARD_SPACE_URL` points at this Space.
+
+**This has never completed a successful real run.** Model loading
+(`_load_evo2_model_once` in `app.py`) and the forward-pass call
+(`_forward_pass_logits`) are written against the pinned Evo2 repository's
+documented usage pattern, not a confirmed execution — no GPU has been
+available to this project to run them. Expect the first several invocations
+to fail with `FAILED_MODEL_LOAD` or `FAILED_FORWARD_PASS`; the fix for either
+belongs in `app.py`, not in the scoring math (`scoring.py`), which is
+independently unit-tested against
+`concordia.genomics.evo2_protocol.score_causal_logits` and does not depend on
+hardware.
+
+Every response is a typed record with an explicit `execution_status`
+(`COMPLETED`, `FAILED_VALIDATION`, `FAILED_MODEL_LOAD`, `FAILED_TOKENIZATION`,
+`FAILED_FORWARD_PASS`, or `FAILED_SCORING`) rather than an opaque traceback,
+and always carries `scientific_use_allowed: false` — the calling adapter
+(`concordia.genomics.evo2_zerogpu.ZeroGpuEvo2ForwardRunner`) independently
+re-verifies checkpoint identity, exact window length, and scored-token count
+before ever promoting a result to scientific eligibility.
+
 The worker requests the ZeroGPU-supported Python 3.12.12 runtime. Evo2 is
 installed from revision `53f195997257c56c00e5ef8d33a54f5baad143a6`, Vortex is
 pinned to 1.1.0, and the official FlashAttention 2.8.3 wheel is pinned by

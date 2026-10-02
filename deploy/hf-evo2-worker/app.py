@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import gradio as gr
+import numpy as np
 import spaces
 import torch
 from huggingface_hub import hf_hub_download
@@ -17,9 +18,12 @@ from qualification import (
     build_runtime_qualification,
     installed_package_versions,
 )
+from scoring import score_causal_logits, validate_protocol_sequence
 
 SCHEMA_VERSION = 1
 DECLARED_MINIMUM_VRAM_BYTES = 40 * 1024**3
+FORWARD_MODEL_CHECKPOINT = f"{CHECKPOINT_REPOSITORY}@{CHECKPOINT_REVISION}/evo2_7b.pt"
+FORWARD_TARGET = "mean_next_base_log_likelihood"
 
 
 def _probe_payload() -> dict[str, Any]:
@@ -126,17 +130,164 @@ def qualify_runtime() -> dict[str, Any]:
     return deepcopy(_qualify_runtime_once())
 
 
+@lru_cache(maxsize=1)
+def _load_evo2_model_once() -> Any:
+    """Load the pinned Evo2 7B checkpoint once per container lifetime.
+
+    UNVERIFIED: this has never been executed anywhere in this project. Every
+    prior qualification step (``probe_gpu``, ``qualify_runtime``) stopped
+    short of this call deliberately. The constructor call below follows the
+    pinned Evo2 repository's documented usage pattern
+    (``from evo2 import Evo2; Evo2('evo2_7b')``) but has not been confirmed
+    against the live Space. If this fails, the fix almost certainly belongs
+    here, not in the scoring math in ``scoring.py`` (which is unit-tested
+    independently of hardware).
+    """
+
+    from evo2 import Evo2
+
+    return Evo2("evo2_7b")
+
+
+def _tokenize(model: Any, sequence: str) -> list[int]:
+    """Tokenize under the frozen CharLevelTokenizer-vocab-512 contract.
+
+    UNVERIFIED: tries the documented ``tokenizer.tokenize`` method first and
+    falls back to ``tokenizer.encode`` (seen in other tokenizer APIs in this
+    ecosystem) only if the first call raises ``AttributeError``. Whichever
+    path actually works should be confirmed against the live Space and this
+    fallback simplified once it is.
+    """
+
+    tokenizer = model.tokenizer
+    if hasattr(tokenizer, "tokenize"):
+        return list(tokenizer.tokenize(sequence))
+    return list(tokenizer.encode(sequence))
+
+
+def _forward_pass_logits(model: Any, token_ids: list[int]) -> np.ndarray:
+    """Run one forward pass and return float64 logits as a NumPy array.
+
+    UNVERIFIED: the exact call signature (``model(input_ids)`` returning a
+    ``(logits, embeddings)`` tuple with ``logits`` shaped
+    ``(batch, length, vocab)``) matches the pinned repository's documented
+    README usage, not a confirmed local run.
+    """
+
+    input_ids = torch.tensor(token_ids, dtype=torch.int).unsqueeze(0).to("cuda:0")
+    with torch.no_grad():
+        outputs = model(input_ids)
+    logits = outputs[0] if isinstance(outputs, tuple) else outputs
+    return logits[0].float().cpu().numpy().astype(np.float64, copy=False)
+
+
+@spaces.GPU(duration=300)
+def score_sequence(sequence: str) -> dict[str, Any]:
+    """Run one real Evo2 7B forward pass under the frozen scoring protocol.
+
+    The duration budget (300s, ZeroGPU's typical ceiling) is a guess sized
+    for a cold-start 13.77GB checkpoint load plus one forward pass; it has
+    never been measured. If real runs consistently finish well under this or
+    time out before completing, tune this value from observed
+    ``elapsed_seconds`` in successful and failed runs.
+
+    UNVERIFIED end to end. This is the first code in this project that
+    attempts to load the checkpoint and execute a forward pass; nothing here
+    can be exercised without a live ZeroGPU allocation. Every failure mode is
+    reported as a typed, fail-closed record rather than raising, so a caller
+    always gets a structured ``execution_status`` instead of an opaque
+    traceback. ``scientific_use_allowed`` is always False here: scope
+    eligibility (checkpoint identity, exact window length, scored-token
+    count) is decided by the calling adapter
+    (``concordia.genomics.evo2_zerogpu.ZeroGpuEvo2ForwardRunner``), which can
+    be tested without a GPU, not by this function.
+    """
+
+    base_record: dict[str, Any] = {
+        "schema_version": 1,
+        "model_checkpoint": FORWARD_MODEL_CHECKPOINT,
+        "target": FORWARD_TARGET,
+        "scientific_use_allowed": False,
+    }
+
+    error = validate_protocol_sequence(sequence)
+    if error is not None:
+        return {**base_record, "execution_status": "FAILED_VALIDATION", "error": error}
+
+    try:
+        model = _load_evo2_model_once()
+    except Exception as exc:  # noqa: BLE001 - fail closed with a typed record
+        return {
+            **base_record,
+            "execution_status": "FAILED_MODEL_LOAD",
+            "error": f"{type(exc).__name__}: model load failed",
+        }
+
+    normalized = sequence.strip().upper()
+    try:
+        token_ids = _tokenize(model, normalized)
+    except Exception as exc:  # noqa: BLE001
+        return {
+            **base_record,
+            "execution_status": "FAILED_TOKENIZATION",
+            "error": f"{type(exc).__name__}: tokenization failed",
+        }
+
+    try:
+        logits = _forward_pass_logits(model, token_ids)
+    except Exception as exc:  # noqa: BLE001
+        return {
+            **base_record,
+            "execution_status": "FAILED_FORWARD_PASS",
+            "error": f"{type(exc).__name__}: forward pass failed",
+        }
+
+    try:
+        scored = score_causal_logits(logits, token_ids)
+    except ValueError as exc:
+        return {
+            **base_record,
+            "execution_status": "FAILED_SCORING",
+            "error": str(exc),
+        }
+
+    return {
+        **base_record,
+        "execution_status": "COMPLETED",
+        "sequence_length": len(normalized),
+        "token_ids": token_ids,
+        **scored,
+    }
+
+
 with gr.Blocks(title="Concordia Evo2 Forward Worker") as demo:
     gr.Markdown(
         "# Concordia Evo2 Forward Worker\n"
-        "Run bounded hardware and runtime checks before executing Evo2. "
-        "Neither check loads the model or produces scientific evidence."
+        "Run bounded hardware and runtime checks, or one real forward pass against "
+        "the frozen scoring protocol. The forward pass is unverified: it is the "
+        "first attempt in this project to load the checkpoint and run inference, "
+        "and it may fail on early invocations."
     )
     runtime_button = gr.Button("Verify pinned runtime and checkpoint", variant="primary")
     run_button = gr.Button("Run GPU capability probe")
     result = gr.JSON(label="Qualification record")
     runtime_button.click(fn=qualify_runtime, outputs=result, api_name="qualify_runtime")
     run_button.click(fn=probe_gpu, outputs=result, api_name="probe_gpu")
+
+    gr.Markdown("## Forward scoring (unverified)")
+    sequence_input = gr.Textbox(
+        label="Exactly 8,192-base DNA sequence (A/C/G/T only)",
+        lines=4,
+        max_lines=10,
+    )
+    score_button = gr.Button("Run real forward pass", variant="stop")
+    score_result = gr.JSON(label="Forward score record")
+    score_button.click(
+        fn=score_sequence,
+        inputs=sequence_input,
+        outputs=score_result,
+        api_name="score_sequence",
+    )
 
 
 if __name__ == "__main__":

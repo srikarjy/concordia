@@ -25,6 +25,56 @@ Space revision `390013f35bef0874bbc9a24d49909d0ea14c6b18` passed the no-input ru
 
 This result establishes artifact and import compatibility only. Checkpoint deserialization, model loading, FlashAttention execution on compute capability 12.0, causal token shifting, numerical correctness, and forward scoring remain unverified. The Space must remain restricted to the frozen HBB inputs if an execution boundary is added; it must never become an arbitrary-sequence public endpoint.
 
+## Interactive endpoints and their environment variables
+
+The deployed workspace is mostly read-only (see above), but exposes five
+rate-limited, non-tool endpoints that make real outbound calls or execute
+real local code on a visitor's request. Each is controlled by an environment
+variable; omitting it makes that specific endpoint fail closed with a `503`
+rather than silently degrading:
+
+| Variable | Enables | Behavior when unset |
+| --- | --- | --- |
+| `NVIDIA_API_KEY` | `POST /nvidia/evo2/generate`, `/nvidia/boltz/predict`, `/nvidia/esmfold/predict` | `503` |
+| `CONCORDIA_EVO2_FORWARD_SPACE_URL` | `POST /nvidia/evo2/forward` (points at a deployed `deploy/hf-evo2-worker` Space) | `503` |
+| `CONCORDIA_TRUST_PROXY_HEADERS=1` | Honors `X-Forwarded-For` for per-client rate limiting | Falls back to the raw socket address, which is wrong behind a proxy (see below) |
+| `CONCORDIA_DATABASE_URL` | Persists rate limits, response caches, and job history to Postgres instead of local SQLite | Everything still works, but state resets on every redeploy/restart |
+
+`POST /colony/run` needs no variable — it always runs the deterministic
+fixture executor locally.
+
+**Set `CONCORDIA_TRUST_PROXY_HEADERS=1` on Hugging Face Spaces.** A Space
+sits behind HF's own reverse proxy, so every request's raw socket address is
+the proxy's address, not the visitor's — without this flag, every visitor
+shares one rate-limit bucket.
+
+### Persisting state with Supabase (optional)
+
+A Space's local filesystem is wiped on every redeploy and restart. Setting
+`CONCORDIA_DATABASE_URL` to a Postgres connection string (a free Supabase
+project works well) makes `evo2_generation_gateway.py`, `esmfold_gateway.py`,
+`boltz_gateway.py`, `evo2_forward_queue.py`, and the colony-run rate limiter
+all use `genomics/postgres_backend.py` instead of their local SQLite files —
+see each module's docstring. Nothing else changes; this is purely a
+persistence upgrade for the five interactive endpoints above, not the core
+run/colony ledgers, which remain intentionally local per this project's
+zero-cost, local-first design.
+
+To set it up:
+
+1. In a Supabase project, run the migration that creates
+   `concordia_rate_limit_requests`, `concordia_result_cache`, and
+   `concordia_forward_jobs` (three tables, namespaced by a `concordia_`
+   prefix so they coexist safely with any other tables in the same project).
+   The exact SQL is in this project's own migration history under the name
+   `create_concordia_interactive_state_tables`.
+2. From the Supabase dashboard, go to Project Settings → Database →
+   Connection string, and copy the **Transaction pooler** URI (port 6543) —
+   not the direct connection — since Spaces' outbound networking is IPv4
+   and the pooler supports that; the direct host may not.
+3. Set `CONCORDIA_DATABASE_URL` to that URI as a Space secret (never commit
+   it). Supabase's free tier is sufficient for this workload.
+
 ## Build locally
 
 ```bash
@@ -48,9 +98,10 @@ hf upload "$HF_SPACE_ID" . \
   --include Dockerfile --include README.md --include LICENSE \
   --include pyproject.toml --include uv.lock --include 'src/**' \
   --include 'frontend/**' --include 'configs/**' --include 'docs/**' \
-  --include 'reports/**' \
+  --include 'reports/**' --include requirements-space.txt \
   --exclude 'frontend/node_modules/**' --exclude 'frontend/dist/**' \
   --exclude '.concordia/**' --exclude 'data/raw/**' \
+  --exclude '**/__pycache__/**' \
   --commit-message "Publish reproducible scientific workspace"
 ```
 
