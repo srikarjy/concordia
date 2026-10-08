@@ -86,6 +86,10 @@ def test_successful_in_scope_forward_pass_is_accepted_by_real_scorer(tmp_path: P
     assert artifacts.get_bytes(result.input_artifact_digest)
     assert artifacts.get_bytes(result.output_artifact_digest)
     assert result.runtime_metadata["target_token_log_probabilities"] == [-0.01] * 8191
+    retained_request = json.loads(artifacts.get_bytes(result.input_artifact_digest))
+    assert retained_request["input_retained"] is False
+    assert retained_request["input_sequence_length"] == 8_192
+    assert sequence().sequence not in json.dumps(retained_request)
 
 
 def test_wrong_scored_token_count_is_rejected_as_out_of_scope(tmp_path: Path) -> None:

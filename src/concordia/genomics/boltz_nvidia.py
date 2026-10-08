@@ -58,7 +58,8 @@ class NvidiaHostedBoltzRunner:
     model_id = "mit/boltz2"
     endpoint = "https://health.api.nvidia.com/v1/biology/mit/boltz2/predict"
     status_endpoint_template = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/status/{task_id}"
-    max_sequence_length = 2_000
+    # NVIDIA's current Boltz-2 NIM contract allows 1-4,096 residues per polymer.
+    max_sequence_length = 4_096
     poll_seconds_header = 300
     max_poll_attempts = 60
     poll_interval_seconds = 5.0
@@ -128,8 +129,19 @@ class NvidiaHostedBoltzRunner:
                 "schema_version": 1,
                 "model_id": self.model_id,
                 "endpoint": self.endpoint,
-                "input_sequence": normalized,
-                "request": request_payload,
+                "input_sequence_hash": input_hash,
+                "input_sequence_length": len(normalized),
+                "request_parameters": {
+                    "recycling_steps": recycling_steps,
+                    "sampling_steps": sampling_steps,
+                    "diffusion_samples": diffusion_samples,
+                    "step_scale": step_scale,
+                    "without_potentials": True,
+                    "polymer_count": 1,
+                    "molecule_type": "protein",
+                    "msa_method": "single_sequence_self_reference",
+                },
+                "input_retained": False,
                 "scientific_use_allowed": False,
             }
         )
@@ -170,7 +182,7 @@ class NvidiaHostedBoltzRunner:
             raise RuntimeError("NVIDIA Boltz-2 structure entry had no structure text")
         confidence_raw = payload.get("confidence_scores") or []
         confidence_scores = tuple(
-            float(value) for value in confidence_raw if isinstance(value, (int, float))
+            float(value) for value in confidence_raw if isinstance(value, int | float)
         )
         return NvidiaHostedBoltzResult(
             input_sequence_hash=input_hash,

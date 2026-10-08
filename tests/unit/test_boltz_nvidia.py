@@ -40,6 +40,10 @@ def test_boltz_synchronous_200_response(tmp_path: Path) -> None:
     assert result.confidence_scores == (0.87,)
     assert not result.scientific_use_allowed
     assert "test-secret" not in result.model_dump_json()
+    retained_request = json.loads(artifacts.get_bytes(result.request_artifact_digest))
+    assert retained_request["input_retained"] is False
+    assert retained_request["input_sequence_length"] == 3
+    assert "MKT" not in json.dumps(retained_request)
 
 
 def test_boltz_async_202_then_polls_to_completion(tmp_path: Path) -> None:

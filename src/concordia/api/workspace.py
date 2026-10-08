@@ -16,6 +16,26 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 
 from concordia.colonies.live_run import run_live_colony
+from concordia.experiments.schema import (
+    CreateExperimentNodeRequest,
+    CreateExperimentRequest,
+    CreateExperimentResponse,
+    DnaPayload,
+    ExperimentComparison,
+    ExperimentManifest,
+    ExperimentNode,
+    ExperimentNodeKind,
+    ExperimentOperation,
+    ModelRunPayload,
+    StructurePayload,
+)
+from concordia.experiments.service import (
+    ExperimentAccessError,
+    ExperimentConflictError,
+    ExperimentNodeNotFoundError,
+    ExperimentNotFoundError,
+    ExperimentStore,
+)
 from concordia.genomics.boltz_gateway import BoltzGateway
 from concordia.genomics.boltz_nvidia import NvidiaHostedBoltzResult, NvidiaHostedBoltzRunner
 from concordia.genomics.esmfold_gateway import EsmFoldGateway
@@ -35,6 +55,7 @@ from concordia.genomics.evo2_zerogpu import ZeroGpuEvo2ForwardRunner
 from concordia.genomics.rate_limiting import SqliteRateLimiter
 from concordia.genomics.schema import GenomicSequence
 from concordia.reporting.workspace import build_workspace
+from concordia.scientific.frameworks import framework_catalog
 
 HBB_CHECKPOINT = "arcinstitute/evo2_7b@bda0089f92582d5baabf0f22d9fc85f3588f6b58/evo2_7b.pt"
 HBB_TARGET: Literal["mean_next_base_log_likelihood"] = "mean_next_base_log_likelihood"
@@ -111,7 +132,7 @@ class EsmFoldPredictRequest(BaseModel):
 class BoltzPredictRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    sequence: str = Field(min_length=1, max_length=2_000)
+    sequence: str = Field(min_length=1, max_length=4_096)
 
 
 class ColonyRunRequest(BaseModel):
@@ -120,6 +141,32 @@ class ColonyRunRequest(BaseModel):
     population_size: int = Field(default=3, ge=1, le=6)
     generations: int = Field(default=2, ge=1, le=3)
     survivor_count: int = Field(default=1, ge=1, le=6)
+
+
+class ExperimentEvo2GenerateRequest(Evo2GenerateRequest):
+    parent_node_id: str = Field(min_length=1)
+    branch: str = Field(default="evo2-generation", min_length=1, max_length=100)
+
+
+class ExperimentEvo2GenerateResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    result: NvidiaHostedGenerationResult
+    run_node: ExperimentNode
+    output_node: ExperimentNode
+
+
+class ExperimentBoltzPredictRequest(BoltzPredictRequest):
+    parent_node_id: str = Field(min_length=1)
+    branch: str = Field(default="boltz-structure", min_length=1, max_length=100)
+
+
+class ExperimentBoltzPredictResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    result: NvidiaHostedBoltzResult
+    run_node: ExperimentNode
+    output_node: ExperimentNode
 
 
 TOOL_PATHS = (
@@ -192,6 +239,7 @@ def create_workspace_app(
     # Postgres-backed equivalent instead; see genomics/postgres_backend.py
     # and docs/deployment.md. Local development is unaffected either way.
     database_url = os.environ.get("CONCORDIA_DATABASE_URL")
+    experiment_store = ExperimentStore(Path(state_root) / "experiments")
 
     generation_gateway = Evo2GenerationGateway(
         NvidiaHostedEvo2GenerationRunner(
@@ -338,8 +386,21 @@ def create_workspace_app(
                     "deterministic software-fixture executor, no NVIDIA call involved. "
                     "Requests are rate-limited per client.",
                     "",
-                    "The application does not intentionally persist request parameters beyond "
-                    "the rate-limit and cache records described above. Its hosting provider "
+                    "The experiment sandbox endpoints intentionally persist molecular objects, "
+                    "model-run metadata, lineage edges, candidate selections, and evidence "
+                    "references so an experiment can be replayed. Each experiment receives a "
+                    "random access token that is returned once and must be supplied through "
+                    "X-Concordia-Experiment-Token. This is capability-based access for a "
+                    "sandbox demonstration, not an account system or a substitute for a "
+                    "multi-user authorization service.",
+                    "",
+                    "Request provenance does not retain the raw submitted DNA or protein "
+                    "sequence. It stores a SHA-256 sequence digest, sequence length, "
+                    "non-sequence inference parameters, rate-limit records, cached model "
+                    "outputs, raw provider responses, and forward-job status for provenance "
+                    "and quota enforcement. Provider responses and derived outputs, including "
+                    "protein structures, can reflect biological information from the submitted "
+                    "sequence. Its hosting provider "
                     "may process standard connection and access-log metadata under the "
                     "provider's own privacy terms.",
                     "",
@@ -649,10 +710,254 @@ def create_workspace_app(
         except ValueError as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
 
+    def authorize_experiment(experiment_id: str, token: str | None) -> None:
+        if not token:
+            raise HTTPException(status_code=401, detail="experiment access token is required")
+        try:
+            experiment_store.authorize(experiment_id, token)
+        except ExperimentNotFoundError as error:
+            raise HTTPException(status_code=404, detail="experiment not found") from error
+        except ExperimentAccessError as error:
+            raise HTTPException(
+                status_code=403, detail="invalid experiment access token"
+            ) from error
+
+    @app.post(
+        "/experiments",
+        response_model=CreateExperimentResponse,
+        summary="Create a private molecular experiment sandbox",
+    )
+    def create_experiment(payload: CreateExperimentRequest) -> CreateExperimentResponse:
+        return experiment_store.create(payload)
+
+    @app.get(
+        "/experiments/{experiment_id}",
+        response_model=ExperimentManifest,
+        summary="Replay an experiment as a reproducible provenance graph",
+    )
+    def get_experiment(
+        experiment_id: str,
+        x_concordia_experiment_token: str | None = Header(default=None),
+    ) -> ExperimentManifest:
+        authorize_experiment(experiment_id, x_concordia_experiment_token)
+        return experiment_store.manifest(experiment_id)
+
+    @app.post(
+        "/experiments/{experiment_id}/nodes",
+        response_model=ExperimentNode,
+        summary="Add an immutable molecular object or operation to an experiment",
+    )
+    def add_experiment_node(
+        experiment_id: str,
+        payload: CreateExperimentNodeRequest,
+        x_concordia_experiment_token: str | None = Header(default=None),
+    ) -> ExperimentNode:
+        authorize_experiment(experiment_id, x_concordia_experiment_token)
+        try:
+            return experiment_store.add_node(experiment_id, payload)
+        except ExperimentConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.get(
+        "/experiments/{experiment_id}/nodes/{node_id}/payload",
+        summary="Read one authorized experiment node payload",
+    )
+    def get_experiment_node_payload(
+        experiment_id: str,
+        node_id: str,
+        x_concordia_experiment_token: str | None = Header(default=None),
+    ) -> dict[str, object]:
+        authorize_experiment(experiment_id, x_concordia_experiment_token)
+        try:
+            return experiment_store.payload(experiment_id, node_id)
+        except ExperimentNodeNotFoundError as error:
+            raise HTTPException(status_code=404, detail="experiment node not found") from error
+
+    @app.post(
+        "/experiments/{experiment_id}/candidates/{node_id}",
+        response_model=ExperimentManifest,
+        summary="Save an experiment node as a promising candidate",
+    )
+    def select_experiment_candidate(
+        experiment_id: str,
+        node_id: str,
+        x_concordia_experiment_token: str | None = Header(default=None),
+    ) -> ExperimentManifest:
+        authorize_experiment(experiment_id, x_concordia_experiment_token)
+        try:
+            return experiment_store.select(experiment_id, node_id)
+        except ExperimentNodeNotFoundError as error:
+            raise HTTPException(status_code=404, detail="experiment node not found") from error
+
+    @app.get(
+        "/experiments/{experiment_id}/compare",
+        response_model=ExperimentComparison,
+        summary="Compare two molecular objects or measurements",
+    )
+    def compare_experiment_nodes(
+        experiment_id: str,
+        left: str = Query(min_length=1),
+        right: str = Query(min_length=1),
+        x_concordia_experiment_token: str | None = Header(default=None),
+    ) -> ExperimentComparison:
+        authorize_experiment(experiment_id, x_concordia_experiment_token)
+        try:
+            return experiment_store.compare(experiment_id, left, right)
+        except ExperimentNodeNotFoundError as error:
+            raise HTTPException(status_code=404, detail="comparison node not found") from error
+
+    @app.post(
+        "/experiments/{experiment_id}/operations/evo2/generate",
+        response_model=ExperimentEvo2GenerateResponse,
+        summary="Generate DNA with Evo2 and record complete experiment lineage",
+    )
+    def generate_evo2_in_experiment(
+        experiment_id: str,
+        payload: ExperimentEvo2GenerateRequest,
+        request: Request,
+        x_concordia_experiment_token: str | None = Header(default=None),
+    ) -> ExperimentEvo2GenerateResponse:
+        authorize_experiment(experiment_id, x_concordia_experiment_token)
+        try:
+            parent_payload = experiment_store.payload(experiment_id, payload.parent_node_id)
+        except ExperimentNodeNotFoundError as error:
+            raise HTTPException(status_code=404, detail="parent node not found") from error
+        normalized = "".join(payload.sequence.upper().split())
+        if (
+            parent_payload.get("payload_type") != "dna"
+            or parent_payload.get("sequence") != normalized
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail="submitted sequence must exactly match the selected DNA parent",
+            )
+        sequence = GenomicSequence(
+            sequence_id=f"experiment:{experiment_id}:{payload.parent_node_id}",
+            sequence=normalized,
+            strand="+",
+        )
+        try:
+            result = generation_gateway.generate(
+                client_id=_client_ip(request, trust_proxy_headers=trust_proxy_headers),
+                sequence=sequence,
+                num_tokens=payload.num_tokens,
+                temperature=payload.temperature,
+                top_k=payload.top_k,
+                top_p=payload.top_p,
+                random_seed=payload.random_seed,
+            )
+        except RateLimitExceededError:
+            raise
+        except RuntimeError as error:
+            status = 503 if "NVIDIA_API_KEY" in str(error) else 502
+            raise HTTPException(status_code=status, detail=str(error)) from error
+        run_node, output_node = experiment_store.record_model_operation(
+            experiment_id,
+            parent_node_id=payload.parent_node_id,
+            branch=payload.branch,
+            run_label="Evo2 generation",
+            run_payload=ModelRunPayload(
+                model=result.model_id,
+                model_version=result.model_id,
+                parameters={
+                    "num_tokens": payload.num_tokens,
+                    "temperature": payload.temperature,
+                    "top_k": payload.top_k,
+                    "top_p": payload.top_p,
+                },
+                seed=payload.random_seed,
+                execution_mode=result.execution_mode,
+            ),
+            output_label="Evo2 generated DNA",
+            output_kind=ExperimentNodeKind.DNA_SEQUENCE,
+            output_payload=DnaPayload(sequence=result.generated_sequence),
+            operation=ExperimentOperation.GENERATE,
+            evidence_artifact_digests=(
+                result.request_artifact_digest,
+                result.response_artifact_digest,
+            ),
+            scientific_use_allowed=False,
+        )
+        return ExperimentEvo2GenerateResponse(
+            result=result, run_node=run_node, output_node=output_node
+        )
+
+    @app.post(
+        "/experiments/{experiment_id}/operations/boltz/predict",
+        response_model=ExperimentBoltzPredictResponse,
+        summary="Predict a structure with Boltz-2 and record complete experiment lineage",
+    )
+    def predict_boltz_in_experiment(
+        experiment_id: str,
+        payload: ExperimentBoltzPredictRequest,
+        request: Request,
+        x_concordia_experiment_token: str | None = Header(default=None),
+    ) -> ExperimentBoltzPredictResponse:
+        authorize_experiment(experiment_id, x_concordia_experiment_token)
+        try:
+            parent_payload = experiment_store.payload(experiment_id, payload.parent_node_id)
+        except ExperimentNodeNotFoundError as error:
+            raise HTTPException(status_code=404, detail="parent node not found") from error
+        normalized = "".join(payload.sequence.upper().split())
+        if (
+            parent_payload.get("payload_type") != "protein"
+            or parent_payload.get("sequence") != normalized
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail="submitted sequence must exactly match the selected protein parent",
+            )
+        try:
+            result = boltz_gateway.predict(
+                client_id=_client_ip(request, trust_proxy_headers=trust_proxy_headers),
+                sequence=normalized,
+            )
+        except RateLimitExceededError:
+            raise
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        except RuntimeError as error:
+            status = 503 if "NVIDIA_API_KEY" in str(error) else 502
+            raise HTTPException(status_code=status, detail=str(error)) from error
+        run_node, output_node = experiment_store.record_model_operation(
+            experiment_id,
+            parent_node_id=payload.parent_node_id,
+            branch=payload.branch,
+            run_label="Boltz-2 structure prediction",
+            run_payload=ModelRunPayload(
+                model=result.model_id,
+                model_version=result.model_id,
+                parameters={"msa_method": "single_sequence_self_reference"},
+                execution_mode=result.execution_mode,
+            ),
+            output_label="Boltz-2 predicted structure",
+            output_kind=ExperimentNodeKind.STRUCTURE,
+            output_payload=StructurePayload(
+                format="mmcif" if result.structure_format.lower() == "mmcif" else "pdb",
+                structure_text=result.structure_text,
+            ),
+            operation=ExperimentOperation.PREDICT_STRUCTURE,
+            evidence_artifact_digests=(
+                result.request_artifact_digest,
+                result.response_artifact_digest,
+            ),
+            scientific_use_allowed=False,
+        )
+        return ExperimentBoltzPredictResponse(
+            result=result, run_node=run_node, output_node=output_node
+        )
+
     @app.get("/.well-known/concordia-tools.json", include_in_schema=False)
     @app.get("/api/tools", include_in_schema=False)
     def tool_manifest():
         return _tool_manifest()
+
+    @app.get("/api/frameworks", summary="List scientific frameworks and evidence boundaries")
+    def frameworks():
+        return {
+            "schema_version": 1,
+            "frameworks": [framework.model_dump(mode="json") for framework in framework_catalog()],
+        }
 
     @app.get("/api/tools/openapi.json", include_in_schema=False)
     def tool_openapi():

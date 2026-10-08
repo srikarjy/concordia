@@ -111,7 +111,9 @@ class ZeroGpuEvo2ForwardRunner:
                 "schema_version": 1,
                 "space_url": self.space_url,
                 "api_name": self.api_name,
-                "input_sequence": sequence.model_dump(mode="json"),
+                "input_sequence_hash": sequence.content_hash(),
+                "input_sequence_length": len(sequence.sequence),
+                "input_retained": False,
                 "scientific_use_allowed": False,
             }
         )
@@ -158,7 +160,7 @@ class ZeroGpuEvo2ForwardRunner:
         in_scope = (
             worker_record.get("sequence_length") == self.scoring.expected_sequence_length
             and scored_token_count == self.scoring.expected_scored_token_count
-            and isinstance(worker_record.get("mean_log_likelihood"), (int, float))
+            and isinstance(worker_record.get("mean_log_likelihood"), int | float)
         )
 
         return {

@@ -91,8 +91,12 @@ class NvidiaHostedEvo2GenerationRunner:
                 "schema_version": 1,
                 "model_id": self.model_id,
                 "endpoint": self.endpoint,
-                "input_sequence": sequence.model_dump(mode="json"),
-                "request": request_payload,
+                "input_sequence_hash": sequence.content_hash(),
+                "input_sequence_length": len(sequence.sequence),
+                "request_parameters": {
+                    key: value for key, value in request_payload.items() if key != "sequence"
+                },
+                "input_retained": False,
                 "scientific_use_allowed": False,
             }
         )
@@ -131,7 +135,7 @@ class NvidiaHostedEvo2GenerationRunner:
             or len(probabilities) != num_tokens
             or any(
                 isinstance(value, bool)
-                or not isinstance(value, (int, float))
+                or not isinstance(value, int | float)
                 or not 0 <= float(value) <= 1
                 for value in probabilities
             )

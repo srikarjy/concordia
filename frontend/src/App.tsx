@@ -7,18 +7,21 @@ import {
 import { EvidenceGraph } from './Graph';
 import type {
   Claim, EvidenceCheck, Evo2ForwardJob, Evo2GenerationResult, Member, Workspace,
+  ExperimentComparison, ExperimentManifest, ScientificFramework,
 } from './types';
 
 const API_ROOT = import.meta.env.VITE_API_ROOT ?? '';
 const BASES = ['A', 'C', 'G', 'T'];
-type View = 'investigate' | 'sandbox' | 'generate' | 'colony' | 'provenance';
+type View = 'experiment' | 'investigate' | 'sandbox' | 'generate' | 'colony' | 'provenance' | 'frameworks';
 
 const NAV_ITEMS: { id: View; label: string; description: string; icon: typeof Search }[] = [
+  { id: 'experiment', label: 'Experiment canvas', description: 'Branch molecular designs', icon: GitBranch },
   { id: 'investigate', label: 'Investigation', description: 'Claims and evidence', icon: Search },
   { id: 'sandbox', label: 'Sequence sandbox', description: 'Replay perturbations', icon: FlaskConical },
   { id: 'generate', label: 'Evo2 generation', description: 'Live hosted NVIDIA call', icon: Wand2 },
   { id: 'colony', label: 'Colony evolution', description: 'Lineage and fitness', icon: GitBranch },
   { id: 'provenance', label: 'Provenance graph', description: 'Trace every artifact', icon: Network },
+  { id: 'frameworks', label: 'Scientific stack', description: 'Frameworks and boundaries', icon: Atom },
 ];
 
 function pathForClaim(workspace: Workspace, claim: Claim): Set<string> {
@@ -106,7 +109,7 @@ function Sidebar({ view, onView, workspace }: { view: View; onView: (view: View)
       const Icon = item.icon;
       return <button key={item.id} className={view === item.id ? 'nav-item active' : 'nav-item'} onClick={() => onView(item.id)}><Icon size={18} /><span><strong>{item.label}</strong><small>{item.description}</small></span><ChevronRight size={15} /></button>;
     })}</nav>
-    <div className="boundary-card"><div><ShieldCheck size={18} /><strong>Scientific boundary</strong></div><p>This public workspace replays saved software fixtures. It never runs Evo2 or claims biological support.</p><span><i /> No data leaves this page</span></div>
+    <div className="boundary-card"><div><ShieldCheck size={18} /><strong>Scientific boundary</strong></div><p>Saved audits are fixture-backed. Live model calls and persistent experiments are explicitly labeled and never imply biological validation.</p><span><i /> Provenance before claims</span></div>
     <div className="sidebar-foot"><span>Snapshot</span><code>{shortDigest(workspace.snapshot_digest, 8)}</code></div>
   </aside>;
 }
@@ -169,6 +172,159 @@ function Sandbox({ workspace, position, onPosition }: { workspace: Workspace; po
 
 function LiveCallBadge() {
   return <span className="live-badge"><AlertTriangle size={14} /> Real NVIDIA call</span>;
+}
+
+function ExperimentCanvas() {
+  const [title, setTitle] = useState('Molecular design study');
+  const [sequence, setSequence] = useState('ACGTACGT');
+  const [moleculeMode, setMoleculeMode] = useState<'dna' | 'protein'>('dna');
+  const [manifest, setManifest] = useState<ExperimentManifest | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [selectedParent, setSelectedParent] = useState<string | null>(null);
+  const [position, setPosition] = useState(0);
+  const [alternate, setAlternate] = useState('T');
+  const [busy, setBusy] = useState(false);
+  const [modelBusy, setModelBusy] = useState(false);
+  const [canvasError, setCanvasError] = useState<string | null>(null);
+  const [structure, setStructure] = useState<{ text: string; format: string } | null>(null);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [comparison, setComparison] = useState<ExperimentComparison | null>(null);
+
+  const refresh = async (experimentId: string, accessToken: string) => {
+    const response = await fetch(`${API_ROOT}/experiments/${experimentId}`, { headers: { 'X-Concordia-Experiment-Token': accessToken } });
+    if (!response.ok) throw new Error('Experiment replay failed');
+    setManifest(await response.json() as ExperimentManifest);
+  };
+
+  const create = async () => {
+    setBusy(true); setCanvasError(null);
+    try {
+      const experimentResponse = await fetch(`${API_ROOT}/experiments`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title }),
+      });
+      const created = await experimentResponse.json();
+      if (!experimentResponse.ok) throw new Error(created.detail ?? 'Experiment creation failed');
+      const experimentId = created.experiment.experiment_id as string;
+      const accessToken = created.access_token as string;
+      const rootResponse = await fetch(`${API_ROOT}/experiments/${experimentId}/nodes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Concordia-Experiment-Token': accessToken },
+        body: JSON.stringify({ kind: `${moleculeMode}_sequence`, operation: 'root', label: `Reference ${moleculeMode.toUpperCase()}`, payload: { payload_type: moleculeMode, sequence } }),
+      });
+      const root = await rootResponse.json();
+      if (!rootResponse.ok) throw new Error(root.detail ?? 'Reference creation failed');
+      setToken(accessToken); setSelectedParent(root.node_id);
+      await refresh(experimentId, accessToken);
+    } catch (reason) {
+      setCanvasError(reason instanceof Error ? reason.message : 'Experiment creation failed');
+    } finally { setBusy(false); }
+  };
+
+  const branch = async () => {
+    if (!manifest || !token || !selectedParent) return;
+    const parent = manifest.nodes.find(node => node.node_id === selectedParent);
+    if (!parent || position >= sequence.length || alternate === sequence[position]) {
+      setCanvasError('Choose a valid position and a different alternate base.'); return;
+    }
+    setBusy(true); setCanvasError(null);
+    const mutated = `${sequence.slice(0, position)}${alternate}${sequence.slice(position + 1)}`;
+    try {
+      const response = await fetch(`${API_ROOT}/experiments/${manifest.experiment.experiment_id}/nodes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Concordia-Experiment-Token': token },
+        body: JSON.stringify({ kind: 'dna_sequence', operation: 'mutate', label: `Variant ${manifest.nodes.length}`, branch: `branch-${manifest.nodes.length}`, parent_ids: [selectedParent], payload: { payload_type: 'dna', sequence: mutated }, mutations: [{ position, reference: sequence[position], alternate }] }),
+      });
+      const node = await response.json();
+      if (!response.ok) throw new Error(node.detail ?? 'Branch creation failed');
+      setSequence(mutated); setSelectedParent(node.node_id);
+      await refresh(manifest.experiment.experiment_id, token);
+    } catch (reason) {
+      setCanvasError(reason instanceof Error ? reason.message : 'Branch creation failed');
+    } finally { setBusy(false); }
+  };
+
+  const chooseParent = async (nodeId: string) => {
+    if (!manifest || !token) return;
+    setCanvasError(null);
+    try {
+      const response = await fetch(`${API_ROOT}/experiments/${manifest.experiment.experiment_id}/nodes/${nodeId}/payload`, { headers: { 'X-Concordia-Experiment-Token': token } });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.detail ?? 'Node replay failed');
+      if (payload.payload_type === 'dna' || payload.payload_type === 'protein') {
+        setMoleculeMode(payload.payload_type); setSelectedParent(nodeId);
+        setSequence(payload.sequence as string); setPosition(0); setStructure(null);
+      } else if (payload.payload_type === 'structure') {
+        setSelectedParent(nodeId);
+        setStructure({ text: payload.structure_text as string, format: payload.format as string });
+      } else throw new Error('This node has no interactive molecular viewer yet.');
+    } catch (reason) { setCanvasError(reason instanceof Error ? reason.message : 'Node replay failed'); }
+  };
+
+  const generateBranch = async () => {
+    if (!manifest || !token || !selectedParent) return;
+    setModelBusy(true); setCanvasError(null);
+    try {
+      const response = await fetch(`${API_ROOT}/experiments/${manifest.experiment.experiment_id}/operations/evo2/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Concordia-Experiment-Token': token },
+        body: JSON.stringify({ parent_node_id: selectedParent, sequence, num_tokens: 8, branch: `evo2-${manifest.nodes.length}` }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.detail ?? body.message ?? 'Evo2 generation failed');
+      setSelectedParent(body.output_node.node_id as string);
+      setSequence(body.result.generated_sequence as string);
+      await refresh(manifest.experiment.experiment_id, token);
+    } catch (reason) {
+      setCanvasError(reason instanceof Error ? reason.message : 'Evo2 generation failed');
+    } finally { setModelBusy(false); }
+  };
+
+  const predictStructure = async () => {
+    if (!manifest || !token || !selectedParent || moleculeMode !== 'protein') return;
+    setModelBusy(true); setCanvasError(null);
+    try {
+      const response = await fetch(`${API_ROOT}/experiments/${manifest.experiment.experiment_id}/operations/boltz/predict`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Concordia-Experiment-Token': token },
+        body: JSON.stringify({ parent_node_id: selectedParent, sequence, branch: `boltz-${manifest.nodes.length}` }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.detail ?? body.message ?? 'Boltz prediction failed');
+      setSelectedParent(body.output_node.node_id as string);
+      setStructure({ text: body.result.structure_text as string, format: body.result.structure_format as string });
+      await refresh(manifest.experiment.experiment_id, token);
+    } catch (reason) {
+      setCanvasError(reason instanceof Error ? reason.message : 'Boltz prediction failed');
+    } finally { setModelBusy(false); }
+  };
+
+  const saveCandidate = async () => {
+    if (!manifest || !token || !selectedParent) return;
+    const response = await fetch(`${API_ROOT}/experiments/${manifest.experiment.experiment_id}/candidates/${selectedParent}`, {
+      method: 'POST', headers: { 'X-Concordia-Experiment-Token': token },
+    });
+    if (!response.ok) { setCanvasError('Candidate selection failed'); return; }
+    setManifest(await response.json() as ExperimentManifest);
+  };
+
+  const toggleCompare = (nodeId: string) => {
+    setComparison(null);
+    setCompareIds(current => current.includes(nodeId) ? current.filter(id => id !== nodeId) : [...current.slice(-1), nodeId]);
+  };
+
+  const compare = async () => {
+    if (!manifest || !token || compareIds.length !== 2) return;
+    const query = new URLSearchParams({ left: compareIds[0], right: compareIds[1] });
+    const response = await fetch(`${API_ROOT}/experiments/${manifest.experiment.experiment_id}/compare?${query}`, { headers: { 'X-Concordia-Experiment-Token': token } });
+    if (!response.ok) { setCanvasError('Comparison failed'); return; }
+    setComparison(await response.json() as ExperimentComparison);
+  };
+
+  return <><div className="view-intro"><div><p className="kicker">Molecular experiment DAG</p><h2>Create, branch, compare, and replay designs without losing lineage.</h2></div><span className="view-stat"><strong>{manifest?.nodes.length ?? 0}</strong> experiment nodes</span></div>
+    {!manifest ? <section className="card sandbox-controls"><div className="card-heading"><div><p className="kicker">New experiment</p><h2>Start from DNA or protein</h2></div></div><div className="generation-grid"><button className={moleculeMode === 'dna' ? 'secondary-button active' : 'secondary-button'} onClick={() => { setMoleculeMode('dna'); setSequence('ACGTACGT'); }}>DNA</button><button className={moleculeMode === 'protein' ? 'secondary-button active' : 'secondary-button'} onClick={() => { setMoleculeMode('protein'); setSequence('MKT'); }}>Protein</button></div><label>Experiment title<input value={title} maxLength={200} onChange={event => setTitle(event.target.value)} /></label><label>Reference {moleculeMode.toUpperCase()}<textarea className="generation-textarea" value={sequence} onChange={event => setSequence(event.target.value.toUpperCase())} /></label><button className="run-button" disabled={busy || !title || !sequence || (moleculeMode === 'dna' ? /[^ACGTN]/.test(sequence) : /[^ARNDCQEGHILKMFPSTWYVX]/.test(sequence))} onClick={create}>{busy ? <Loader2 className="spin" size={17} /> : <GitBranch size={17} />} Create experiment</button>{canvasError && <div className="gateway-error"><XCircle size={18} /><p>{canvasError}</p></div>}</section> : <div className="sandbox-layout">
+      <section className="card sandbox-controls"><div className="card-heading"><div><p className="kicker">Branch controls</p><h2>{manifest.experiment.title}</h2></div><code>{shortDigest(manifest.manifest_digest)}</code></div><label>Current {moleculeMode.toUpperCase()}<textarea className="generation-textarea" value={sequence} onChange={event => setSequence(event.target.value.toUpperCase())} /></label>{moleculeMode === 'dna' && <><div className="generation-grid"><label>Position<input type="number" min={0} max={Math.max(0, sequence.length - 1)} value={position} onChange={event => setPosition(Number(event.target.value))} /></label><label>Alternate<select value={alternate} onChange={event => setAlternate(event.target.value)}>{BASES.map(base => <option key={base}>{base}</option>)}</select></label></div><button className="run-button" disabled={busy || modelBusy} onClick={branch}>{busy ? <Loader2 className="spin" size={17} /> : <GitBranch size={17} />} Create mutation branch</button><button className="secondary-button" disabled={busy || modelBusy} onClick={generateBranch}>{modelBusy ? <Loader2 className="spin" size={17} /> : <Wand2 size={17} />} Generate branch with Evo2</button></>}{moleculeMode === 'protein' && <button className="run-button" disabled={modelBusy} onClick={predictStructure}>{modelBusy ? <Loader2 className="spin" size={17} /> : <Atom size={17} />} Predict structure with Boltz-2</button>}<button className="secondary-button" disabled={!selectedParent} onClick={saveCandidate}><CheckCircle2 size={17} /> Save selected candidate</button>{structure && <ProteinStructureViewer structureText={structure.text} structureFormat={structure.format} />}{canvasError && <div className="gateway-error"><XCircle size={18} /><p>{canvasError}</p></div>}<p className="control-note"><ShieldCheck size={14} /> The access token stays in this page state. Model actions make real rate-limited NVIDIA calls and remain non-validated computational outputs.</p></section>
+      <section className="card sandbox-result"><div className="card-heading"><div><p className="kicker">Lineage</p><h2>Immutable experiment nodes</h2></div><span className="count-badge">{manifest.edges.length} edges</span></div><div className="claim-list">{manifest.nodes.map(node => <div key={node.node_id} className={selectedParent === node.node_id ? 'claim-item active' : 'claim-item'}><button onClick={() => void chooseParent(node.node_id)}><span className="claim-number">{node.kind === 'dna_sequence' ? 'DNA' : node.kind === 'protein_sequence' ? 'PRO' : node.kind === 'structure' ? '3D' : 'RUN'}</span><span><strong>{node.label}{manifest.selected_candidate_ids.includes(node.node_id) ? ' ★' : ''}</strong><small>{humanize(node.operation)} · {node.branch} · {shortDigest(node.artifact_digest)}</small></span><ChevronRight size={17} /></button><input aria-label={`Compare ${node.label}`} type="checkbox" checked={compareIds.includes(node.node_id)} onChange={() => toggleCompare(node.node_id)} /></div>)}</div><button className="secondary-button" disabled={compareIds.length !== 2} onClick={compare}>Compare selected nodes</button>{comparison && <div className="result-panel"><strong>{comparison.comparable ? 'Comparable' : 'Not comparable'}</strong>{comparison.comparable ? <p>{comparison.differing_positions.length} differing positions · length delta {comparison.length_delta ?? '—'}{comparison.value_delta !== null ? ` · value delta ${comparison.value_delta}` : ''}</p> : <p>{comparison.reasons.join(' ')}</p>}</div>}</section>
+    </div>}</>;
 }
 
 function GenerationPlayground() {
@@ -383,7 +539,7 @@ function ProteinStructurePanel() {
         {mode === 'dna' && <div className="generation-grid"><label>Reading frame<select value={frame} onChange={event => setFrame(Number(event.target.value) as 1 | 2 | 3)}><option value={1}>1</option><option value={2}>2</option><option value={3}>3</option></select></label></div>}
         <div className="translation-preview"><span>{mode === 'dna' ? 'Translated protein' : 'Protein'} ({protein.length} aa{translation.stopCodonHit ? ', stopped at a stop codon' : ''})</span><code>{protein || '—'}</code></div>
         <button className="run-button" disabled={invalid || status === 'loading'} onClick={predict}>{status === 'loading' ? <Loader2 size={17} className="spin" /> : <Atom size={17} />} {status === 'loading' ? 'Calling NVIDIA (may take a minute)…' : 'Predict 3D structure'}</button>
-        {protein.length > 2000 && <p className="field-error">Boltz-2 accepts at most 2,000 amino acids.</p>}
+        {protein.length > 4096 && <p className="field-error">Boltz-2 accepts at most 4,096 amino acids.</p>}
         {status === 'error' && error && <div className="gateway-error"><XCircle size={18} /><p>{error}</p></div>}
       </div>
       <div className="protein-result">
@@ -480,6 +636,15 @@ function FitnessBars({ member }: { member: Member }) {
   return <div className="fitness-bars">{entries.map(([label, value]) => { const normalized = label.includes('runtime') || label.includes('usage') ? Math.min(1, value / 200) : Math.min(1, Math.max(0, value)); return <div key={label}><span>{humanize(label)}</span><div><i style={{ width: `${normalized * 100}%` }} /></div><strong>{value.toFixed(value < 10 ? 3 : 0)}</strong></div>; })}</div>;
 }
 
+function Frameworks({ frameworks }: { frameworks: ScientificFramework[] }) {
+  return <><div className="view-intro"><div><p className="kicker">Scientific stack</p><h2>Frameworks are shown with their execution role and evidence boundary.</h2></div><span className="view-stat"><strong>{frameworks.length}</strong> registered integrations</span></div>
+    <div className="framework-grid">{frameworks.map(framework => <article className="card framework-card" key={framework.id}>
+      <div className="card-heading"><div><p className="kicker">{humanize(framework.category)}</p><h2>{framework.name}</h2></div><span className={`status-chip ${framework.status === 'integrated' ? 'positive' : framework.status === 'boundary' ? 'caution' : 'negative'}`}>{humanize(framework.status)}</span></div>
+      <p className="framework-role">{framework.role}</p><dl className="digest-list"><div><dt>Integration</dt><dd>{framework.integration}</dd></div><div><dt>Execution</dt><dd><code>{framework.execution_mode}</code></dd></div></dl>
+      <div className="framework-boundary"><ShieldCheck size={16} /><p>{framework.scientific_boundary}</p></div><a className="secondary-button" href={framework.official_url} target="_blank" rel="noreferrer">Official documentation <ArrowRight size={14} /></a>
+    </article>)}</div></>;
+}
+
 function Colony({ workspace }: { workspace: Workspace }) {
   const [liveColony, setLiveColony] = useState<Workspace['colony'] | null>(null);
   const [running, setRunning] = useState(false);
@@ -562,21 +727,25 @@ function ActivityDock({ workspace }: { workspace: Workspace }) {
 export default function App() {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [view, setView] = useState<View>('investigate');
+  const [view, setView] = useState<View>('experiment');
   const [selectedClaim, setSelectedClaim] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<Set<string>>(new Set());
   const [selectedPosition, setSelectedPosition] = useState(0);
+  const [frameworks, setFrameworks] = useState<ScientificFramework[]>([]);
   useEffect(() => { fetch(`${API_ROOT}/api/workspace`).then(response => { if (!response.ok) throw new Error(`Workspace request failed (${response.status})`); return response.json() as Promise<Workspace>; }).then(setWorkspace).catch(reason => setError(reason instanceof Error ? reason.message : 'Workspace unavailable')); }, []);
+  useEffect(() => { fetch(`${API_ROOT}/api/frameworks`).then(response => response.ok ? response.json() as Promise<{ frameworks: ScientificFramework[] }> : Promise.reject(new Error('Framework catalog unavailable'))).then(body => setFrameworks(body.frameworks)).catch(() => undefined); }, []);
   if (error) return <AppLoading error={error} />;
   if (!workspace) return <AppLoading />;
   const claim = workspace.claims.find(item => item.id === selectedClaim) ?? workspace.claims[0];
   const chooseClaim = (id: string) => { const next = workspace.claims.find(item => item.id === id); setSelectedClaim(id); if (next) { setSelectedPosition(next.start); setSelectedNode(pathForClaim(workspace, next)); } };
   const choosePosition = (position: number) => { setSelectedPosition(position); const region = workspace.claims.find(item => position >= item.start && position < item.end); if (region) setSelectedClaim(region.id); };
-  return <div className="app-shell"><Sidebar view={view} onView={setView} workspace={workspace} /><main className="workspace-main"><Topbar view={view} workspace={workspace} /><div className="science-notice"><ShieldCheck size={17} /><span><strong>Software demonstration.</strong> Every result is fixture-backed and cannot support a biological conclusion.</span><a href="/api/report">Read report</a></div>
+  return <div className="app-shell"><Sidebar view={view} onView={setView} workspace={workspace} /><main className="workspace-main"><Topbar view={view} workspace={workspace} /><div className="science-notice"><ShieldCheck size={17} /><span><strong>Scientific sandbox.</strong> Live and fixture-backed results are labeled separately; computational output is not biological validation.</span><a href="/privacy">Privacy</a></div>
+    {view === 'experiment' && <ExperimentCanvas />}
     {view === 'investigate' && <Investigation workspace={workspace} claim={claim} onClaim={chooseClaim} selectedPosition={selectedPosition} onPosition={position => { choosePosition(position); setView('sandbox'); }} onView={setView} />}
     {view === 'sandbox' && <Sandbox workspace={workspace} position={selectedPosition} onPosition={choosePosition} />}
     {view === 'generate' && <><GenerationPlayground /><ForwardScoringPanel /><ProteinStructurePanel /></>}
     {view === 'colony' && <Colony workspace={workspace} />}
     {view === 'provenance' && <Provenance workspace={workspace} claim={claim} selectedNode={selectedNode} onNode={id => setSelectedNode(id ? new Set([id]) : new Set())} />}
+    {view === 'frameworks' && <Frameworks frameworks={frameworks} />}
     <ActivityDock workspace={workspace} /><footer><span>Concordia Colony · local-first evidence audit</span><span><Box size={13} /> {workspace.execution_mode.replaceAll('_', ' ')}</span></footer></main></div>;
 }

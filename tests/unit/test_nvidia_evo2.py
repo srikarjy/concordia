@@ -26,7 +26,7 @@ def sequence() -> GenomicSequence:
     )
 
 
-def test_nvidia_generation_preserves_request_and_raw_response(tmp_path) -> None:
+def test_nvidia_generation_redacts_request_sequence_and_preserves_raw_response(tmp_path) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.url == httpx.URL(
             "https://health.api.nvidia.com/v1/biology/arc/evo2-40b/generate"
@@ -57,6 +57,12 @@ def test_nvidia_generation_preserves_request_and_raw_response(tmp_path) -> None:
     assert artifacts.get_bytes(result.request_artifact_digest)
     assert artifacts.get_bytes(result.response_artifact_digest)
     assert "test-secret" not in result.model_dump_json()
+    retained_request = json.loads(artifacts.get_bytes(result.request_artifact_digest))
+    assert retained_request["input_retained"] is False
+    assert retained_request["input_sequence_length"] == 4
+    assert retained_request["input_sequence_hash"] == sequence().content_hash()
+    assert retained_request["request_parameters"]["num_tokens"] == 4
+    assert "ACGT" not in json.dumps(retained_request)
 
 
 def test_nvidia_generation_fails_closed_on_invalid_output_or_missing_key(tmp_path) -> None:

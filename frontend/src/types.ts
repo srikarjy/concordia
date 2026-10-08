@@ -54,3 +54,25 @@ export interface Evo2ForwardJob {
   job_id: string; status: string; submitted_at: number; completed_at: number | null;
   result: Evo2ForwardScore | null; error: string | null;
 }
+export interface ExperimentNode {
+  node_id: string; experiment_id: string; kind: string; operation: string; label: string;
+  branch: string; parent_ids: string[]; artifact_digest: string;
+  mutations: { position: number; reference: string; alternate: string }[];
+  evidence_artifact_digests: string[]; scientific_use_allowed: boolean; created_at: string;
+}
+export interface ExperimentManifest {
+  experiment: { experiment_id: string; title: string; description: string; created_at: string };
+  nodes: ExperimentNode[];
+  edges: { parent_id: string; child_id: string; relation: string }[];
+  selected_candidate_ids: string[]; manifest_digest: string;
+}
+export interface ExperimentComparison {
+  left_node_id: string; right_node_id: string; comparable: boolean; kind: string | null;
+  length_delta: number | null; differing_positions: number[]; value_delta: number | null;
+  reasons: string[];
+}
+export interface ScientificFramework {
+  id: string; name: string; category: string; role: string; integration: string;
+  execution_mode: string; status: 'integrated' | 'boundary' | 'planned';
+  scientific_boundary: string; official_url: string;
+}

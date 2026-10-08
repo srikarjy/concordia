@@ -171,6 +171,17 @@ def test_esmfold_endpoint_fails_closed_without_api_key(
     assert "NVIDIA_API_KEY" in response.json()["detail"]
 
 
+def test_framework_catalog_exposes_integrations_and_boundaries(tmp_path: Path) -> None:
+    client = TestClient(create_workspace_app(tmp_path, "frontend/dist"))
+    response = client.get("/api/frameworks")
+    assert response.status_code == 200
+    frameworks = response.json()["frameworks"]
+    by_id = {framework["id"]: framework for framework in frameworks}
+    assert {"evo2", "boltz2", "cellforge", "anndata-scanpy"} <= by_id.keys()
+    assert by_id["evo2"]["status"] == "integrated"
+    assert "validated biology" in by_id["boltz2"]["scientific_boundary"].lower()
+
+
 def test_esmfold_endpoint_rejects_non_amino_acid_sequence(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

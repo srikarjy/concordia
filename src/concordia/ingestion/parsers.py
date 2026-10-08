@@ -117,7 +117,7 @@ class PythonParser:
         lines = text.splitlines(keepends=True)
         entities = []
         for node in ast.walk(tree):
-            if not isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+            if not isinstance(node, ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef):
                 continue
             end_line = node.end_lineno or node.lineno
             end_column = node.end_col_offset or node.col_offset
@@ -213,7 +213,7 @@ def structured_entities(
     )
     if is_xai:
         attribution_values = value.get("attributions", value.get("shap_values"))
-        has_values = isinstance(attribution_values, (list, dict)) and bool(
+        has_values = isinstance(attribution_values, list | dict) and bool(
             attribution_values
         )
         missing = tuple(

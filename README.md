@@ -9,7 +9,15 @@ app_port: 7860
 
 # Concordia Colony
 
-Concordia Colony is a provenance-first scientific platform for testing, tracing, and improving explanations produced around genomic foundation models.
+Concordia Colony is an AI-native molecular experimentation sandbox where scientists can generate,
+modify, simulate, and compare DNA and proteins through controlled biological-model workflows, with
+every experiment captured as a reproducible provenance graph.
+
+The interactive experiment canvas now provides the shared foundation: typed DNA, protein,
+structure, model-run, measurement, and evidence objects; immutable branches; content-addressed
+payloads; deterministic comparison; candidate selection; replayable manifests; and capability-
+scoped access. Existing Evo2 and Boltz integrations remain explicitly separated from experiment
+writes until each operation can record its run and output without partial lineage.
 
 One seed scientist creates a bounded colony of isolated workflow variants. Each descendant inherits a versioned digital genome, uses approved computational biology tools inside a sandbox, and produces structured claims. Deterministic infrastructure verifies evidence paths, calculates fitness, selects surviving workflows, and records the complete lineage.
 
@@ -250,6 +258,9 @@ The public workspace also publishes a curated, GET-only OpenAPI tool contract at
 `/api/tools/openapi.json`. It exposes inspection of saved fixture evidence only;
 run mutation, arbitrary sequences, model inference, and sandbox execution are
 excluded. See [read-only tool integration](docs/tool-integration.md).
+
+The integrated scientific frameworks and their execution/evidence boundaries
+are listed at `/api/frameworks` and in [the framework map](docs/frameworks.md).
 
 Then create a durable fixture run:
 

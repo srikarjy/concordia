@@ -91,8 +91,10 @@ class NvidiaHostedEsmFoldRunner:
                 "schema_version": 1,
                 "model_id": self.model_id,
                 "endpoint": self.endpoint,
-                "input_sequence": normalized,
-                "request": request_payload,
+                "input_sequence_hash": input_hash,
+                "input_sequence_length": len(normalized),
+                "request_parameters": {"sequence_type": "protein"},
+                "input_retained": False,
                 "scientific_use_allowed": False,
             }
         )

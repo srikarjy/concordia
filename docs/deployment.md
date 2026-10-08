@@ -106,3 +106,14 @@ hf upload "$HF_SPACE_ID" . \
 ```
 
 The Hub CLI requires an authenticated account and network access; this repository cannot infer a namespace or create a public Space without those user-controlled choices. The deployment remains optional and replaceable. A Space running this image is a software demonstration, not a scientific validation environment.
+
+### Sequence-retention migration
+
+Interactive request artifacts created before the metadata-only provenance update retained the
+submitted sequence text. Deploy the updated image with a fresh or rotated artifact volume; do not
+copy an older `artifacts/sha256` tree into the new deployment. The standard Hugging Face Space
+configuration uses ephemeral local storage, so a clean rebuild provides this rotation. If a custom
+persistent volume is attached, archive or remove the legacy volume under the deployer's data-
+retention procedure before exposing the updated service. Provider responses and cached derived
+outputs remain retained as described by `/privacy` and may reflect information from the submitted
+sequence.

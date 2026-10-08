@@ -51,7 +51,7 @@ def test_public_runtime_qualification_is_process_cached() -> None:
     functions = {
         node.name: node
         for node in tree.body
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
     }
 
     cached = functions["_qualify_runtime_once"]
