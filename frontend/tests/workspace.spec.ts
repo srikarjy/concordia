@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 test('guides a claim from sequence context to its verification decision', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Genomic attribution audit' })).toBeVisible();
+  await expect(page.locator('.loading-screen')).toHaveCount(0);
   await expect(page.getByRole('link', { name: /GitHub repository/ })).toHaveAttribute('href', 'https://github.com/srikarjy/concordia');
   await expect(page.getByText(/Results are labeled by execution mode and validation status/)).toBeVisible();
   await page.getByRole('button', { name: /Investigation/ }).click();

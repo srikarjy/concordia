@@ -10,7 +10,10 @@ import type {
   ExperimentComparison, ExperimentManifest, ScientificFramework,
 } from './types';
 
-const API_ROOT = import.meta.env.VITE_API_ROOT ?? '';
+const localHost = typeof window !== 'undefined'
+  && (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost');
+const API_ROOT = import.meta.env.VITE_API_ROOT
+  ?? (localHost ? '' : 'https://srikarjy025-concordia-colony.hf.space');
 const BASES = ['A', 'C', 'G', 'T'];
 type View = 'experiment' | 'investigate' | 'sandbox' | 'generate' | 'antibody' | 'colony' | 'provenance' | 'frameworks';
 

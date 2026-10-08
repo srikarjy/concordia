@@ -29,3 +29,60 @@
 @media(max-width:560px){.sidebar nav{grid-template-columns:repeat(2,1fr)}.workspace-topbar,.view-intro{display:block}.top-actions{margin-top:12px}.science-notice a{display:none}.summary-strip{grid-template-columns:1fr 1fr}.sequence-card{padding-inline:14px}.sequence-meta{display:none}.sequence-legend{flex-wrap:wrap}.generation-columns{grid-template-columns:1fr}.member-facts{grid-template-columns:1fr}.graph-panel{padding:15px}.graph-canvas{height:390px}footer{display:block}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
 .framework-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.framework-card{min-height:300px;padding:22px}.framework-role{min-height:42px;margin:16px 0;color:#b2c4bf;font-size:.82rem;line-height:1.5}.framework-card .digest-list dd{max-width:65%;text-align:right;line-height:1.4}.framework-boundary{min-height:72px;margin:18px 0;padding:12px;display:flex;gap:9px;color:#c8b78f;background:#251e12;border:1px solid #4e3d21;border-radius:7px}.framework-boundary svg{flex:none;color:var(--amber)}.framework-boundary p{font-size:.69rem;line-height:1.45}
+
+/* Scientific workbench palette: cobalt surfaces, indigo structure, and restrained status colors. */
+:root { --bg:#0b1020; --sidebar:#10182b; --surface:#141d33; --line:#293858; --text:#edf3ff; --muted:#8fa2bf; --teal:#5ad7ff; --amber:#f2c66d; --red:#ff7d89; }
+body { color:var(--text); background:radial-gradient(circle at 78% -10%,#1b2c56 0,transparent 36rem),var(--bg); }
+.sidebar { background:#10182bf2; border-color:var(--line); }
+.brand-mark { color:#07101e; background:var(--teal); box-shadow:0 0 28px #5ad7ff36; }
+.nav-item:hover { background:#17233d; }
+.nav-item.active { background:#1b3153; border-color:#365b82; }
+.nav-item small { color:#7187aa; }
+.boundary-card { background:#162542; border-color:#35567d; }
+.boundary-card>div { color:var(--teal); }
+.boundary-card>span { color:#8ca9cc; }
+.boundary-card i,.live-state i,.study-state i { background:var(--teal); box-shadow:0 0 10px #5ad7ff80; }
+.boundary-badge { color:var(--teal); background:#173554; border-color:#3d709b; }
+.science-notice { color:#e3cc94; background:#292518; border-color:#5d4d2d; }
+.card { background:linear-gradient(145deg,#17233d,#10182b); border-color:var(--line); }
+.summary-strip>div { background:#121c31; }
+.sequence-meta span,.count-badge { color:#91a7c7; background:#192842; border-color:#304667; }
+.sequence-ribbon button { color:#91a7c7; }
+.sequence-ribbon button i { background:#3e6485; }
+.sequence-ribbon button.in-claim { color:#e4edff; background:#1a3150; }
+.sequence-ribbon button.selected { color:#07101e; background:var(--teal); }
+.region-key { background:#234261; }.signal-key { background:#3e6485; }
+.nav-item,.claim-item { color:#9cafcc; }
+.claim-item:hover,.claim-item.active { background:#1a3150; }
+.claim-item.active { border-color:#3a618a; }
+.claim-number { color:var(--teal); }
+.decision-callout,.framework-boundary { color:#e3cc94; background:#292518; border-color:#5d4d2d; }
+.decision-callout p { color:#b6a778; }
+.evidence-table,.digest-list>div,.connection-list,.connection-list>div { border-color:var(--line); }
+.evidence-icon.valid,.claim-node,.member-orb.completed { color:#64e3a8; }
+.evidence-icon.blocked { color:var(--red); }
+.evidence-assessment { color:#d59aa0; }
+.trace-node.claim-node { color:#64e3a8; background:#173c3a; border-color:#39776d; }
+.trace-node.evidence-node { color:#d1b9ff; background:#29234b; border-color:#594a8b; }
+.trace-node.source-node { color:#f2c66d; background:#302918; border-color:#725c2f; }
+.primary-button,.run-button { color:#07101e; background:var(--teal); }
+.secondary-button { color:#b7c5df; background:#182640; border-color:#395274; }
+.icon-button { color:#a9bde0; background:#1a2b48; border-color:#395274; }
+.sequence-preview,.generation-textarea,.graph-canvas,.protein-viewer-loading { background:#0d1527; border-color:var(--line); }
+.pipeline>div>span { color:#8298ba; background:#1b2943; border-color:#344a6c; }
+.pipeline>div.ready>span { color:var(--amber); }.pipeline>div.complete>span { color:#64e3a8; background:#173c3a; }
+.run-indicator.done,.generation-control strong,.fitness-bars i { color:#64e3a8; }
+.run-indicator.done i { background:#64e3a8; }
+.generation-control,.member-card,.event { background:#121c31; }
+.generation-dots button { background:#34435f; border-color:#10182b; }.generation-dots button.active { background:var(--teal); box-shadow:0 0 0 1px var(--teal); }
+.member-card:hover,.member-card.active { background:#1a3150; border-color:#426b96; }
+.member-card b { color:var(--teal); }
+.fitness-bars>div>div,.probability-bars>div>div { background:#202e4b; }
+.terminal-reason,.gateway-error { background:#301a24; border-color:#6a3543; }
+.graph-node-list .node { color:#91a7c7; background:#182640; border-color:#395274; }
+.graph-node-list .node.active { color:var(--teal); }
+.node-kind { color:var(--teal); background:#173554; border-color:#3d709b; }
+.event code,.likelihood-readout code { color:var(--teal); }
+footer { color:#7187aa; }
+footer a { color:var(--teal); }
+.loading-mark { color:#07101e; background:var(--teal); }
