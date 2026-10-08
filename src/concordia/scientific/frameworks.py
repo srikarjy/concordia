@@ -94,6 +94,45 @@ FRAMEWORKS: tuple[ScientificFramework, ...] = (
         scientific_boundary="Visualization exposes artifacts and confidence fields but does not certify model quality or biological validity.",  # noqa: E501
         official_url="https://3dmol.csb.pitt.edu/",
     ),
+    ScientificFramework(
+        id="react-flow", name="React Flow", category="visualization",
+        role="Planned editable workflow and experiment-DAG canvas",
+        integration=(
+            "Candidate for typed node editing, handles, validation, and save/restore "
+            "interactions"
+        ),
+        execution_mode="planned_browser_local", status="planned",
+        scientific_boundary=(
+            "An editable graph changes workflow state only; it cannot turn computational "
+            "artifacts into scientific evidence."
+        ),
+        official_url="https://reactflow.dev/",
+    ),
+    ScientificFramework(
+        id="molstar-ngl", name="Mol* / NGL Viewer", category="visualization",
+        role="Planned higher-fidelity biomolecular structure and annotation inspection",
+        integration=(
+            "Candidate structure viewer for chain annotations, selections, and large "
+            "complex inspection"
+        ),
+        execution_mode="planned_browser_local", status="planned",
+        scientific_boundary=(
+            "A richer molecular renderer improves inspection and annotation, not structure "
+            "accuracy or biological validation."
+        ),
+        official_url="https://github.com/molstar/molstar",
+    ),
+    ScientificFramework(
+        id="observable-plot", name="Observable Plot", category="visualization",
+        role="Planned benchmark and evidence-metric charts",
+        integration="Candidate for compact latency, replay, and claim-verifier metric views",
+        execution_mode="planned_browser_local", status="planned",
+        scientific_boundary=(
+            "Plots summarize declared measurements; they do not establish model quality "
+            "or biological truth."
+        ),
+        official_url="https://observablehq.github.io/plot/",
+    ),
 )
 
 

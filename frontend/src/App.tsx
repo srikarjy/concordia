@@ -28,6 +28,54 @@ const NAV_ITEMS: { id: View; label: string; description: string; icon: typeof Se
   { id: 'frameworks', label: 'Scientific stack', description: 'Frameworks and boundaries', icon: Atom },
 ];
 
+const FRAMEWORK_SNAPSHOT: ScientificFramework[] = [
+  {
+    id: 'evo2', name: 'Evo 2', category: 'genome_model', role: 'DNA generation and frozen-protocol causal likelihood scoring',
+    integration: 'NVIDIA hosted generation plus an isolated forward boundary', execution_mode: 'real_hosted_generation_or_external_worker', status: 'integrated',
+    scientific_boundary: 'Generation is never scientific evidence; forward output is eligible only after protocol and numerical checks pass.', official_url: 'https://github.com/ArcInstitute/evo2',
+  },
+  {
+    id: 'boltz2', name: 'Boltz-2', category: 'structure_model', role: 'Protein, nucleic-acid, and ligand complex structure prediction',
+    integration: 'NVIDIA Boltz-2 NIM with content-addressed request/response artifacts', execution_mode: 'real_hosted_nim', status: 'integrated',
+    scientific_boundary: 'Hosted predictions are computational outputs and are not treated as validated biology.', official_url: 'https://docs.nvidia.com/nim/bionemo/boltz2/latest/api-reference.html',
+  },
+  {
+    id: 'cellforge', name: 'CellForge-compatible tools', category: 'orchestration', role: 'Bounded, policy-checked scientific tool execution',
+    integration: 'Local process-isolated adapter with registered tools and provenance events', execution_mode: 'local_fixture_or_external_runtime', status: 'integrated',
+    scientific_boundary: 'Fixture outputs cannot support scientific claims.', official_url: 'https://github.com/ArcInstitute/cellforge',
+  },
+  {
+    id: 'anndata-scanpy', name: 'AnnData / Scanpy', category: 'data', role: 'Single-cell data interchange and analysis context',
+    integration: 'Read-only H5AD release verification and explicit State boundary', execution_mode: 'local_read_only', status: 'integrated',
+    scientific_boundary: 'Cell-level evidence remains separate from sequence-model scores.', official_url: 'https://scanpy.readthedocs.io/',
+  },
+  {
+    id: 'rdkit', name: 'RDKit', category: 'data', role: 'Molecular validation and scaffold-aware splitting',
+    integration: 'Local molecular evidence baseline', execution_mode: 'local_deterministic', status: 'integrated',
+    scientific_boundary: 'Molecular baseline results are not biological proof.', official_url: 'https://www.rdkit.org/docs/',
+  },
+  {
+    id: 'sigma-3dmol', name: 'Sigma / 3Dmol.js', category: 'visualization', role: 'Interactive provenance graphs and structure inspection',
+    integration: 'React frontend with browser-local rendering of saved artifacts', execution_mode: 'browser_local', status: 'integrated',
+    scientific_boundary: 'Visualization exposes artifacts but does not certify model quality.', official_url: 'https://3dmol.csb.pitt.edu/',
+  },
+  {
+    id: 'react-flow', name: 'React Flow', category: 'visualization', role: 'Editable workflow and experiment-DAG canvas',
+    integration: 'Planned typed node editing, validation, and save/restore interactions', execution_mode: 'planned_browser_local', status: 'planned',
+    scientific_boundary: 'Editing workflow state cannot turn computational artifacts into evidence.', official_url: 'https://reactflow.dev/',
+  },
+  {
+    id: 'molstar-ngl', name: 'Mol* / NGL Viewer', category: 'visualization', role: 'Higher-fidelity structure and annotation inspection',
+    integration: 'Planned chain annotations, selections, and large complex inspection', execution_mode: 'planned_browser_local', status: 'planned',
+    scientific_boundary: 'A richer renderer improves inspection, not structure accuracy or validation.', official_url: 'https://github.com/molstar/molstar',
+  },
+  {
+    id: 'observable-plot', name: 'Observable Plot', category: 'visualization', role: 'Benchmark and evidence-metric charts',
+    integration: 'Planned compact latency, replay, and verifier metric views', execution_mode: 'planned_browser_local', status: 'planned',
+    scientific_boundary: 'Plots summarize declared measurements; they do not establish biological truth.', official_url: 'https://observablehq.github.io/plot/',
+  },
+];
+
 function pathForClaim(workspace: Workspace, claim: Claim): Set<string> {
   const ids = new Set<string>([claim.artifact_digest, claim.verification_digest]);
   const walk = (id: string) => workspace.graph.edges.forEach(edge => {
@@ -708,8 +756,8 @@ function FitnessBars({ member }: { member: Member }) {
   return <div className="fitness-bars">{entries.map(([label, value]) => { const normalized = label.includes('runtime') || label.includes('usage') ? Math.min(1, value / 200) : Math.min(1, Math.max(0, value)); return <div key={label}><span>{humanize(label)}</span><div><i style={{ width: `${normalized * 100}%` }} /></div><strong>{value.toFixed(value < 10 ? 3 : 0)}</strong></div>; })}</div>;
 }
 
-function Frameworks({ frameworks }: { frameworks: ScientificFramework[] }) {
-  return <><div className="view-intro"><div><p className="kicker">Scientific stack</p><h2>Frameworks are shown with their execution role and evidence boundary.</h2></div><span className="view-stat"><strong>{frameworks.length}</strong> registered integrations</span></div>
+function Frameworks({ frameworks, source }: { frameworks: ScientificFramework[]; source: 'live' | 'snapshot' }) {
+  return <><div className="view-intro"><div><p className="kicker">Scientific stack</p><h2>Frameworks are shown with their execution role and evidence boundary.</h2></div><span className="view-stat"><strong>{frameworks.length}</strong> {source === 'live' ? 'registered integrations' : 'catalog snapshot'}</span></div>
     <div className="framework-grid">{frameworks.map(framework => <article className="card framework-card" key={framework.id}>
       <div className="card-heading"><div><p className="kicker">{humanize(framework.category)}</p><h2>{framework.name}</h2></div><span className={`status-chip ${framework.status === 'integrated' ? 'positive' : framework.status === 'boundary' ? 'caution' : 'negative'}`}>{humanize(framework.status)}</span></div>
       <p className="framework-role">{framework.role}</p><dl className="digest-list"><div><dt>Integration</dt><dd>{framework.integration}</dd></div><div><dt>Execution</dt><dd><code>{framework.execution_mode}</code></dd></div></dl>
@@ -803,9 +851,10 @@ export default function App() {
   const [selectedClaim, setSelectedClaim] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<Set<string>>(new Set());
   const [selectedPosition, setSelectedPosition] = useState(0);
-  const [frameworks, setFrameworks] = useState<ScientificFramework[]>([]);
+  const [frameworks, setFrameworks] = useState<ScientificFramework[]>(FRAMEWORK_SNAPSHOT);
+  const [frameworkSource, setFrameworkSource] = useState<'live' | 'snapshot'>('snapshot');
   useEffect(() => { fetch(`${API_ROOT}/api/workspace`).then(response => { if (!response.ok) throw new Error(`Workspace request failed (${response.status})`); return response.json() as Promise<Workspace>; }).then(setWorkspace).catch(reason => setError(reason instanceof Error ? reason.message : 'Workspace unavailable')); }, []);
-  useEffect(() => { fetch(`${API_ROOT}/api/frameworks`).then(response => response.ok ? response.json() as Promise<{ frameworks: ScientificFramework[] }> : Promise.reject(new Error('Framework catalog unavailable'))).then(body => setFrameworks(body.frameworks)).catch(() => undefined); }, []);
+  useEffect(() => { fetch(`${API_ROOT}/api/frameworks`).then(response => response.ok ? response.json() as Promise<{ frameworks: ScientificFramework[] }> : Promise.reject(new Error('Framework catalog unavailable'))).then(body => { setFrameworks(body.frameworks); setFrameworkSource('live'); }).catch(() => { setFrameworks(FRAMEWORK_SNAPSHOT); setFrameworkSource('snapshot'); }); }, []);
   if (error) return <AppLoading error={error} />;
   if (!workspace) return <AppLoading />;
   const claim = workspace.claims.find(item => item.id === selectedClaim) ?? workspace.claims[0];
@@ -819,6 +868,6 @@ export default function App() {
     {view === 'antibody' && <AntibodyComplexPanel />}
     {view === 'colony' && <Colony workspace={workspace} />}
     {view === 'provenance' && <Provenance workspace={workspace} claim={claim} selectedNode={selectedNode} onNode={id => setSelectedNode(id ? new Set([id]) : new Set())} />}
-    {view === 'frameworks' && <Frameworks frameworks={frameworks} />}
+    {view === 'frameworks' && <Frameworks frameworks={frameworks} source={frameworkSource} />}
     <ActivityDock workspace={workspace} /><footer><span>Concordia Colony · local-first evidence audit</span><span><Box size={13} /> {workspace.execution_mode.replaceAll('_', ' ')}</span><a href="https://github.com/srikarjy/concordia" target="_blank" rel="noreferrer">GitHub repository <ArrowRight size={13} /></a></footer></main></div>;
 }

@@ -121,3 +121,13 @@ test('opens provenance records and controls local event playback', async ({ page
   await page.getByRole('button', { name: 'Show recent' }).click();
   await expect(events).toHaveCount(6);
 });
+
+test('shows the scientific framework catalog and planned visualization stack', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /Scientific stack/ }).click();
+
+  await expect(page.getByText('React Flow')).toBeVisible();
+  await expect(page.getByText('Mol* / NGL Viewer')).toBeVisible();
+  await expect(page.getByText('Observable Plot')).toBeVisible();
+  await expect(page.getByText(/catalog snapshot|registered integrations/)).toBeVisible();
+});
