@@ -37,7 +37,12 @@ from concordia.experiments.service import (
     ExperimentStore,
 )
 from concordia.genomics.boltz_gateway import BoltzGateway
-from concordia.genomics.boltz_nvidia import NvidiaHostedBoltzResult, NvidiaHostedBoltzRunner
+from concordia.genomics.boltz_nvidia import (
+    BoltzComplexRequest,
+    NvidiaHostedBoltzComplexResult,
+    NvidiaHostedBoltzResult,
+    NvidiaHostedBoltzRunner,
+)
 from concordia.genomics.esmfold_gateway import EsmFoldGateway
 from concordia.genomics.esmfold_nvidia import NvidiaHostedEsmFoldResult, NvidiaHostedEsmFoldRunner
 from concordia.genomics.evo2_forward_queue import Evo2ForwardJobQueue, JobNotFoundError
@@ -674,6 +679,32 @@ def create_workspace_app(
         client_id = _client_ip(request, trust_proxy_headers=trust_proxy_headers)
         try:
             return boltz_gateway.predict(client_id=client_id, sequence=payload.sequence)
+        except RateLimitExceededError:
+            raise
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        except RuntimeError as error:
+            if "NVIDIA_API_KEY" in str(error):
+                raise HTTPException(status_code=503, detail=str(error)) from error
+            raise HTTPException(status_code=502, detail=str(error)) from error
+
+    @app.post(
+        "/nvidia/boltz/complex",
+        response_model=NvidiaHostedBoltzComplexResult,
+        summary="Interactive hosted Boltz-2 antibody-antigen complex prediction",
+        description=(
+            "Accepts a validated multi-chain polymer request and calls NVIDIA's hosted "
+            "Boltz-2 NIM through the same rate-limited, cached gateway as the single-chain "
+            "endpoint. This is a computational structure hypothesis, never validated "
+            "affinity or therapeutic evidence."
+        ),
+    )
+    def predict_boltz_complex(
+        payload: BoltzComplexRequest, request: Request
+    ) -> NvidiaHostedBoltzComplexResult:
+        client_id = _client_ip(request, trust_proxy_headers=trust_proxy_headers)
+        try:
+            return boltz_gateway.predict_complex(client_id=client_id, request=payload)
         except RateLimitExceededError:
             raise
         except ValueError as error:

@@ -44,6 +44,25 @@ FRAMEWORKS: tuple[ScientificFramework, ...] = (
         official_url="https://docs.nvidia.com/nim/bionemo/boltz2/latest/api-reference.html",
     ),
     ScientificFramework(
+        id="rfantibody", name="RFantibody / RFdiffusion", category="structure_model",
+        role="Planned antibody and nanobody backbone generation",
+        integration="External GPU worker contract is planned; no local model execution is enabled",
+        execution_mode="planned_external_gpu_worker", status="planned",
+        scientific_boundary="Generated backbones require sequence design, complex refolding, interface checks, and experimental validation before any scientific conclusion.",  # noqa: E501
+        official_url="https://github.com/RosettaCommons/RFantibody",
+    ),
+    ScientificFramework(
+        id="proteinmpnn", name="ProteinMPNN", category="structure_model",
+        role="Planned antibody sequence design from generated backbones",
+        integration=(
+            "External GPU worker contract is planned; checkpoint and sampling provenance "
+            "will be required"
+        ),
+        execution_mode="planned_external_gpu_worker", status="planned",
+        scientific_boundary="Designed sequences are computational candidates and do not establish folding, binding, expression, or developability.",  # noqa: E501
+        official_url="https://github.com/dauparas/ProteinMPNN",
+    ),
+    ScientificFramework(
         id="cellforge", name="CellForge-compatible tools", category="orchestration",
         role="Bounded, policy-checked scientific tool execution",
         integration="Local process-isolated adapter with registered tools and provenance events",

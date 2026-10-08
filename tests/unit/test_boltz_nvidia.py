@@ -6,7 +6,7 @@ from pathlib import Path
 import httpx
 import pytest
 
-from concordia.genomics.boltz_nvidia import NvidiaHostedBoltzRunner
+from concordia.genomics.boltz_nvidia import BoltzComplexRequest, NvidiaHostedBoltzRunner
 from concordia.storage.content import ContentAddressedStore
 
 STRUCTURE_STUB = "ATOM      1  N   MET A   1      12.501   2.331 -26.921  1.00 47.72      N\n"
@@ -106,3 +106,47 @@ def test_boltz_requires_api_key(tmp_path: Path) -> None:
     artifacts = ContentAddressedStore(tmp_path / "artifacts")
     with pytest.raises(RuntimeError, match="NVIDIA_API_KEY"):
         NvidiaHostedBoltzRunner(artifacts, api_key="").predict("MKT")
+
+
+def test_boltz_complex_sends_multiple_polymers_and_retains_bounded_provenance(
+    tmp_path: Path,
+) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        assert [polymer["id"] for polymer in body["polymers"]] == ["H", "L", "A"]
+        assert body["polymers"][0]["sequence"] == "EVQLV"
+        assert body["polymers"][2]["molecule_type"] == "protein"
+        assert body["polymers"][0]["msa"]["uniref90"]["a3m"]["format"] == "a3m"
+        return httpx.Response(
+            200,
+            json={"structures": [{"format": "mmcif", "structure": STRUCTURE_STUB}]},
+        )
+
+    request = BoltzComplexRequest(
+        polymers=(
+            {"id": "H", "molecule_type": "protein", "sequence": "EVQLV"},
+            {"id": "L", "molecule_type": "protein", "sequence": "DIQMT"},
+            {"id": "A", "molecule_type": "protein", "sequence": "MKTAY"},
+        )
+    )
+    artifacts = ContentAddressedStore(tmp_path / "artifacts")
+    result = NvidiaHostedBoltzRunner(
+        artifacts, api_key="test-secret", transport=httpx.MockTransport(handler)
+    ).predict_complex(request)
+
+    assert result.structure_format == "mmcif"
+    assert result.execution_mode == "real_hosted_complex_structure_prediction"
+    assert result.scientific_use_allowed is False
+    retained_request = json.loads(artifacts.get_bytes(result.request_artifact_digest))
+    assert retained_request["polymer_count"] == 3
+    assert "EVQLV" not in json.dumps(retained_request)
+
+
+def test_boltz_complex_rejects_duplicate_chain_ids() -> None:
+    with pytest.raises(ValueError, match="IDs must be unique"):
+        BoltzComplexRequest(
+            polymers=(
+                {"id": "A", "sequence": "MKT"},
+                {"id": "A", "sequence": "EVQ"},
+            )
+        )

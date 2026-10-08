@@ -25,6 +25,7 @@ Run `concordia list-tools` to inspect the exact JSON schemas and policies for th
 | `lineage.backtrack@1.0.0` | Backtrack a claim through a stored graph | `artifact.read`, `graph.read` |
 | `evidence.verify@1.0.0` | Apply deterministic claim-path verification | `artifact.read`, `graph.read` |
 | `xai.mutational_scan@1.0.0` | Run deterministic position-level fixture mutagenesis | `genomic.compute` |
+| `antibody.validate@1.0.0` | Validate antibody chain roles, sequences, antigen input, and epitope positions | `antibody.compute` |
 
 These tools use no network or general filesystem access. Artifact reads are resolved through the content-addressed store, not caller-selected paths.
 
@@ -41,5 +42,18 @@ The design is deny-by-default and excludes arbitrary shell, arbitrary Python, un
 The local adapter is process isolation for trusted Concordia handlers, not a container, virtual machine, or kernel-enforced hostile-code sandbox. On Linux it applies an address-space limit; on supported Unix systems it applies a CPU limit. Filesystem allowlists are validated by the parent but are not an OS-level jail. Use a future external CellForge adapter when the threat model includes untrusted executable code.
 
 No current tool output is evidence of biological truth. Fixture scoring and fixture mutational scans always set `scientific_use_allowed=false`, and deterministic validation only establishes software or provenance properties.
+
+## Antibody workflow boundary
+
+The first Concordia antibody increment is deliberately validation-only. The `antibody.validate`
+tool is local, deterministic, network-free, and provenance-safe. It does not run RFantibody,
+RFdiffusion, ProteinMPNN, ANARCI, AbNumber, or Boltz-2. Those model steps belong in explicit
+external adapters that record the model name, version, checkpoint digest, parameters, seed,
+input artifact digests, output artifact digests, and execution mode.
+
+The intended workflow is `antibody.validate` → external backbone generation → external sequence
+design → external Boltz-2 complex prediction → interface/developability assessment. Keeping the
+first step inside the local registry allows the frontend and experiment DAG to be built without
+implying that a local fixture or validation result is a binding prediction.
 
 The separate [Arc State boundary](state-sandbox.md) applies the same persist-first and resource-bounded principles to virtual-cell prediction contracts. Its current recorded runner is deliberately not registered as a scientific CellForge tool because no State runtime, licensed checkpoint, or real AnnData input is installed.

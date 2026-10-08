@@ -280,6 +280,7 @@ def test_tool_budget_cannot_exceed_declared_limit(tmp_path) -> None:
 def test_builtin_registry_exposes_complete_versioned_contracts() -> None:
     definitions = build_default_registry().definitions()
     assert {definition.name for definition in definitions} == {
+        "antibody.validate",
         "artifact.verify",
         "evidence.verify",
         "graph.query",
@@ -293,7 +294,32 @@ def test_builtin_registry_exposes_complete_versioned_contracts() -> None:
         assert manifest["version"] == "1.0.0"
         assert manifest["input_schema"]
         assert manifest["output_schema"]
-        assert manifest["network_policy"] == NetworkPolicy.DENY
+    assert manifest["network_policy"] == NetworkPolicy.DENY
+
+
+def test_antibody_validation_is_local_and_provenance_safe(tmp_path) -> None:
+    local = adapter(tmp_path, build_default_registry())
+    antibody_policy = policy(
+        "antibody.validate",
+        capabilities=frozenset({ToolCapability.ANTIBODY_COMPUTE}),
+    )
+    result = local.execute(
+        request(
+            "antibody.validate",
+            antibody_policy,
+            arguments={
+                "chains": [
+                    {"chain_id": "H", "role": "heavy", "sequence": "EVQLVESGGGLVQPGGSLRLSCAAS"},
+                    {"chain_id": "L", "role": "light", "sequence": "DIQMTQSPSSLSASVGDRVTITC"},
+                ],
+                "antigen_sequence": "MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQ",
+                "epitope_residues": [1, 3],
+            },
+        )
+    )
+    assert result.status is ExecutionStatus.SUCCESS
+    assert result.output["validation_status"] == "VALID"
+    assert result.output["scientific_use_allowed"] is False
 
 
 def test_network_policy_and_child_guard_both_fail_closed(tmp_path) -> None:

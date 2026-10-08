@@ -3,7 +3,8 @@ import { expect, test } from '@playwright/test';
 test('guides a claim from sequence context to its verification decision', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Genomic attribution audit' })).toBeVisible();
-  await expect(page.getByText(/Live and fixture-backed results are labeled separately/)).toBeVisible();
+  await expect(page.getByRole('link', { name: /GitHub repository/ })).toHaveAttribute('href', 'https://github.com/srikarjy/concordia');
+  await expect(page.getByText(/Results are labeled by execution mode and validation status/)).toBeVisible();
   await page.getByRole('button', { name: /Investigation/ }).click();
 
   const claims = page.locator('.claim-item');
@@ -13,7 +14,10 @@ test('guides a claim from sequence context to its verification decision', async 
   await expect(claims.nth(1)).toHaveClass(/active/);
   await expect(page.getByRole('button', { name: 'Position 12, base G' })).toHaveClass(/selected/);
   await expect(page.getByRole('heading', { name: 'Verification result' })).toBeVisible();
-  await expect(page.getByText('Why this claim cannot pass')).toBeVisible();
+  await expect(page.getByText('What blocks confirmation')).toBeVisible();
+  await expect(page.getByText('Needs evidence')).toBeVisible();
+  await expect(page.getByText('software_contract_only')).toHaveCount(0);
+  await expect(page.getByText('Ineligible fixture')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Trace this claim' })).toBeVisible();
 });
 
@@ -49,6 +53,19 @@ test('starts a protein experiment with a Boltz structure action', async ({ page 
   await expect(page.getByLabel('Current PROTEIN')).toHaveValue('MKT');
   await expect(page.getByRole('button', { name: 'Predict structure with Boltz-2' })).toBeVisible();
   await expect(page.getByText('Reference PROTEIN')).toBeVisible();
+});
+
+test('opens the antibody complex workspace without sending a live request', async ({ page }) => {
+  const mutationRequests: string[] = [];
+  page.on('request', request => {
+    if (request.method() !== 'GET') mutationRequests.push(request.url());
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: /Antibody complex/ }).click();
+
+  await expect(page.getByRole('heading', { name: /Heavy chain, light chain, and antigen/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Predict antibody complex' })).toBeVisible();
+  expect(mutationRequests).toEqual([]);
 });
 
 test('replays a bounded fixture mutation entirely in the browser', async ({ page }) => {

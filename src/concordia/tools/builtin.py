@@ -6,6 +6,11 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from concordia.antibody.schema import (
+    AntibodyDesignRequest,
+    AntibodyValidateOutput,
+    validate_antibody,
+)
 from concordia.cellforge.contracts import (
     FilesystemPolicy,
     NetworkPolicy,
@@ -161,6 +166,13 @@ def mutational_scan(arguments: BaseModel, context: ExecutionContext) -> Mutation
     )
 
 
+def antibody_validate(
+    arguments: BaseModel, context: ExecutionContext
+) -> AntibodyValidateOutput:
+    del context
+    return validate_antibody(AntibodyDesignRequest.model_validate(arguments))
+
+
 def definition(
     name: str,
     input_model: type[BaseModel],
@@ -251,6 +263,16 @@ def mutational_scan_definition() -> ToolDefinition:
     )
 
 
+def antibody_validate_definition() -> ToolDefinition:
+    return definition(
+        "antibody.validate",
+        AntibodyDesignRequest,
+        AntibodyValidateOutput,
+        antibody_validate,
+        frozenset({ToolCapability.ANTIBODY_COMPUTE}),
+    )
+
+
 BUILTIN_TOOLS = (
     sequence_validate_definition,
     variant_normalize_definition,
@@ -259,4 +281,5 @@ BUILTIN_TOOLS = (
     lineage_backtrack_definition,
     evidence_verify_definition,
     mutational_scan_definition,
+    antibody_validate_definition,
 )

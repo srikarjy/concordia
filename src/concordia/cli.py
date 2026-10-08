@@ -161,6 +161,21 @@ def build_parser() -> argparse.ArgumentParser:
     )
     nvidia_smoke.add_argument("--num-tokens", type=int, default=8)
     nvidia_smoke.add_argument("--seed", type=int, default=1729)
+    benchmark = subparsers.add_parser(
+        "benchmark",
+        help="run reproducible throughput, replay, claim, and Boltz benchmarks",
+    )
+    benchmark.add_argument(
+        "--suite", choices=("all", "throughput", "replay", "claims", "boltz"), default="all"
+    )
+    benchmark.add_argument("--output", type=Path, default=Path("reports/benchmark.json"))
+    benchmark.add_argument("--iterations", type=int, default=10)
+    benchmark.add_argument("--nodes", type=int, default=25)
+    benchmark.add_argument("--repetitions", type=int, default=10)
+    benchmark.add_argument("--boltz-repetitions", type=int, default=1)
+    benchmark.add_argument(
+        "--real", action="store_true", help="run the hosted Boltz latency suite"
+    )
     return parser
 
 
@@ -374,6 +389,19 @@ def main() -> None:
             ContentAddressedStore(args.state_root / "artifacts")
         ).generate(sequence, num_tokens=args.num_tokens, random_seed=args.seed)
         print(json.dumps(smoke_result.model_dump(mode="json"), indent=2))
+    elif args.command == "benchmark":
+        from concordia.benchmarks.runner import run_benchmark_suite
+
+        report = run_benchmark_suite(
+            suite=args.suite,
+            iterations=args.iterations,
+            nodes=args.nodes,
+            repetitions=args.repetitions,
+            boltz_repetitions=args.boltz_repetitions,
+            real_boltz=args.real,
+            output=args.output,
+        )
+        print(report.model_dump_json(indent=2))
 
 
 if __name__ == "__main__":

@@ -93,7 +93,7 @@ def run_genomic_fixture_demo(output_directory: str | Path) -> dict[str, Any]:
     result = {
         "mode": "recorded_fixture",
         "scientific_use_allowed": False,
-        "warning": "Software demonstration only; this is not an Evo2 result.",
+        "warning": "Validation-only output; no biological conclusion is asserted.",
         "graph_artifact": graph_artifact,
         "verification": verification.model_dump(mode="json"),
     }
