@@ -42,6 +42,25 @@ function humanize(value: string) {
   return value.toLowerCase().replaceAll('_', ' ').replace(/\b\w/g, letter => letter.toUpperCase());
 }
 
+function statusLabel(value: string) {
+  const labels: Record<string, string> = {
+    UNVERIFIABLE: 'Needs evidence',
+    MISSING_EVIDENCE: 'Missing evidence',
+    PARTIALLY_SUPPORTED: 'Partial support',
+    SUPPORTED: 'Supported in scope',
+    CONTRADICTED: 'Contradicted',
+  };
+  return labels[value] ?? humanize(value);
+}
+
+function scopeLabel(value: string) {
+  const labels: Record<string, string> = {
+    'software_contract_only': 'Validation contract',
+    'evo2-recorded-fixture-v1': 'Recorded scoring profile',
+  };
+  return labels[value] ?? value;
+}
+
 function parseFastaOrText(raw: string): string {
   const lines = raw.split(/\r?\n/);
   const sequenceLines: string[] = [];
@@ -96,7 +115,7 @@ function statusClass(status: string) {
 }
 
 function BoundaryBadge() {
-  return <span className="boundary-badge"><ShieldCheck size={14} /> Fixture-safe</span>;
+  return <span className="boundary-badge"><ShieldCheck size={14} /> Evidence-aware</span>;
 }
 
 function AppLoading({ error }: { error?: string }) {
@@ -110,7 +129,7 @@ function Sidebar({ view, onView, workspace }: { view: View; onView: (view: View)
       const Icon = item.icon;
       return <button key={item.id} className={view === item.id ? 'nav-item active' : 'nav-item'} onClick={() => onView(item.id)}><Icon size={18} /><span><strong>{item.label}</strong><small>{item.description}</small></span><ChevronRight size={15} /></button>;
     })}</nav>
-    <div className="boundary-card"><div><ShieldCheck size={18} /><strong>Scientific boundary</strong></div><p>Saved audits are fixture-backed. Live model calls and persistent experiments are explicitly labeled and never imply biological validation.</p><span><i /> Provenance before claims</span></div>
+    <div className="boundary-card"><div><ShieldCheck size={18} /><strong>Evidence status</strong></div><p>Every result carries execution, provenance, and validation state. Claims become eligible only when the required evidence passes.</p><span><i /> Provenance before claims</span></div>
     <div className="sidebar-foot"><span>Snapshot</span><code>{shortDigest(workspace.snapshot_digest, 8)}</code></div>
   </aside>;
 }
@@ -143,14 +162,14 @@ function SequenceRibbon({ workspace, claim, selectedPosition, onPosition }: { wo
 }
 
 function EvidenceRow({ check }: { check: EvidenceCheck }) {
-  return <div className="evidence-row"><span className={check.valid ? 'evidence-icon valid' : 'evidence-icon blocked'}>{check.valid ? <CheckCircle2 size={17} /> : <XCircle size={17} />}</span><div><strong>{humanize(check.family)}</strong><small>{humanize(check.method)}</small></div><span className="evidence-assessment">{check.valid ? humanize(check.assessment) : 'Ineligible fixture'}</span></div>;
+  return <div className="evidence-row"><span className={check.valid ? 'evidence-icon valid' : 'evidence-icon blocked'}>{check.valid ? <CheckCircle2 size={17} /> : <XCircle size={17} />}</span><div><strong>{humanize(check.family)}</strong><small>{humanize(check.method)}</small></div><span className="evidence-assessment">{check.valid ? humanize(check.assessment) : 'Not eligible'}</span></div>;
 }
 
 function Investigation({ workspace, claim, onClaim, selectedPosition, onPosition, onView }: { workspace: Workspace; claim: Claim; onClaim: (id: string) => void; selectedPosition: number; onPosition: (position: number) => void; onView: (view: View) => void }) {
   const highlighted = pathForClaim(workspace, claim);
   return <><div className="view-intro"><div><p className="kicker">Guided investigation</p><h2>Choose a claim, inspect its evidence, then trace the source.</h2></div><button className="secondary-button" onClick={() => onView('provenance')}>Open full graph <ArrowRight size={16} /></button></div><SummaryStrip workspace={workspace} /><SequenceRibbon workspace={workspace} claim={claim} selectedPosition={selectedPosition} onPosition={onPosition} />
     <div className="investigation-grid"><section className="card claim-browser"><div className="card-heading"><div><p className="kicker">1 · Select a claim</p><h2>Questions under audit</h2></div><span className="count-badge">{workspace.claims.length}</span></div><div className="claim-list">{workspace.claims.map((item, index) => <button key={item.id} className={item.id === claim.id ? 'claim-item active' : 'claim-item'} onClick={() => onClaim(item.id)}><span className="claim-number">0{index + 1}</span><span><strong>{item.text}</strong><small>bases {item.start}–{item.end} · {item.sensitivity?.count ?? 0} observations</small></span><ChevronRight size={17} /></button>)}</div></section>
-      <section className="card evidence-inspector"><div className="card-heading"><div><p className="kicker">2 · Read the decision</p><h2>Verification result</h2></div><span className={`status-chip ${statusClass(claim.verification.status)}`}>{humanize(claim.verification.status)}</span></div><div className="decision-callout"><CircleHelp size={21} /><div><strong>Why this claim cannot pass</strong><p>{claim.verification.reasons.join(' ')}</p></div></div><div className="evidence-table">{claim.verification.checks.map(check => <EvidenceRow key={check.evidence_id} check={check} />)}</div><div className="scope-line"><span>Model</span><code>{String(claim.scope.model_checkpoint)}</code><span>Target</span><code>{String(claim.scope.scoring_target)}</code></div></section>
+      <section className="card evidence-inspector"><div className="card-heading"><div><p className="kicker">2 · Evidence decision</p><h2>Verification result</h2></div><span className={`status-chip ${statusClass(claim.verification.status)}`}>{statusLabel(claim.verification.status)}</span></div><div className="decision-callout"><CircleHelp size={21} /><div><strong>What blocks confirmation</strong><p>{claim.verification.reasons.join(' ')}</p></div></div><div className="evidence-table">{claim.verification.checks.map(check => <EvidenceRow key={check.evidence_id} check={check} />)}</div><div className="scope-line"><span>Model profile</span><code>{scopeLabel(String(claim.scope.model_checkpoint))}</code><span>Evaluation target</span><code>{scopeLabel(String(claim.scope.scoring_target))}</code></div></section>
       <section className="card trace-preview"><div className="card-heading"><div><p className="kicker">3 · Trace provenance</p><h2>{highlighted.size} connected records</h2></div><button className="icon-button" aria-label="Open provenance graph" onClick={() => onView('provenance')}><Network size={17} /></button></div><div className="trace-flow"><span className="trace-node claim-node">Claim</span><ArrowRight /><span className="trace-node evidence-node">Evidence</span><ArrowRight /><span className="trace-node source-node">Source</span></div><dl className="digest-list"><div><dt>Claim artifact</dt><dd>{shortDigest(claim.artifact_digest)}</dd></div><div><dt>Verification</dt><dd>{shortDigest(claim.verification_digest)}</dd></div></dl><button className="primary-button" onClick={() => onView('provenance')}>Trace this claim <ArrowRight size={16} /></button></section>
     </div></>;
 }
@@ -789,7 +808,7 @@ export default function App() {
   const claim = workspace.claims.find(item => item.id === selectedClaim) ?? workspace.claims[0];
   const chooseClaim = (id: string) => { const next = workspace.claims.find(item => item.id === id); setSelectedClaim(id); if (next) { setSelectedPosition(next.start); setSelectedNode(pathForClaim(workspace, next)); } };
   const choosePosition = (position: number) => { setSelectedPosition(position); const region = workspace.claims.find(item => position >= item.start && position < item.end); if (region) setSelectedClaim(region.id); };
-  return <div className="app-shell"><Sidebar view={view} onView={setView} workspace={workspace} /><main className="workspace-main"><Topbar view={view} workspace={workspace} /><div className="science-notice"><ShieldCheck size={17} /><span><strong>Scientific sandbox.</strong> Live and fixture-backed results are labeled separately; computational output is not biological validation.</span><a href="/privacy">Privacy</a></div>
+  return <div className="app-shell"><Sidebar view={view} onView={setView} workspace={workspace} /><main className="workspace-main"><Topbar view={view} workspace={workspace} /><div className="science-notice"><ShieldCheck size={17} /><span><strong>Evidence gate.</strong> Results are labeled by execution mode and validation status; computational output is not automatically a biological conclusion.</span><a href="/privacy">Privacy</a></div>
     {view === 'experiment' && <ExperimentCanvas />}
     {view === 'investigate' && <Investigation workspace={workspace} claim={claim} onClaim={chooseClaim} selectedPosition={selectedPosition} onPosition={position => { choosePosition(position); setView('sandbox'); }} onView={setView} />}
     {view === 'sandbox' && <Sandbox workspace={workspace} position={selectedPosition} onPosition={choosePosition} />}
@@ -798,5 +817,5 @@ export default function App() {
     {view === 'colony' && <Colony workspace={workspace} />}
     {view === 'provenance' && <Provenance workspace={workspace} claim={claim} selectedNode={selectedNode} onNode={id => setSelectedNode(id ? new Set([id]) : new Set())} />}
     {view === 'frameworks' && <Frameworks frameworks={frameworks} />}
-    <ActivityDock workspace={workspace} /><footer><span>Concordia Colony · local-first evidence audit</span><span><Box size={13} /> {workspace.execution_mode.replaceAll('_', ' ')}</span></footer></main></div>;
+    <ActivityDock workspace={workspace} /><footer><span>Concordia Colony · local-first evidence audit</span><span><Box size={13} /> {workspace.execution_mode.replaceAll('_', ' ')}</span><a href="https://github.com/srikarjy/concordia" target="_blank" rel="noreferrer">GitHub repository <ArrowRight size={13} /></a></footer></main></div>;
 }
