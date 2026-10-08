@@ -18,7 +18,12 @@ import sqlite3
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from concordia.genomics.boltz_nvidia import NvidiaHostedBoltzResult, NvidiaHostedBoltzRunner
+from concordia.genomics.boltz_nvidia import (
+    BoltzComplexRequest,
+    NvidiaHostedBoltzComplexResult,
+    NvidiaHostedBoltzResult,
+    NvidiaHostedBoltzRunner,
+)
 from concordia.genomics.rate_limiting import Clock, RateLimitExceededError, SystemClock
 
 if TYPE_CHECKING:
@@ -140,6 +145,38 @@ class BoltzGateway:
             return NvidiaHostedBoltzResult.model_validate_json(row["result_json"])
         self._check_and_record_rate_limit(client_id)
         result = self.runner.predict(sequence)
+        with self._connect() as connection:
+            connection.execute(
+                "INSERT OR REPLACE INTO prediction_cache "
+                "(request_key, result_json, created_at) VALUES (?, ?, ?)",
+                (request_key, result.model_dump_json(), self._now()),
+            )
+        return result
+
+    def predict_complex(
+        self, *, client_id: str, request: BoltzComplexRequest
+    ) -> NvidiaHostedBoltzComplexResult:
+        """Rate-limit and cache a structured multi-chain Boltz request."""
+
+        canonical = request.model_dump_json(exclude_none=True, by_alias=True)
+        request_key = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+        if self._postgres is not None:
+            cached_json = self._postgres.get_cached(request_key)
+            if cached_json:
+                return NvidiaHostedBoltzComplexResult.model_validate_json(cached_json)
+            self._check_and_record_rate_limit(client_id)
+            result = self.runner.predict_complex(request)
+            self._postgres.store(request_key, result.model_dump_json(), self._now())
+            return result
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT result_json FROM prediction_cache WHERE request_key = ?",
+                (request_key,),
+            ).fetchone()
+        if row is not None:
+            return NvidiaHostedBoltzComplexResult.model_validate_json(row["result_json"])
+        self._check_and_record_rate_limit(client_id)
+        result = self.runner.predict_complex(request)
         with self._connect() as connection:
             connection.execute(
                 "INSERT OR REPLACE INTO prediction_cache "

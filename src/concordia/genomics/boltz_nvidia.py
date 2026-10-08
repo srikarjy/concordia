@@ -1,16 +1,9 @@
-"""NVIDIA-hosted Boltz-2 protein structure prediction.
+"""NVIDIA-hosted Boltz-2 structure prediction.
 
-Replaces ESMFold (``esmfold_nvidia.py``) as the live structure-prediction
-backend: NVIDIA's own catalog page confirms ESMFold (``nvidia/esmfold``) no
-longer resolves for a real account (``404: Function not found``), while
-Boltz-2 does. Endpoint, request schema, and the async NVCF polling protocol
-are taken from NVIDIA's own published sample code at
-``https://build.nvidia.com/mit/boltz2`` (fetched 2026-10-02), not guessed.
-
-Only single-chain, ligand-free protein folding is requested here. Boltz-2
-requires an MSA input; this module sends the official sample's own
-simplification — a one-sequence "alignment" containing just the query
-itself — which is not a real multiple sequence alignment.
+The runner supports the original single-chain path and a separately typed
+multi-chain path for antibody-antigen complexes. Both paths retain bounded
+request/response artifacts and explicitly remain computational outputs, not
+validated biological evidence.
 """
 
 from __future__ import annotations
@@ -20,10 +13,10 @@ import json
 import os
 import re
 import time
-from typing import Literal
+from typing import Any, Literal
 
 import httpx
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from concordia.storage.content import ContentAddressedStore
 
@@ -32,7 +25,7 @@ AMINO_ACID_PATTERN = r"^[ARNDCQEGHILKMFPSTWYV]+$"
 
 
 class NvidiaHostedBoltzResult(BaseModel):
-    """Validated structure-prediction output that is never scientific evidence."""
+    """Validated single-chain output that is never scientific evidence."""
 
     model_config = ConfigDict(extra="forbid", frozen=True, allow_inf_nan=False)
 
@@ -52,13 +45,87 @@ class NvidiaHostedBoltzResult(BaseModel):
     limitations: tuple[str, ...] = Field(min_length=1)
 
 
+class BoltzPolymer(BaseModel):
+    """A structured polymer accepted by the Boltz-2 NIM."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    id: str = Field(min_length=1, max_length=4, pattern=r"^[A-Za-z0-9]+$")
+    molecule_type: Literal["protein", "dna", "rna"] = "protein"
+    sequence: str = Field(min_length=1, max_length=4_096)
+    msa: dict[str, Any] | None = None
+
+    @field_validator("sequence")
+    @classmethod
+    def normalize_sequence(cls, value: str) -> str:
+        normalized = "".join(value.upper().split())
+        if not normalized:
+            raise ValueError("polymer sequence must not be empty")
+        return normalized
+
+    @model_validator(mode="after")
+    def validate_alphabet(self) -> BoltzPolymer:
+        allowed = {
+            "protein": set("ARNDCQEGHILKMFPSTWYV"),
+            "dna": set("ACGT"),
+            "rna": set("ACGU"),
+        }[self.molecule_type]
+        invalid = sorted(set(self.sequence) - allowed)
+        if invalid:
+            raise ValueError(
+                f"{self.molecule_type} polymer contains unsupported residues: "
+                + "".join(invalid)
+            )
+        return self
+
+
+class BoltzComplexRequest(BaseModel):
+    """Validated multi-chain input for antibody-antigen prediction."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    polymers: tuple[BoltzPolymer, ...] = Field(min_length=2, max_length=12)
+    recycling_steps: int = Field(default=1, ge=1, le=10)
+    sampling_steps: int = Field(default=20, ge=1, le=200)
+    diffusion_samples: int = Field(default=1, ge=1, le=5)
+    step_scale: float = Field(default=1.2, gt=0, le=3)
+    without_potentials: bool = True
+
+    @model_validator(mode="after")
+    def validate_polymers(self) -> BoltzComplexRequest:
+        ids = [polymer.id for polymer in self.polymers]
+        if len(set(ids)) != len(ids):
+            raise ValueError("Boltz polymer IDs must be unique")
+        return self
+
+
+class NvidiaHostedBoltzComplexResult(BaseModel):
+    """Validated multi-chain output that is never scientific evidence."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, allow_inf_nan=False)
+
+    schema_version: Literal[1] = 1
+    model_id: Literal["mit/boltz2"] = "mit/boltz2"
+    execution_mode: Literal["real_hosted_complex_structure_prediction"] = (
+        "real_hosted_complex_structure_prediction"
+    )
+    input_payload_hash: str = Field(pattern=SHA256_PATTERN)
+    structure_text: str = Field(min_length=1)
+    structure_format: str = Field(min_length=1)
+    confidence_scores: tuple[float, ...] = Field(default_factory=tuple)
+    elapsed_seconds: float = Field(ge=0)
+    request_artifact_digest: str = Field(pattern=SHA256_PATTERN)
+    response_artifact_digest: str = Field(pattern=SHA256_PATTERN)
+    scientific_use_allowed: Literal[False] = False
+    limitations: tuple[str, ...] = Field(min_length=1)
+
+
 class NvidiaHostedBoltzRunner:
-    """Call NVIDIA's hosted Boltz-2 NIM, including its async NVCF polling path."""
+    """Call NVIDIA's hosted Boltz-2 NIM, including async NVCF polling."""
 
     model_id = "mit/boltz2"
     endpoint = "https://health.api.nvidia.com/v1/biology/mit/boltz2/predict"
     status_endpoint_template = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/status/{task_id}"
-    # NVIDIA's current Boltz-2 NIM contract allows 1-4,096 residues per polymer.
     max_sequence_length = 4_096
     poll_seconds_header = 300
     max_poll_attempts = 60
@@ -87,8 +154,6 @@ class NvidiaHostedBoltzRunner:
         diffusion_samples: int = 1,
         step_scale: float = 1.2,
     ) -> NvidiaHostedBoltzResult:
-        if not self._api_key:
-            raise RuntimeError("NVIDIA_API_KEY is required for hosted Boltz-2 prediction")
         normalized = sequence.strip().upper()
         if not normalized or len(normalized) > self.max_sequence_length:
             raise ValueError(
@@ -98,8 +163,8 @@ class NvidiaHostedBoltzRunner:
         if not re.fullmatch(AMINO_ACID_PATTERN, normalized):
             invalid = sorted(set(normalized) - set("ARNDCQEGHILKMFPSTWYV"))
             raise ValueError(
-                f"sequence contains characters outside the 20 standard amino acids: "
-                f"{''.join(invalid)}"
+                "sequence contains characters outside the 20 standard amino acids: "
+                + "".join(invalid)
             )
         request_payload = {
             "polymers": [
@@ -124,11 +189,10 @@ class NvidiaHostedBoltzRunner:
             "without_potentials": True,
         }
         input_hash = hashlib.sha256(normalized.encode("ascii")).hexdigest()
-        request_digest = self.artifacts.put_json(
-            {
-                "schema_version": 1,
-                "model_id": self.model_id,
-                "endpoint": self.endpoint,
+        submitted = self._submit(
+            request_payload,
+            input_hash=input_hash,
+            request_metadata={
                 "input_sequence_hash": input_hash,
                 "input_sequence_length": len(normalized),
                 "request_parameters": {
@@ -143,6 +207,101 @@ class NvidiaHostedBoltzRunner:
                 },
                 "input_retained": False,
                 "scientific_use_allowed": False,
+            },
+        )
+        structure_text, structure_format, confidence_scores = self._parse_response(
+            submitted["payload"]
+        )
+        return NvidiaHostedBoltzResult(
+            input_sequence_hash=input_hash,
+            structure_text=structure_text,
+            structure_format=structure_format,
+            confidence_scores=confidence_scores,
+            elapsed_seconds=submitted["elapsed_seconds"],
+            request_artifact_digest=submitted["request_digest"],
+            response_artifact_digest=submitted["response_digest"],
+            limitations=(
+                "Hosted structure prediction is a software integration check, not a "
+                "validated protein structure.",
+                "The MSA sent is a one-sequence self-reference, not a real multiple "
+                "sequence alignment, which measurably reduces Boltz-2 accuracy.",
+                "Per-residue confidence has not been inspected or thresholded here.",
+                "The input protein is not biologically verified to be encoded by any "
+                "real organism's genome.",
+            ),
+        )
+
+    def predict_complex(
+        self, request: BoltzComplexRequest
+    ) -> NvidiaHostedBoltzComplexResult:
+        """Predict an antibody-antigen or other multi-chain complex."""
+
+        payload = request.model_dump(mode="json", exclude_none=True)
+        for polymer in payload["polymers"]:
+            if polymer["molecule_type"] == "protein" and "msa" not in polymer:
+                polymer["msa"] = {
+                    "uniref90": {
+                        "a3m": {
+                            "alignment": f">seq1\n{polymer['sequence']}",
+                            "format": "a3m",
+                        }
+                    }
+                }
+        canonical = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+        input_hash = hashlib.sha256(canonical).hexdigest()
+        submitted = self._submit(
+            payload,
+            input_hash=input_hash,
+            request_metadata={
+                "input_payload_hash": input_hash,
+                "polymer_count": len(request.polymers),
+                "polymer_ids": [polymer.id for polymer in request.polymers],
+                "request_parameters": {
+                    "recycling_steps": request.recycling_steps,
+                    "sampling_steps": request.sampling_steps,
+                    "diffusion_samples": request.diffusion_samples,
+                    "step_scale": request.step_scale,
+                    "without_potentials": request.without_potentials,
+                },
+                "input_retained": False,
+                "scientific_use_allowed": False,
+            },
+        )
+        structure_text, structure_format, confidence_scores = self._parse_response(
+            submitted["payload"]
+        )
+        return NvidiaHostedBoltzComplexResult(
+            input_payload_hash=input_hash,
+            structure_text=structure_text,
+            structure_format=structure_format,
+            confidence_scores=confidence_scores,
+            elapsed_seconds=submitted["elapsed_seconds"],
+            request_artifact_digest=submitted["request_digest"],
+            response_artifact_digest=submitted["response_digest"],
+            limitations=(
+                "Hosted complex prediction is a computational structure hypothesis, not "
+                "validated affinity or therapeutic evidence.",
+                "Antibody numbering and CDR boundaries were not inferred by this call.",
+                "Interface confidence and clashes have not been independently assessed.",
+            ),
+        )
+
+    def _submit(
+        self,
+        request_payload: dict[str, Any],
+        *,
+        input_hash: str,
+        request_metadata: dict[str, Any],
+    ) -> dict[str, Any]:
+        if not self._api_key:
+            raise RuntimeError("NVIDIA_API_KEY is required for hosted Boltz-2 prediction")
+        request_digest = self.artifacts.put_json(
+            {
+                "schema_version": 1,
+                "model_id": self.model_id,
+                "endpoint": self.endpoint,
+                "input_hash": input_hash,
+                **request_metadata,
             }
         )
         headers = {
@@ -172,6 +331,15 @@ class NvidiaHostedBoltzRunner:
             payload = response.json()
         except json.JSONDecodeError as error:
             raise RuntimeError("NVIDIA Boltz-2 response was not JSON") from error
+        return {
+            "payload": payload,
+            "elapsed_seconds": elapsed_seconds,
+            "request_digest": request_digest,
+            "response_digest": response_digest,
+        }
+
+    @staticmethod
+    def _parse_response(payload: Any) -> tuple[str, str, tuple[float, ...]]:
         structures = payload.get("structures")
         if not isinstance(structures, list) or not structures:
             raise RuntimeError("NVIDIA Boltz-2 response contained no structure")
@@ -184,24 +352,7 @@ class NvidiaHostedBoltzRunner:
         confidence_scores = tuple(
             float(value) for value in confidence_raw if isinstance(value, int | float)
         )
-        return NvidiaHostedBoltzResult(
-            input_sequence_hash=input_hash,
-            structure_text=structure_text,
-            structure_format=structure_format or "pdb",
-            confidence_scores=confidence_scores,
-            elapsed_seconds=elapsed_seconds,
-            request_artifact_digest=request_digest,
-            response_artifact_digest=response_digest,
-            limitations=(
-                "Hosted structure prediction is a software integration check, not a "
-                "validated protein structure.",
-                "The MSA sent is a one-sequence self-reference, not a real multiple "
-                "sequence alignment, which measurably reduces Boltz-2 accuracy.",
-                "Per-residue confidence has not been inspected or thresholded here.",
-                "The input protein is not biologically verified to be encoded by any "
-                "real organism's genome.",
-            ),
-        )
+        return structure_text, structure_format or "pdb", confidence_scores
 
     def _poll_status(
         self, client: httpx.Client, headers: dict[str, str], task_id: str

@@ -51,6 +51,19 @@ test('starts a protein experiment with a Boltz structure action', async ({ page 
   await expect(page.getByText('Reference PROTEIN')).toBeVisible();
 });
 
+test('opens the antibody complex workspace without sending a live request', async ({ page }) => {
+  const mutationRequests: string[] = [];
+  page.on('request', request => {
+    if (request.method() !== 'GET') mutationRequests.push(request.url());
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: /Antibody complex/ }).click();
+
+  await expect(page.getByRole('heading', { name: /Heavy chain, light chain, and antigen/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Predict antibody complex' })).toBeVisible();
+  expect(mutationRequests).toEqual([]);
+});
+
 test('replays a bounded fixture mutation entirely in the browser', async ({ page }) => {
   const mutationRequests: string[] = [];
   page.on('request', request => {

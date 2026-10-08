@@ -12,13 +12,14 @@ import type {
 
 const API_ROOT = import.meta.env.VITE_API_ROOT ?? '';
 const BASES = ['A', 'C', 'G', 'T'];
-type View = 'experiment' | 'investigate' | 'sandbox' | 'generate' | 'colony' | 'provenance' | 'frameworks';
+type View = 'experiment' | 'investigate' | 'sandbox' | 'generate' | 'antibody' | 'colony' | 'provenance' | 'frameworks';
 
 const NAV_ITEMS: { id: View; label: string; description: string; icon: typeof Search }[] = [
   { id: 'experiment', label: 'Experiment canvas', description: 'Branch molecular designs', icon: GitBranch },
   { id: 'investigate', label: 'Investigation', description: 'Claims and evidence', icon: Search },
   { id: 'sandbox', label: 'Sequence sandbox', description: 'Replay perturbations', icon: FlaskConical },
   { id: 'generate', label: 'Evo2 generation', description: 'Live hosted NVIDIA call', icon: Wand2 },
+  { id: 'antibody', label: 'Antibody complex', description: 'Boltz-2 multi-chain structure', icon: Atom },
   { id: 'colony', label: 'Colony evolution', description: 'Lineage and fitness', icon: GitBranch },
   { id: 'provenance', label: 'Provenance graph', description: 'Trace every artifact', icon: Network },
   { id: 'frameworks', label: 'Scientific stack', description: 'Frameworks and boundaries', icon: Atom },
@@ -553,6 +554,55 @@ function ProteinStructurePanel() {
   </section>;
 }
 
+interface BoltzComplexPredictionResult {
+  structure_text: string; structure_format: string; confidence_scores: number[];
+  limitations: string[]; elapsed_seconds: number; input_payload_hash: string;
+  request_artifact_digest: string; response_artifact_digest: string;
+}
+
+function AntibodyComplexPanel() {
+  const [heavy, setHeavy] = useState('EVQLVESGGGLVQPGGSLRLSCAAS');
+  const [light, setLight] = useState('DIQMTQSPSSLSASVGDRVTITC');
+  const [antigen, setAntigen] = useState('MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQ');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'done'>('idle');
+  const [result, setResult] = useState<BoltzComplexPredictionResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const invalid = [heavy, light, antigen].some(sequence => !/^[ARNDCQEGHILKMFPSTWYV]+$/i.test(sequence) || sequence.length === 0);
+
+  const predict = async () => {
+    setStatus('loading'); setError(null);
+    try {
+      const response = await fetch(`${API_ROOT}/nvidia/boltz/complex`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ polymers: [
+          { id: 'H', molecule_type: 'protein', sequence: heavy },
+          { id: 'L', molecule_type: 'protein', sequence: light },
+          { id: 'A', molecule_type: 'protein', sequence: antigen },
+        ] }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.detail ?? body.message ?? 'Complex prediction failed');
+      setResult(body as BoltzComplexPredictionResult); setStatus('done');
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Complex prediction failed'); setStatus('error');
+    }
+  };
+
+  return <><div className="view-intro"><div><p className="kicker">Antibody design foundation</p><h2>Validate a multi-chain antibody–antigen input and inspect a Boltz-2 complex hypothesis.</h2></div><LiveCallBadge /></div>
+    <section className="card protein-panel"><div className="card-heading"><div><p className="kicker">NVIDIA Boltz-2 complex</p><h2>Heavy chain, light chain, and antigen</h2></div><span className="live-badge"><AlertTriangle size={14} /> Rate-limited live call</span></div>
+      <p className="forward-warning"><AlertTriangle size={14} /> This panel performs structure prediction only. RFantibody/RFdiffusion generation, ProteinMPNN sequence design, antibody numbering, and interface scoring are separate future workflow steps.</p>
+      <div className="generation-grid antibody-fields">
+        <label>Heavy chain<textarea className="generation-textarea" value={heavy} onChange={event => setHeavy(event.target.value.toUpperCase())} /></label>
+        <label>Light chain<textarea className="generation-textarea" value={light} onChange={event => setLight(event.target.value.toUpperCase())} /></label>
+        <label>Antigen<textarea className="generation-textarea" value={antigen} onChange={event => setAntigen(event.target.value.toUpperCase())} /></label>
+      </div>
+      {invalid && <p className="field-error">Use only the 20 standard amino-acid letters in all three chains.</p>}
+      <button className="run-button" disabled={invalid || status === 'loading'} onClick={predict}>{status === 'loading' ? <Loader2 size={17} className="spin" /> : <Atom size={17} />} {status === 'loading' ? 'Calling NVIDIA (may take a minute)…' : 'Predict antibody complex'}</button>
+      {status === 'error' && error && <div className="gateway-error"><XCircle size={18} /><p>{error}</p></div>}
+      {status === 'done' && result ? <div className="protein-result antibody-result"><ProteinStructureViewer structureText={result.structure_text} structureFormat={result.structure_format} /><div className="result-warning"><ShieldCheck size={18} /><p><strong>Not scientific evidence.</strong> {result.limitations.join(' ')}</p></div><dl className="digest-list"><div><dt>Input payload</dt><dd>{shortDigest(result.input_payload_hash)}</dd></div><div><dt>Request artifact</dt><dd>{shortDigest(result.request_artifact_digest)}</dd></div><div><dt>Response artifact</dt><dd>{shortDigest(result.response_artifact_digest)}</dd></div><div><dt>Elapsed</dt><dd>{result.elapsed_seconds.toFixed(2)}s</dd></div></dl></div> : status !== 'error' && <div className="empty-result"><Atom size={28} /><strong>Complex structure will render here</strong><p>Submit the three chains to call the hosted Boltz-2 NIM.</p></div>}
+    </section></>;
+}
+
 function ForwardScoringPanel() {
   const [sequence, setSequence] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -744,6 +794,7 @@ export default function App() {
     {view === 'investigate' && <Investigation workspace={workspace} claim={claim} onClaim={chooseClaim} selectedPosition={selectedPosition} onPosition={position => { choosePosition(position); setView('sandbox'); }} onView={setView} />}
     {view === 'sandbox' && <Sandbox workspace={workspace} position={selectedPosition} onPosition={choosePosition} />}
     {view === 'generate' && <><GenerationPlayground /><ForwardScoringPanel /><ProteinStructurePanel /></>}
+    {view === 'antibody' && <AntibodyComplexPanel />}
     {view === 'colony' && <Colony workspace={workspace} />}
     {view === 'provenance' && <Provenance workspace={workspace} claim={claim} selectedNode={selectedNode} onNode={id => setSelectedNode(id ? new Set([id]) : new Set())} />}
     {view === 'frameworks' && <Frameworks frameworks={frameworks} />}

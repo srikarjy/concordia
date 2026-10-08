@@ -21,6 +21,7 @@ class ToolCapability(StrEnum):
     ARTIFACT_READ = "artifact.read"
     GRAPH_READ = "graph.read"
     GENOMIC_COMPUTE = "genomic.compute"
+    ANTIBODY_COMPUTE = "antibody.compute"
     FILESYSTEM_READ = "filesystem.read"
     NETWORK = "network"
 
