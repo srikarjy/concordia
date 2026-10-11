@@ -193,7 +193,7 @@ function Topbar({ view, workspace }: { view: View; workspace: Workspace }) {
 function SummaryStrip({ workspace }: { workspace: Workspace }) {
   const members = [workspace.colony.seed_member, ...workspace.colony.members];
   const values = [['Sequence', `${workspace.sequence.sequence.length} bp`, workspace.sequence.assembly], ['Claims', String(workspace.claims.length), 'all require review'], ['Colony', String(members.length), '2 generations'], ['Evidence', String(workspace.graph.nodes.length), 'provenance nodes']];
-  return <section className="summary-strip" aria-label="Run summary">{values.map(([label, value, note]) => <div key={label}><span>{label}</span><strong>{value}</strong><small>{note}</small></div>)}<div className="study-state"><span>Real-study gate</span><strong><i /> Awaiting evidence</strong><small>Phase 9 remains closed</small></div></section>;
+  return <section className="summary-strip" aria-label="Run summary">{values.map(([label, value, note]) => <div key={label}><span>{label}</span><strong>{value}</strong><small>{note}</small></div>)}<div className="study-state"><span>Real-study gate</span><strong><i /> Awaiting evidence</strong><small>No real evidence admitted yet</small></div></section>;
 }
 
 function SequenceRibbon({ workspace, claim, selectedPosition, onPosition }: { workspace: Workspace; claim: Claim; selectedPosition: number; onPosition: (position: number) => void }) {

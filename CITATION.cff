@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use Concordia, please cite it as below."
+title: "Concordia: an audit layer for biological foundation-model outputs"
+type: software
+license: MIT
+repository-code: "https://github.com/srikarjy/concordia"
+authors:
+  - family-names: "JY"
+    given-names: "Srikar"

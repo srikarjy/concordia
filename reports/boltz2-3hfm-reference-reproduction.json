@@ -15,7 +15,8 @@
       "L": 214,
       "Y": 129
     },
-    "sequence_source": "RCSB PDB FASTA for 3HFM"
+    "sequence_source": "RCSB PDB FASTA for 3HFM",
+    "released": "1989-07-12"
   },
   "prediction": {
     "model_id": "mit/boltz2",
