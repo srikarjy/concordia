@@ -101,3 +101,11 @@ def test_security_headers_present_and_docs_exempt_from_csp(
     assert "content-security-policy" not in client.get("/docs").headers
     secure = client.get("/health", headers={"X-Forwarded-Proto": "https"})
     assert "max-age" in secure.headers["strict-transport-security"]
+
+
+def test_unreachable_database_url_falls_back_to_sqlite() -> None:
+    from concordia.api.workspace import _reachable_database_url
+
+    assert _reachable_database_url(None) is None
+    assert _reachable_database_url("not a dsn") is None
+    assert _reachable_database_url("postgresql://u:p@127.0.0.1:1/db") is None

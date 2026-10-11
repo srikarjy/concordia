@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 from collections.abc import Awaitable, Callable
 from copy import deepcopy
@@ -256,6 +257,25 @@ def _tool_manifest() -> dict[str, object]:
     }
 
 
+def _reachable_database_url(database_url: str | None) -> str | None:
+    """Return the Postgres URL only if it connects now; otherwise fall back to SQLite.
+
+    A wrong secret must degrade persistence, not take every write endpoint down.
+    """
+    if not database_url:
+        return None
+    try:
+        import psycopg
+
+        with psycopg.connect(database_url, connect_timeout=5):
+            return database_url
+    except Exception as error:  # noqa: BLE001 - any failure means fall back
+        logging.getLogger(__name__).warning(
+            "CONCORDIA_DATABASE_URL unusable (%s); using local SQLite state", type(error).__name__
+        )
+        return None
+
+
 def create_workspace_app(
     state_root: str | Path = ".concordia/workspace",
     frontend: str | Path = "frontend/dist",
@@ -275,7 +295,7 @@ def create_workspace_app(
     # Postgres/Supabase connection string) swaps every one of these for a
     # Postgres-backed equivalent instead; see genomics/postgres_backend.py
     # and docs/deployment.md. Local development is unaffected either way.
-    database_url = os.environ.get("CONCORDIA_DATABASE_URL")
+    database_url = _reachable_database_url(os.environ.get("CONCORDIA_DATABASE_URL"))
     experiment_store = ExperimentStore(Path(state_root) / "experiments")
 
     generation_gateway = Evo2GenerationGateway(
