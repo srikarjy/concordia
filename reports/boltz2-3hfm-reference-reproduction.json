@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "report_id": "boltz2-3hfm-reference-reproduction-v1",
+  "date": "2026-10-11",
+  "execution_mode": "real_hosted_complex_structure_prediction",
+  "scientific_use_allowed": false,
+  "purpose": "Check that the hosted Boltz-2 integration reproduces a known antibody-antigen crystal complex end to end. Not a discovery and not a generalization test.",
+  "target": {
+    "pdb_id": "3HFM",
+    "title": "HyHEL-10 Fab - hen egg white lysozyme complex",
+    "method": "X-ray diffraction",
+    "resolution_angstrom": 3.0,
+    "chains": {
+      "H": 215,
+      "L": 214,
+      "Y": 129
+    },
+    "sequence_source": "RCSB PDB FASTA for 3HFM"
+  },
+  "prediction": {
+    "model_id": "mit/boltz2",
+    "endpoint": "/nvidia/boltz/complex on the public Space",
+    "structure_format": "mmcif",
+    "model_confidence": 0.9394980669021606,
+    "elapsed_seconds": 5.04,
+    "input_payload_hash": "4f3f4d082f06957a95178b92f0b296ce3ad6eef9e64de15b7ccc5ecfd591164b",
+    "request_artifact_digest": "e3595129dc62aec6db3f2331b1594231bb1b8006c116e3f0da59d6c8ab0ef036",
+    "response_artifact_digest": "ebcf595807359f2d7d096dc9b6fc6ee77b017fb03a00bb1a036385dcedc3b5ae",
+    "msa": "single-sequence self-reference (no real alignment)"
+  },
+  "comparison_to_crystal": {
+    "H_rmsd_CA": 1.55,
+    "L_rmsd_CA": 1.21,
+    "Y_rmsd_CA": 0.76,
+    "antibody_HL_rmsd_CA": 1.44,
+    "antigen_rmsd_in_antibody_frame_CA": 2.07,
+    "interface_pairs_crystal": 32,
+    "interface_pairs_pred": 35,
+    "interface_precision": 0.743,
+    "interface_recall": 0.812,
+    "method": "CA-only, residue-aligned; interface pair = antibody-antigen CA-CA distance < 8 A; scoring script: scripts/score_complex_against_crystal.py"
+  },
+  "limitations": [
+    "3HFM is an old, public structure and is very likely in Boltz-2's training data, so close agreement is expected and does not show generalization to unseen antibodies.",
+    "Single complex, single sample, single seed; no uncertainty estimate.",
+    "CA-only metrics and a crude contact definition; not DockQ and not an affinity or developability assessment.",
+    "The model's own confidence (0.94) agrees with the measured accuracy here, but one agreeing case does not calibrate it."
+  ],
+  "next": "Repeat on antibody-antigen complexes released after the model's training cutoff and report the distribution, including failures."
+}

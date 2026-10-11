@@ -4,8 +4,8 @@ import Sigma from 'sigma';
 import type { Edge, GraphNode } from './types';
 
 const colors: Record<string, string> = {
-  sequence: '#3de0b5', model: '#72a4cc', counterfactual: '#a68bd4',
-  annotation: '#e2b660', claim: '#62d9b8', verification: '#ed7f74',
+  sequence: '#5ad7ff', model: '#9aa8ff', counterfactual: '#c49bff',
+  annotation: '#f2c66d', claim: '#64e3a8', verification: '#ff7d89',
 };
 
 export function EvidenceGraph({ nodes, edges, selected, onSelect }: {
@@ -26,19 +26,19 @@ export function EvidenceGraph({ nodes, edges, selected, onSelect }: {
         const position = data.find(value => value.id === node.id)!;
         graph.addNode(node.id, { ...position, label: node.label,
           size: selected.has(node.id) ? 11 : 7,
-          color: selected.size && !selected.has(node.id) ? '#2b403a' : colors[node.kind],
+          color: selected.size && !selected.has(node.id) ? '#34415d' : colors[node.kind],
           forceLabel: selected.has(node.id), zIndex: selected.has(node.id) ? 2 : 0 });
       }
       edges.forEach((edge, index) => {
         if (graph.hasNode(edge.source) && graph.hasNode(edge.target))
           graph.addDirectedEdgeWithKey(String(index), edge.source, edge.target, {
-            color: selected.has(edge.source) && selected.has(edge.target) ? '#3de0b5' : '#263b35',
+            color: selected.has(edge.source) && selected.has(edge.target) ? '#5ad7ff' : '#33415f',
             size: 1.5, type: 'arrow',
           });
       });
       try {
         renderer = new Sigma(graph, host.current, { renderLabels: true, labelSize: 12,
-          labelColor: { color: '#a8bcb6' }, defaultEdgeType: 'arrow',
+          labelColor: { color: '#b7c5df' }, defaultEdgeType: 'arrow',
           stagePadding: 42, zIndex: true, allowInvalidContainer: true });
         renderer.on('clickNode', ({ node }) => selectRef.current(node));
       } catch { setFallback(true); }

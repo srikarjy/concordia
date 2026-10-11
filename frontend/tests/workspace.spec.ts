@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 test('guides a claim from sequence context to its verification decision', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Genomic attribution audit' })).toBeVisible();
+  await expect(page.locator('.loading-screen')).toHaveCount(0);
   await expect(page.getByRole('link', { name: /GitHub repository/ })).toHaveAttribute('href', 'https://github.com/srikarjy/concordia');
   await expect(page.getByText(/Results are labeled by execution mode and validation status/)).toBeVisible();
   await page.getByRole('button', { name: /Investigation/ }).click();
@@ -119,4 +120,14 @@ test('opens provenance records and controls local event playback', async ({ page
   expect(await events.count()).toBeGreaterThan(10);
   await page.getByRole('button', { name: 'Show recent' }).click();
   await expect(events).toHaveCount(6);
+});
+
+test('shows the scientific framework catalog and planned visualization stack', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /Scientific stack/ }).click();
+
+  await expect(page.getByText('React Flow')).toBeVisible();
+  await expect(page.getByText('Mol* / NGL Viewer')).toBeVisible();
+  await expect(page.getByText('Observable Plot')).toBeVisible();
+  await expect(page.getByText(/catalog snapshot|registered integrations/)).toBeVisible();
 });

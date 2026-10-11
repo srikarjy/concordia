@@ -13,6 +13,7 @@ from pathlib import Path
 from concordia.benchmarks.contracts import (
     BenchmarkReport,
     BenchmarkStatus,
+    BenchmarkSuite,
     BoltzLatencyBenchmark,
     ClaimBenchmark,
     LatencySummary,
@@ -28,7 +29,11 @@ from concordia.experiments.schema import (
 )
 from concordia.experiments.service import ExperimentStore
 from concordia.genomes.schema import EvidenceFamily
-from concordia.genomics.boltz_nvidia import BoltzComplexRequest, NvidiaHostedBoltzRunner
+from concordia.genomics.boltz_nvidia import (
+    BoltzComplexRequest,
+    BoltzPolymer,
+    NvidiaHostedBoltzRunner,
+)
 from concordia.storage.content import ContentAddressedStore
 from concordia.verification.cross import (
     ClaimRequest,
@@ -222,7 +227,7 @@ def _claim_case(store: ContentAddressedStore, label: str) -> ClaimRequest:
         annotation = _artifact(
             store, kind="evidence", payload={"case": label}, dependencies=(sequence,)
         )
-        evidence = (
+        evidence: tuple[EvidenceRecord, ...] = (
             EvidenceRecord(
                 evidence_id="counterfactual",
                 family=EvidenceFamily.COUNTERFACTUAL,
@@ -378,9 +383,9 @@ def run_boltz_latency_benchmark(
         )
     request = BoltzComplexRequest(
         polymers=(
-            {"id": "H", "sequence": "EVQLVESGGGLVQPGGSLRLSCAAS"},
-            {"id": "L", "sequence": "DIQMTQSPSSLSASVGDRVTITC"},
-            {"id": "A", "sequence": "MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQ"},
+            BoltzPolymer(id="H", sequence="EVQLVESGGGLVQPGGSLRLSCAAS"),
+            BoltzPolymer(id="L", sequence="DIQMTQSPSSLSASVGDRVTITC"),
+            BoltzPolymer(id="A", sequence="MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQ"),
         )
     )
     latencies: list[float] = []
@@ -422,7 +427,7 @@ def run_benchmark_suite(
     valid = {"all", "throughput", "replay", "claims", "boltz"}
     if suite not in valid:
         raise ValueError(f"suite must be one of {sorted(valid)}")
-    suites = []
+    suites: list[BenchmarkSuite] = []
     if suite in {"all", "throughput"}:
         suites.append(run_throughput_benchmark(iterations=iterations, nodes=nodes))
     if suite in {"all", "replay"}:

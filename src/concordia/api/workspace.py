@@ -81,8 +81,40 @@ def _client_ip(request: Request, *, trust_proxy_headers: bool) -> str:
     if trust_proxy_headers:
         forwarded = request.headers.get("x-forwarded-for")
         if forwarded:
-            return forwarded.split(",")[0].strip()
+            # Proxies append the address they saw, so the leftmost entries are
+            # client-supplied and spoofable. Count back from the right by the
+            # number of trusted proxy hops (default: one, e.g. the Spaces proxy).
+            entries = [entry.strip() for entry in forwarded.split(",") if entry.strip()]
+            hops = _trusted_proxy_hops()
+            if len(entries) >= hops:
+                return entries[-hops]
     return request.client.host if request.client else "unknown"
+
+
+# Spaces embed the app in a huggingface.co iframe, so framing is limited to
+# the app itself and Hugging Face rather than denied outright.
+_CONTENT_SECURITY_POLICY = "; ".join(
+    (
+        "default-src 'self'",
+        "script-src 'self' 'wasm-unsafe-eval'",
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data: blob:",
+        "font-src 'self' data:",
+        "connect-src 'self'",
+        "worker-src 'self' blob:",
+        "object-src 'none'",
+        "base-uri 'none'",
+        "form-action 'self'",
+        "frame-ancestors 'self' https://huggingface.co https://*.hf.space",
+    )
+)
+
+
+def _trusted_proxy_hops() -> int:
+    try:
+        return max(1, int(os.environ.get("CONCORDIA_TRUSTED_PROXY_HOPS", "1")))
+    except ValueError:
+        return 1
 
 
 def _hbb_scoring_semantics() -> Evo2ScoringSemantics:
@@ -285,6 +317,25 @@ def create_workspace_app(
             global_daily_limit=500,
         )
 
+    if database_url:
+        experiment_create_limiter: SqliteRateLimiter | PostgresRateLimiter = (
+            PostgresRateLimiter(
+                dsn=database_url,
+                namespace="experiment_create",
+                per_client_limit=10,
+                per_client_window_seconds=3_600,
+                global_daily_limit=500,
+            )
+        )
+    else:
+        experiment_create_limiter = SqliteRateLimiter(
+            database_path=Path(state_root) / "experiment_creates.sqlite3",
+            table_name="experiment_create_requests",
+            per_client_limit=10,
+            per_client_window_seconds=3_600,
+            global_daily_limit=500,
+        )
+
     forward_space_url = os.environ.get("CONCORDIA_EVO2_FORWARD_SPACE_URL")
     forward_queue: Evo2ForwardJobQueue | None = None
     if forward_space_url:
@@ -322,6 +373,12 @@ def create_workspace_app(
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        # The interactive API docs load third-party assets, so they keep their
+        # own policy; everything else, including the app shell, is locked down.
+        if not request.url.path.startswith(("/docs", "/redoc")):
+            response.headers["Content-Security-Policy"] = _CONTENT_SECURITY_POLICY
+        if request.headers.get("x-forwarded-proto") == "https" or request.url.scheme == "https":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000"
         return response
 
     @app.get("/health")
@@ -758,7 +815,12 @@ def create_workspace_app(
         response_model=CreateExperimentResponse,
         summary="Create a private molecular experiment sandbox",
     )
-    def create_experiment(payload: CreateExperimentRequest) -> CreateExperimentResponse:
+    def create_experiment(
+        payload: CreateExperimentRequest, request: Request
+    ) -> CreateExperimentResponse:
+        experiment_create_limiter.check_and_record(
+            _client_ip(request, trust_proxy_headers=trust_proxy_headers)
+        )
         return experiment_store.create(payload)
 
     @app.get(
@@ -784,6 +846,13 @@ def create_workspace_app(
         x_concordia_experiment_token: str | None = Header(default=None),
     ) -> ExperimentNode:
         authorize_experiment(experiment_id, x_concordia_experiment_token)
+        if payload.scientific_use_allowed:
+            # Only server-side verified operations may mark an object usable as
+            # scientific evidence; a client must never self-certify its own nodes.
+            raise HTTPException(
+                status_code=422,
+                detail="scientific_use_allowed cannot be set by clients",
+            )
         try:
             return experiment_store.add_node(experiment_id, payload)
         except ExperimentConflictError as error:

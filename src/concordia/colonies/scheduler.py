@@ -33,6 +33,7 @@ TERMINAL = {
     ColonyStatus.CANCELLED,
     ColonyStatus.STAGNATED,
     ColonyStatus.BUDGET_EXHAUSTED,
+    ColonyStatus.EXTINCT,
 }
 
 
@@ -152,6 +153,19 @@ class ColonyScheduler:
             self._select_generation(colony_id, current_generation, current, state.spec)
             state = self.reconstruct(colony_id)
 
+        latest = next(
+            (s for s in state.selections if s.generation == current_generation), None
+        )
+        if latest is not None and not latest.survivor_ids:
+            self._append(
+                colony_id,
+                "COLONY_TERMINATED",
+                {
+                    "status": ColonyStatus.EXTINCT,
+                    "reason": "no member produced a valid structured response",
+                },
+            )
+            return self.reconstruct(colony_id)
         if current_generation >= state.spec.generations:
             self._append(
                 colony_id,
@@ -364,8 +378,15 @@ class ColonyScheduler:
         spec: ColonySpec,
     ) -> None:
         completed = [member for member in members if member.status is MemberStatus.COMPLETED]
+        # A member that never produced a schema-valid response has no checkable
+        # output, so a high tool-success score alone must not let it reproduce.
+        viable = [
+            member
+            for member in completed
+            if member.fitness is not None and member.fitness.vector.schema_valid_response_rate > 0
+        ]
         ranked = sorted(
-            completed,
+            viable,
             key=lambda member: (-member.fitness.weighted_score, member.member_id),  # type: ignore[union-attr]
         )
         survivors = tuple(member.member_id for member in ranked[: spec.survivor_count])
@@ -376,7 +397,11 @@ class ColonyScheduler:
                 reason=(
                     "EXECUTION_FAILED"
                     if member.status is MemberStatus.FAILED
-                    else "LOWER_WEIGHTED_FITNESS"
+                    else (
+                        "NO_VALID_RESPONSE"
+                        if member.status is MemberStatus.COMPLETED and member not in viable
+                        else "LOWER_WEIGHTED_FITNESS"
+                    )
                 ),
             )
             for member in members
