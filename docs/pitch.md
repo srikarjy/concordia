@@ -46,7 +46,13 @@ Concordia answers those mechanically and keeps the receipt.
 
 - **Real and tested:** the audit layer, experiment DAG, claim verifier, replay, integrity checks,
   security controls, and the Boltz-2 integration code. 243 automated tests and 8 browser tests pass.
-- **Not yet real:** there is **no validated scientific finding** in this repository. Evo 2 forward
+- **First real measurement:** the live Boltz-2 integration reproduced the HyHEL-10 Fab and lysozyme
+  complex (PDB 3HFM) in about 5 seconds. Against the crystal structure: per-chain CA RMSD 0.76 to
+  1.55 Å, antigen placement 2.07 Å in the antibody frame, and 81% of crystal interface contacts
+  recovered at 74% precision. This is a known, old structure that is likely in the model's
+  training data, so it shows the pipeline works, not that the model generalizes. See
+  `reports/boltz2-3hfm-reference-reproduction.json`.
+- **Not yet real:** there is **no novel or validated scientific finding** in this repository. Evo 2 forward
   scoring is not wired. RFantibody and ProteinMPNN are planned, not integrated. All fixture output is
   labeled `scientific_use_allowed=false`.
 - **Why that is a feature:** the system refuses to overclaim, which is exactly what a diligence
@@ -54,8 +60,8 @@ Concordia answers those mechanically and keeps the receipt.
 
 ## What I want from you
 
-A design partner. Bring one real campaign, such as an antibody-antigen pair you already modeled.
-I will run it end to end, deliver the artifacts, the replay manifest and a verifier report that
+A design partner. Bring one real campaign, such as an antibody-antigen pair you already modeled, ideally one
+released after the model's training cutoff. I will run it end to end, deliver the artifacts, the replay manifest and a verifier report that
 states plainly where the evidence is and is not sufficient, and show you where the verifier
 disagrees with the model. In return I want honest feedback on what your team would need before
 trusting it with a real decision.
