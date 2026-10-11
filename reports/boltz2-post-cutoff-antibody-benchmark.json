@@ -1,0 +1,330 @@
+{
+  "selection_rule": {
+    "released_on_or_after": "2024-06-01",
+    "exactly_3_protein_chains": true,
+    "resolution_max": 3.0,
+    "unique_heavy_light_by_name": true,
+    "seed": 20261011,
+    "n": 9,
+    "eligible": 94,
+    "candidates_screened": 123
+  },
+  "success_criterion": {
+    "antigen_rmsd_in_antibody_frame_ca_max": 5.0,
+    "interface_recall_min": 0.5,
+    "fixed_before_results": true
+  },
+  "results": [
+    {
+      "pdb_id": "8TUZ",
+      "released": "2024-08-28",
+      "method": "X-RAY DIFFRACTION",
+      "resolution": 2.186,
+      "antigen_desc": "Outer surface protein A",
+      "lengths": {
+        "H": 223,
+        "L": 213,
+        "A": 251
+      },
+      "http_status": 200,
+      "wall_seconds": 4.5,
+      "model_confidence": 0.8061196208000183,
+      "input_payload_hash": "0735b8ca4d0ff9224f5115b1a8d3e9bc1ac5c5312799e56f6bb562e0369430ab",
+      "response_artifact_digest": "78cefeb19d775eb4206b6a18c5610c54b9b5f6902ec573ea3210aa8ebf3cb969",
+      "scores": {
+        "aligned_residues": {
+          "H": 220,
+          "L": 213,
+          "A": 251
+        },
+        "H_rmsd_ca": 1.44,
+        "L_rmsd_ca": 1.06,
+        "A_rmsd_ca": 13.54,
+        "antibody_rmsd_ca": 1.34,
+        "antigen_rmsd_in_antibody_frame_ca": 18.46,
+        "interface_pairs_crystal": 20,
+        "interface_pairs_predicted": 35,
+        "interface_precision": 0.4,
+        "interface_recall": 0.7
+      },
+      "verdict": "failure"
+    },
+    {
+      "pdb_id": "8VTD",
+      "released": "2025-07-02",
+      "method": "X-RAY DIFFRACTION",
+      "resolution": 1.23,
+      "antigen_desc": "T-cell immunoreceptor with Ig and ITIM domains",
+      "lengths": {
+        "H": 221,
+        "L": 214,
+        "A": 122
+      },
+      "http_status": 200,
+      "wall_seconds": 3.6,
+      "model_confidence": 0.9010229110717773,
+      "input_payload_hash": "f20976582bef85062b5e51417c1cffaea796a383ea8ecb38da19c0644035875d",
+      "response_artifact_digest": "2640a3273634068757b324a72f883e53d12ed96aa6e2a19ed7eec8b8fb929dea",
+      "scores": {
+        "aligned_residues": {
+          "H": 221,
+          "L": 214,
+          "A": 105
+        },
+        "H_rmsd_ca": 0.77,
+        "L_rmsd_ca": 1.23,
+        "A_rmsd_ca": 0.94,
+        "antibody_rmsd_ca": 1.11,
+        "antigen_rmsd_in_antibody_frame_ca": 14.12,
+        "interface_pairs_crystal": 30,
+        "interface_pairs_predicted": 41,
+        "interface_precision": 0.024,
+        "interface_recall": 0.033
+      },
+      "verdict": "failure"
+    },
+    {
+      "pdb_id": "8XK6",
+      "released": "2024-07-10",
+      "method": "X-RAY DIFFRACTION",
+      "resolution": 2.45,
+      "antigen_desc": "Envelopment polyprotein",
+      "lengths": {
+        "H": 251,
+        "L": 237,
+        "A": 357
+      },
+      "http_status": 200,
+      "wall_seconds": 5.6,
+      "model_confidence": 0.79648756980896,
+      "input_payload_hash": "b537d872ffbe1bef3e97d58e8de1b37f26b2a8fe98ed4e6c3c45ff31ac3e7f3f",
+      "response_artifact_digest": "5e90104ffa9f70a69ab0038fac23312cb51026c6da73fc3746b96759dda87d5c",
+      "scores": {
+        "aligned_residues": {
+          "H": 120,
+          "L": 111,
+          "A": 313
+        },
+        "H_rmsd_ca": 0.69,
+        "L_rmsd_ca": 0.32,
+        "A_rmsd_ca": 1.52,
+        "antibody_rmsd_ca": 0.77,
+        "antigen_rmsd_in_antibody_frame_ca": 33.08,
+        "interface_pairs_crystal": 38,
+        "interface_pairs_predicted": 21,
+        "interface_precision": 0.0,
+        "interface_recall": 0.0
+      },
+      "verdict": "failure"
+    },
+    {
+      "pdb_id": "9LY5",
+      "released": "2026-03-04",
+      "method": "ELECTRON MICROSCOPY",
+      "resolution": 2.98,
+      "antigen_desc": "CD276 antigen",
+      "lengths": {
+        "H": 223,
+        "L": 213,
+        "A": 448
+      },
+      "http_status": 200,
+      "wall_seconds": 57.0,
+      "model_confidence": 0.7837544083595276,
+      "input_payload_hash": "5fa998c5743ce8898931b34f1150d68bb82d91b346f66dd53706295974600b53",
+      "response_artifact_digest": "0c31c2baf902060dfef809a3856aa893b1606406bb432cbd6692767800dd2cc3",
+      "scores": {
+        "aligned_residues": {
+          "H": 218,
+          "L": 213,
+          "A": 181
+        },
+        "H_rmsd_ca": 4.3,
+        "L_rmsd_ca": 3.57,
+        "A_rmsd_ca": 1.34,
+        "antibody_rmsd_ca": 4.21,
+        "antigen_rmsd_in_antibody_frame_ca": 48.49,
+        "interface_pairs_crystal": 27,
+        "interface_pairs_predicted": 37,
+        "interface_precision": 0.054,
+        "interface_recall": 0.074
+      },
+      "verdict": "failure"
+    },
+    {
+      "pdb_id": "9NPH",
+      "released": "2025-08-27",
+      "method": "X-RAY DIFFRACTION",
+      "resolution": 2.592,
+      "antigen_desc": "Major allergen Can f 1",
+      "lengths": {
+        "H": 235,
+        "L": 212,
+        "A": 149
+      },
+      "http_status": 200,
+      "wall_seconds": 5.6,
+      "model_confidence": 0.7662240862846375,
+      "input_payload_hash": "cdf47a36e43dbc4372145250f1e7a1e45f98bc8fc4770408c0dca80df05cdf7f",
+      "response_artifact_digest": "ab6be0ed1eb9c0758c46f9df3b7a1981467fcab36d97005acd3b6ab4cae1fa20",
+      "scores": {
+        "aligned_residues": {
+          "H": 234,
+          "L": 211,
+          "A": 144
+        },
+        "H_rmsd_ca": 6.42,
+        "L_rmsd_ca": 6.02,
+        "A_rmsd_ca": 3.98,
+        "antibody_rmsd_ca": 6.71,
+        "antigen_rmsd_in_antibody_frame_ca": 22.52,
+        "interface_pairs_crystal": 34,
+        "interface_pairs_predicted": 36,
+        "interface_precision": 0.0,
+        "interface_recall": 0.0
+      },
+      "verdict": "failure"
+    },
+    {
+      "pdb_id": "9NPI",
+      "released": "2025-08-27",
+      "method": "X-RAY DIFFRACTION",
+      "resolution": 1.85,
+      "antigen_desc": "Major allergen Can f 1",
+      "lengths": {
+        "H": 225,
+        "L": 215,
+        "A": 156
+      },
+      "http_status": 200,
+      "wall_seconds": 3.8,
+      "model_confidence": 0.7655850648880005,
+      "input_payload_hash": "a894261422ac10171e4d8268b8b7b5e6b47878a1bb9ca424577cac9169686d36",
+      "response_artifact_digest": "65cedbda00a6ad03d17494f1a3596e0b0a58bb6534a2cc68d1d16ccc897d1105",
+      "scores": {
+        "aligned_residues": {
+          "H": 222,
+          "L": 214,
+          "A": 133
+        },
+        "H_rmsd_ca": 5.4,
+        "L_rmsd_ca": 3.92,
+        "A_rmsd_ca": 5.63,
+        "antibody_rmsd_ca": 5.01,
+        "antigen_rmsd_in_antibody_frame_ca": 27.13,
+        "interface_pairs_crystal": 42,
+        "interface_pairs_predicted": 33,
+        "interface_precision": 0.03,
+        "interface_recall": 0.024
+      },
+      "verdict": "failure"
+    },
+    {
+      "pdb_id": "9OAO",
+      "released": "2025-06-25",
+      "method": "X-RAY DIFFRACTION",
+      "resolution": 2.58,
+      "antigen_desc": "Germline-targeting HIV-1 gp120 engineered outer domain eOD-GT8-mingly",
+      "lengths": {
+        "H": 221,
+        "L": 211,
+        "A": 183
+      },
+      "http_status": 200,
+      "wall_seconds": 6.4,
+      "model_confidence": 0.8448095321655273,
+      "input_payload_hash": "8781fbd34486ac5b6dfe724e979ed4eed6801260be8df648c838d874f33447f9",
+      "response_artifact_digest": "a21342cdd2de341d4e86869f9faeff305faa037e2d9286fafb4ecf3a00ce9dea",
+      "scores": {
+        "aligned_residues": {
+          "H": 214,
+          "L": 210,
+          "A": 169
+        },
+        "H_rmsd_ca": 3.44,
+        "L_rmsd_ca": 2.42,
+        "A_rmsd_ca": 1.13,
+        "antibody_rmsd_ca": 3.22,
+        "antigen_rmsd_in_antibody_frame_ca": 42.36,
+        "interface_pairs_crystal": 60,
+        "interface_pairs_predicted": 25,
+        "interface_precision": 0.0,
+        "interface_recall": 0.0
+      },
+      "verdict": "failure"
+    },
+    {
+      "pdb_id": "9SSM",
+      "released": "2026-02-18",
+      "method": "X-RAY DIFFRACTION",
+      "resolution": 2.7,
+      "antigen_desc": "Spike glycoprotein",
+      "lengths": {
+        "H": 230,
+        "L": 214,
+        "A": 249
+      },
+      "http_status": 200,
+      "wall_seconds": 7.2,
+      "model_confidence": 0.8249350786209106,
+      "input_payload_hash": "1a92ebbab25b8a8c3a7769a301901fc436d2e4c21d2505c02561ffeea3465532",
+      "response_artifact_digest": "aaad4fbd3d38748fd21807c943681487af46b05d5d099cd2f5744ba795d10b47",
+      "scores": {
+        "aligned_residues": {
+          "H": 221,
+          "L": 214,
+          "A": 191
+        },
+        "H_rmsd_ca": 1.15,
+        "L_rmsd_ca": 0.84,
+        "A_rmsd_ca": 0.89,
+        "antibody_rmsd_ca": 1.05,
+        "antigen_rmsd_in_antibody_frame_ca": 26.2,
+        "interface_pairs_crystal": 21,
+        "interface_pairs_predicted": 53,
+        "interface_precision": 0.0,
+        "interface_recall": 0.0
+      },
+      "verdict": "failure"
+    },
+    {
+      "pdb_id": "9VHZ",
+      "released": "2025-10-01",
+      "method": "X-RAY DIFFRACTION",
+      "resolution": 2.8,
+      "antigen_desc": "Entry-fusion complex associated protein OPG095",
+      "lengths": {
+        "H": 236,
+        "L": 220,
+        "A": 181
+      },
+      "http_status": 200,
+      "wall_seconds": 4.1,
+      "model_confidence": 0.8599831461906433,
+      "input_payload_hash": "37503a053628f17c4da38e5b05a411dc7f17578f3a6e870f461cf1597e81e3cb",
+      "response_artifact_digest": "da2af7cb18c33fa55f89515e43ba0485975eee7ec03c99a04435291b468baea0",
+      "scores": {
+        "aligned_residues": {
+          "H": 218,
+          "L": 219,
+          "A": 169
+        },
+        "H_rmsd_ca": 4.0,
+        "L_rmsd_ca": 2.68,
+        "A_rmsd_ca": 1.02,
+        "antibody_rmsd_ca": 3.8,
+        "antigen_rmsd_in_antibody_frame_ca": 9.49,
+        "interface_pairs_crystal": 38,
+        "interface_pairs_predicted": 32,
+        "interface_precision": 0.938,
+        "interface_recall": 0.789
+      },
+      "verdict": "failure"
+    }
+  ],
+  "summary": {
+    "n": 9,
+    "success": 0,
+    "failure": 9
+  }
+}
