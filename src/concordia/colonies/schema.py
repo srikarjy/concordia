@@ -20,6 +20,7 @@ class ColonyStatus(StrEnum):
     CANCELLED = "CANCELLED"
     STAGNATED = "STAGNATED"
     BUDGET_EXHAUSTED = "BUDGET_EXHAUSTED"
+    EXTINCT = "EXTINCT"
 
 
 class MemberStatus(StrEnum):
@@ -103,7 +104,7 @@ class ExtinctionRecord(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     member_id: str
-    reason: Literal["LOWER_WEIGHTED_FITNESS", "EXECUTION_FAILED"]
+    reason: Literal["LOWER_WEIGHTED_FITNESS", "EXECUTION_FAILED", "NO_VALID_RESPONSE"]
 
 
 class GenerationSelection(BaseModel):

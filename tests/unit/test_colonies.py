@@ -276,3 +276,30 @@ def test_worker_failure_is_preserved_and_excluded(tmp_path: Path) -> None:
         record.member_id == failed[0].member_id and record.reason == "EXECUTION_FAILED"
         for record in state.selections[0].extinct
     )
+
+
+class InvalidResponseFactory:
+    """Members complete their tools but never produce a schema-valid response."""
+
+    def create(self, isolation_id: str):
+        class Invalid(DeterministicFixtureExecutor):
+            def execute(self, request: MemberExecutionInput) -> MemberExecutionOutput:
+                output = super().execute(request)
+                observation = output.observation.model_copy(
+                    update={"schema_valid_response_rate": 0, "valid_citation_rate": 0}
+                )
+                return output.model_copy(update={"observation": observation})
+
+        return Invalid(isolation_id)
+
+
+def test_colony_goes_extinct_when_no_member_gives_a_valid_response(tmp_path: Path) -> None:
+    scheduler, spec = make_scheduler(tmp_path, InvalidResponseFactory())
+    scheduler.create(spec, seed(), idempotency_key="invalid-responses")
+    state = scheduler.run(spec.colony_id)
+
+    assert state.status is ColonyStatus.EXTINCT
+    assert state.terminal_reason == "no member produced a valid structured response"
+    assert len(state.selections) == 1
+    assert state.selections[0].survivor_ids == ()
+    assert {record.reason for record in state.selections[0].extinct} == {"NO_VALID_RESPONSE"}

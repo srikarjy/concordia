@@ -28,6 +28,8 @@ from concordia.experiments.schema import (
 )
 from concordia.storage.content import ContentAddressedStore
 
+MAX_NODES_PER_EXPERIMENT = 500
+
 
 class ExperimentNotFoundError(LookupError):
     pass
@@ -158,6 +160,7 @@ class ExperimentStore:
                 "SELECT 1 FROM experiments WHERE experiment_id = ?", (experiment_id,)
             ).fetchone() is None:
                 raise ExperimentNotFoundError(experiment_id)
+            self._require_node_capacity(connection, experiment_id, 1)
             if request.parent_ids:
                 placeholders = ",".join("?" for _ in request.parent_ids)
                 rows = connection.execute(
@@ -258,6 +261,7 @@ class ExperimentStore:
         connection = self._connect()
         try:
             connection.execute("BEGIN IMMEDIATE")
+            self._require_node_capacity(connection, experiment_id, 2)
             parent = connection.execute(
                 "SELECT 1 FROM experiment_nodes WHERE experiment_id = ? AND node_id = ?",
                 (experiment_id, parent_node_id),
@@ -290,6 +294,19 @@ class ExperimentStore:
         finally:
             connection.close()
         return run_node, output_node
+
+    @staticmethod
+    def _require_node_capacity(
+        connection: sqlite3.Connection, experiment_id: str, incoming: int
+    ) -> None:
+        count = connection.execute(
+            "SELECT COUNT(*) FROM experiment_nodes WHERE experiment_id = ?",
+            (experiment_id,),
+        ).fetchone()[0]
+        if count + incoming > MAX_NODES_PER_EXPERIMENT:
+            raise ExperimentConflictError(
+                f"experiment is limited to {MAX_NODES_PER_EXPERIMENT} nodes"
+            )
 
     def _experiment(self, experiment_id: str) -> ExperimentRecord:
         with self._connect() as connection:
