@@ -124,7 +124,7 @@ class ZeroGpuEvo2ForwardRunner:
             timeout=self.timeout_seconds, transport=self._transport, headers=self._auth
         ) as client:
             submit_response = client.post(
-                f"{self.space_url}/call/{self.api_name}", json=request_payload
+                f"{self.space_url}/gradio_api/call/{self.api_name}", json=request_payload
             )
             if submit_response.is_error:
                 raise Evo2ForwardExecutionError(
@@ -132,7 +132,7 @@ class ZeroGpuEvo2ForwardRunner:
                 )
             event_id = _parse_gradio_call_event_id(submit_response)
             poll_response = client.get(
-                f"{self.space_url}/call/{self.api_name}/{event_id}",
+                f"{self.space_url}/gradio_api/call/{self.api_name}/{event_id}",
                 headers={"Accept": "text/event-stream"},
             )
             if poll_response.is_error:
