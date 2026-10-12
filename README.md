@@ -69,7 +69,7 @@ flowchart LR
 - Durable run API with an append-only ledger, worker leases, idempotent creation, event streaming and replay.
 - Experiment graph with branches, comparison, candidate selection and capability-token access.
 - Rule-based claim verifier with five statuses and fixture rejection.
-- Hosted Boltz-2 complex prediction and Evo 2 generation, each recorded with request and response artifacts.
+- Hosted Boltz-2 complex prediction, OpenFold2 monomer prediction and Evo 2 generation, each recorded with request and response artifacts.
 - React workspace with a WebGL provenance graph, a browser-local sequence sandbox and a colony view.
 
 ## Reproduce

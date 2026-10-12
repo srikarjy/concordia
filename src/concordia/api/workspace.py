@@ -58,6 +58,10 @@ from concordia.genomics.evo2_nvidia import (
 from concordia.genomics.evo2_protocol import Evo2ScoringSemantics
 from concordia.genomics.evo2_real import RealEvo2Scorer
 from concordia.genomics.evo2_zerogpu import ZeroGpuEvo2ForwardRunner
+from concordia.genomics.openfold2_nvidia import (
+    NvidiaHostedOpenFold2Result,
+    NvidiaHostedOpenFold2Runner,
+)
 from concordia.genomics.rate_limiting import SqliteRateLimiter
 from concordia.genomics.schema import GenomicSequence
 from concordia.reporting.workspace import build_workspace
@@ -165,6 +169,12 @@ class EsmFoldPredictRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     sequence: str = Field(min_length=1, max_length=1_024)
+
+
+class OpenFold2PredictRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    sequence: str = Field(min_length=1, max_length=1_000)
 
 
 class BoltzPredictRequest(BaseModel):
@@ -309,6 +319,14 @@ def create_workspace_app(
     esmfold_gateway = EsmFoldGateway(
         NvidiaHostedEsmFoldRunner(ContentAddressedStore(Path(state_root) / "artifacts")),
         database_path=None if database_url else Path(state_root) / "esmfold.sqlite3",
+        postgres_dsn=database_url,
+    )
+
+    openfold2_gateway = EsmFoldGateway(
+        NvidiaHostedOpenFold2Runner(ContentAddressedStore(Path(state_root) / "artifacts")),
+        namespace="openfold2",
+        result_model=NvidiaHostedOpenFold2Result,
+        database_path=None if database_url else Path(state_root) / "openfold2.sqlite3",
         postgres_dsn=database_url,
     )
 
@@ -728,6 +746,34 @@ def create_workspace_app(
         client_id = _client_ip(request, trust_proxy_headers=trust_proxy_headers)
         try:
             return esmfold_gateway.predict(client_id=client_id, sequence=payload.sequence)
+        except RateLimitExceededError:
+            raise
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        except RuntimeError as error:
+            if "NVIDIA_API_KEY" in str(error):
+                raise HTTPException(status_code=503, detail=str(error)) from error
+            raise HTTPException(status_code=502, detail=str(error)) from error
+
+    @app.post(
+        "/nvidia/openfold2/predict",
+        response_model=NvidiaHostedOpenFold2Result,
+        summary="Interactive hosted OpenFold2 structure prediction (AlphaFold2-class)",
+        description=(
+            "Accepts a visitor-supplied amino acid sequence (up to 1,000 residues) and "
+            "calls NVIDIA's hosted OpenFold2 NIM with this deployment's own credential. "
+            "No MSA or templates are supplied. Output is never scientific evidence."
+        ),
+    )
+    def predict_openfold2(
+        payload: OpenFold2PredictRequest, request: Request
+    ) -> NvidiaHostedOpenFold2Result:
+        client_id = _client_ip(request, trust_proxy_headers=trust_proxy_headers)
+        try:
+            result: NvidiaHostedOpenFold2Result = openfold2_gateway.predict(
+                client_id=client_id, sequence=payload.sequence
+            )
+            return result
         except RateLimitExceededError:
             raise
         except ValueError as error:

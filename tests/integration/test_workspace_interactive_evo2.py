@@ -231,3 +231,16 @@ def test_colony_run_is_excluded_from_the_read_only_tool_manifest(tmp_path: Path)
     schema = client.get("/api/tools/openapi.json").json()
 
     assert "/colony/run" not in schema["paths"]
+
+
+def test_openfold2_endpoint_fails_closed_without_key_and_validates_input(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    client = TestClient(create_workspace_app(tmp_path, "frontend/dist"))
+    assert client.post("/nvidia/openfold2/predict", json={"sequence": "MKT"}).status_code == 503
+    monkeypatch.setenv("NVIDIA_API_KEY", "x")
+    keyed = TestClient(create_workspace_app(tmp_path / "keyed", "frontend/dist"))
+    assert keyed.post("/nvidia/openfold2/predict", json={"sequence": "BJOUZ"}).status_code == 422
+    schema = client.get("/api/tools/openapi.json").json()
+    assert "/nvidia/openfold2/predict" not in schema["paths"]
