@@ -1,7 +1,7 @@
-"""Rate-limited, cached gateway for interactive hosted ESMFold prediction.
+"""Rate-limited, cached gateway for interactive hosted structure prediction.
 
-Mirrors ``Evo2GenerationGateway``: protects the shared NVIDIA_API_KEY quota
-with a per-client fixed window and a global daily cap, and skips the call
+Used by the OpenFold2 endpoint. Mirrors ``Evo2GenerationGateway``: protects the shared
+NVIDIA_API_KEY quota with a per-client fixed window and a global daily cap, and skips the call
 entirely for a sequence already folded (structure prediction is
 deterministic for a given input).
 
@@ -18,26 +18,25 @@ import sqlite3
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol
 
-from concordia.genomics.esmfold_nvidia import NvidiaHostedEsmFoldResult
 from concordia.genomics.rate_limiting import Clock, RateLimitExceededError, SystemClock
 
 if TYPE_CHECKING:
     from concordia.genomics.postgres_backend import PostgresRateLimitedCache
 
-__all__ = ["EsmFoldGateway", "RateLimitExceededError"]
+__all__ = ["RateLimitExceededError", "StructureGateway"]
 
 
 class _StructureRunner(Protocol):
     def predict(self, sequence: str) -> Any: ...
 
 
-class EsmFoldGateway:
+class StructureGateway:
     def __init__(
         self,
         runner: _StructureRunner,
         *,
-        namespace: str = "esmfold",
-        result_model: type[Any] = NvidiaHostedEsmFoldResult,
+        namespace: str,
+        result_model: type[Any],
         database_path: str | Path | None = None,
         postgres_dsn: str | None = None,
         per_client_limit: int = 5,
@@ -88,7 +87,7 @@ class EsmFoldGateway:
                 "created_at REAL NOT NULL)"
             )
             connection.execute(
-                "CREATE INDEX IF NOT EXISTS idx_esmfold_client_requests "
+                "CREATE INDEX IF NOT EXISTS idx_structure_client_requests "
                 "ON client_requests(client_id, requested_at)"
             )
 

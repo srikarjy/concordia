@@ -1,4 +1,4 @@
-"""Shared rate-limiting primitives for the interactive Evo2/ESMFold endpoints.
+"""Shared rate-limiting primitives for the interactive Evo2 and structure-prediction endpoints.
 
 ``RateLimitExceededError`` is raised by every gateway so a single FastAPI
 exception handler in ``api/workspace.py`` can catch all of them.

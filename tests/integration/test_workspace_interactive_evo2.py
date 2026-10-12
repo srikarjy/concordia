@@ -159,18 +159,6 @@ def test_rate_limiting_trusts_forwarded_header_when_opted_in(
     assert other.status_code == 200
 
 
-def test_esmfold_endpoint_fails_closed_without_api_key(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
-    client = TestClient(create_workspace_app(tmp_path, "frontend/dist"))
-
-    response = client.post("/nvidia/esmfold/predict", json={"sequence": "MKT"})
-
-    assert response.status_code == 503
-    assert "NVIDIA_API_KEY" in response.json()["detail"]
-
-
 def test_framework_catalog_exposes_integrations_and_boundaries(tmp_path: Path) -> None:
     client = TestClient(create_workspace_app(tmp_path, "frontend/dist"))
     response = client.get("/api/frameworks")
@@ -180,25 +168,6 @@ def test_framework_catalog_exposes_integrations_and_boundaries(tmp_path: Path) -
     assert {"evo2", "boltz2", "cellforge", "anndata-scanpy"} <= by_id.keys()
     assert by_id["evo2"]["status"] == "integrated"
     assert "validated biology" in by_id["boltz2"]["scientific_boundary"].lower()
-
-
-def test_esmfold_endpoint_rejects_non_amino_acid_sequence(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setenv("NVIDIA_API_KEY", "irrelevant-since-validation-runs-first")
-    client = TestClient(create_workspace_app(tmp_path, "frontend/dist"))
-
-    response = client.post("/nvidia/esmfold/predict", json={"sequence": "BJOUZ"})
-
-    assert response.status_code == 422
-
-
-def test_esmfold_endpoint_is_excluded_from_the_read_only_tool_manifest(tmp_path: Path) -> None:
-    client = TestClient(create_workspace_app(tmp_path, "frontend/dist"))
-
-    schema = client.get("/api/tools/openapi.json").json()
-
-    assert "/nvidia/esmfold/predict" not in schema["paths"]
 
 
 def test_colony_run_executes_a_real_fresh_colony(tmp_path: Path) -> None:
@@ -244,3 +213,5 @@ def test_openfold2_endpoint_fails_closed_without_key_and_validates_input(
     assert keyed.post("/nvidia/openfold2/predict", json={"sequence": "BJOUZ"}).status_code == 422
     schema = client.get("/api/tools/openapi.json").json()
     assert "/nvidia/openfold2/predict" not in schema["paths"]
+    removed = client.post("/nvidia/esmfold/predict", json={"sequence": "MKT"})
+    assert removed.status_code in (404, 405)

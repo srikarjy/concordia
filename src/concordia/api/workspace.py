@@ -44,8 +44,6 @@ from concordia.genomics.boltz_nvidia import (
     NvidiaHostedBoltzResult,
     NvidiaHostedBoltzRunner,
 )
-from concordia.genomics.esmfold_gateway import EsmFoldGateway
-from concordia.genomics.esmfold_nvidia import NvidiaHostedEsmFoldResult, NvidiaHostedEsmFoldRunner
 from concordia.genomics.evo2_forward_queue import Evo2ForwardJobQueue, JobNotFoundError
 from concordia.genomics.evo2_generation_gateway import (
     Evo2GenerationGateway,
@@ -64,6 +62,7 @@ from concordia.genomics.openfold2_nvidia import (
 )
 from concordia.genomics.rate_limiting import SqliteRateLimiter
 from concordia.genomics.schema import GenomicSequence
+from concordia.genomics.structure_gateway import StructureGateway
 from concordia.reporting.workspace import build_workspace
 from concordia.scientific.frameworks import framework_catalog
 
@@ -165,12 +164,6 @@ class Evo2ForwardRequest(BaseModel):
     sequence: str = Field(min_length=8_192, max_length=8_192)
 
 
-class EsmFoldPredictRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    sequence: str = Field(min_length=1, max_length=1_024)
-
-
 class OpenFold2PredictRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -257,9 +250,9 @@ def _tool_manifest() -> dict[str, object]:
             "scientific_use_allowed=true only when the execution independently matches "
             "the frozen scoring protocol), POST /nvidia/boltz/predict (real hosted "
             "NVIDIA Boltz-2 protein structure prediction, always "
-            "scientific_use_allowed=false; confirmed live), POST /nvidia/esmfold/predict "
-            "(the same, but confirmed retired by NVIDIA as of 2026-10-02 and kept only "
-            "for reference), and POST /colony/run (executes a real, fresh colony "
+            "scientific_use_allowed=false; confirmed live), POST /nvidia/openfold2/predict "
+            "(real hosted NVIDIA OpenFold2 monomer prediction, also never scientific "
+            "evidence), and POST /colony/run (executes a real, fresh colony "
             "simulation with the deterministic fixture executor on every call; no user "
             "sequence accepted, always scientific_use_allowed=false since the evaluated "
             "task is a frozen software fixture). See /privacy."
@@ -316,13 +309,7 @@ def create_workspace_app(
         postgres_dsn=database_url,
     )
 
-    esmfold_gateway = EsmFoldGateway(
-        NvidiaHostedEsmFoldRunner(ContentAddressedStore(Path(state_root) / "artifacts")),
-        database_path=None if database_url else Path(state_root) / "esmfold.sqlite3",
-        postgres_dsn=database_url,
-    )
-
-    openfold2_gateway = EsmFoldGateway(
+    openfold2_gateway = StructureGateway(
         NvidiaHostedOpenFold2Runner(ContentAddressedStore(Path(state_root) / "artifacts")),
         namespace="openfold2",
         result_model=NvidiaHostedOpenFold2Result,
@@ -475,11 +462,10 @@ def create_workspace_app(
                     "predicted structure is not validated and its confidence has not been "
                     "inspected.",
                     "",
-                    "A fourth endpoint, POST /nvidia/esmfold/predict, offers the same "
-                    "capability through NVIDIA's older ESMFold NIM. That NIM is confirmed "
-                    "retired as of 2026-10-02 (NVIDIA's API returns 'function not found for "
-                    "account') and this endpoint is kept only for reference; it will not "
-                    "currently return a structure.",
+                    "A fourth endpoint, POST /nvidia/openfold2/predict, returns a real "
+                    "AlphaFold2-class monomer structure from NVIDIA's hosted OpenFold2 NIM "
+                    "(up to 1,000 residues, no MSA or templates). Output is never scientific "
+                    "evidence.",
                     "",
                     "A fifth endpoint, POST /colony/run, does not accept a sequence at all. "
                     "It executes a real, fresh colony simulation (new digital genomes, "
@@ -728,34 +714,6 @@ def create_workspace_app(
             raise HTTPException(status_code=404, detail="forward job not found") from error
 
     @app.post(
-        "/nvidia/esmfold/predict",
-        response_model=NvidiaHostedEsmFoldResult,
-        summary="Interactive hosted ESMFold structure prediction (confirmed retired)",
-        description=(
-            "Accepts a visitor-supplied amino acid sequence and calls NVIDIA's hosted "
-            "ESMFold NIM with this deployment's own credential. Confirmed against a real "
-            "NVIDIA account on 2026-10-02: this function now returns HTTP 404 "
-            "('Function not found for account') and no longer resolves. Kept for "
-            "historical reference and in case NVIDIA restores it; prefer "
-            "POST /nvidia/boltz/predict, which is confirmed live."
-        ),
-    )
-    def predict_esmfold(
-        payload: EsmFoldPredictRequest, request: Request
-    ) -> NvidiaHostedEsmFoldResult:
-        client_id = _client_ip(request, trust_proxy_headers=trust_proxy_headers)
-        try:
-            return esmfold_gateway.predict(client_id=client_id, sequence=payload.sequence)
-        except RateLimitExceededError:
-            raise
-        except ValueError as error:
-            raise HTTPException(status_code=422, detail=str(error)) from error
-        except RuntimeError as error:
-            if "NVIDIA_API_KEY" in str(error):
-                raise HTTPException(status_code=503, detail=str(error)) from error
-            raise HTTPException(status_code=502, detail=str(error)) from error
-
-    @app.post(
         "/nvidia/openfold2/predict",
         response_model=NvidiaHostedOpenFold2Result,
         summary="Interactive hosted OpenFold2 structure prediction (AlphaFold2-class)",
@@ -792,7 +750,7 @@ def create_workspace_app(
             "Boltz-2 NIM (mit/boltz2) with this deployment's own credential, including "
             "its async NVCF long-polling protocol when NVIDIA queues the job. "
             "Confirmed live (not deprecated) as of 2026-10-02 — the replacement for the "
-            "retired ESMFold endpoint. Rate-limited per client and cached by sequence; "
+            "retired ESMFold model. Rate-limited per client and cached by sequence; "
             "the MSA sent is a one-sequence self-reference, not a real alignment. The "
             "response is a real structure but is never scientific evidence."
         ),

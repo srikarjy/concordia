@@ -1,8 +1,8 @@
 """NVIDIA-hosted OpenFold2 protein structure prediction.
 
 OpenFold2 is NVIDIA's PyTorch reimplementation of AlphaFold2 (monomer). It is the
-hosted replacement for the retired ESMFold and AlphaFold2 endpoints. Requests keep
-the exact request and response bytes as artifacts and never retain the sequence.
+hosted replacement for the retired ESMFold and AlphaFold2 endpoints. Requests keep the
+exact request and response bytes as artifacts and never retain the sequence.
 Every result is explicitly non-scientific regardless of structure quality.
 """
 

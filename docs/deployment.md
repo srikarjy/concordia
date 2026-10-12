@@ -35,7 +35,7 @@ rather than silently degrading:
 
 | Variable | Enables | Behavior when unset |
 | --- | --- | --- |
-| `NVIDIA_API_KEY` | `POST /nvidia/evo2/generate`, `/nvidia/boltz/predict`, `/nvidia/esmfold/predict` | `503` |
+| `NVIDIA_API_KEY` | `POST /nvidia/evo2/generate`, `/nvidia/boltz/predict`, `/nvidia/openfold2/predict` | `503` |
 | `CONCORDIA_EVO2_FORWARD_SPACE_URL` | `POST /nvidia/evo2/forward` (points at a deployed `deploy/hf-evo2-worker` Space) | `503` |
 | `CONCORDIA_EVO2_FORWARD_HF_TOKEN` | optional HF token sent to the worker Space; without it ZeroGPU may answer `429` | forward jobs fail with `HTTP 429` |
 | `CONCORDIA_TRUST_PROXY_HEADERS=1` | Honors `X-Forwarded-For` for per-client rate limiting | Falls back to the raw socket address, which is wrong behind a proxy (see below) |
@@ -53,7 +53,7 @@ shares one rate-limit bucket.
 
 A Space's local filesystem is wiped on every redeploy and restart. Setting
 `CONCORDIA_DATABASE_URL` to a Postgres connection string (a free Supabase
-project works well) makes `evo2_generation_gateway.py`, `esmfold_gateway.py`,
+project works well) makes `evo2_generation_gateway.py`, `structure_gateway.py`,
 `boltz_gateway.py`, `evo2_forward_queue.py`, and the colony-run rate limiter
 all use `genomics/postgres_backend.py` instead of their local SQLite files —
 see each module's docstring. Nothing else changes; this is purely a

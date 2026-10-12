@@ -601,7 +601,7 @@ function ProteinStructurePanel() {
   };
 
   return <section className="card protein-panel"><div className="card-heading"><div><p className="kicker">Protein structure (NVIDIA Boltz-2)</p><h2>Translate DNA and fold the resulting protein</h2></div><LiveCallBadge /></div>
-    <p className="forward-warning"><AlertTriangle size={14} /> ESMFold was NVIDIA's original NIM here but is confirmed retired (404 for any account); this panel now calls Boltz-2 instead, confirmed live. Prediction can take up to a few minutes — NVIDIA may queue the job. The alignment sent is a single self-referenced sequence, not a real MSA, which reduces accuracy.</p>
+    <p className="forward-warning"><AlertTriangle size={14} /> This panel calls NVIDIA's hosted Boltz-2. Prediction can take up to a few minutes — NVIDIA may queue the job. The alignment sent is a single self-referenced sequence, not a real MSA, which reduces accuracy.</p>
     <div className="mode-toggle"><button type="button" className={mode === 'dna' ? 'active' : ''} onClick={() => setMode('dna')}>From DNA</button><button type="button" className={mode === 'protein' ? 'active' : ''} onClick={() => setMode('protein')}>Protein sequence</button></div>
     <div className="protein-layout">
       <div>

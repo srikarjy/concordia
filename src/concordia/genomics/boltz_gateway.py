@@ -1,8 +1,8 @@
 """Rate-limited, cached gateway for interactive hosted Boltz-2 prediction.
 
-Mirrors ``EsmFoldGateway``, with tighter limits: Boltz-2 is a heavier,
+Mirrors ``StructureGateway``, with tighter limits: Boltz-2 is a heavier,
 slower model (recycling/diffusion steps, possible NVCF long-polling up to
-minutes) than ESMFold was, so the shared NVIDIA_API_KEY quota needs more
+minutes) than the older structure models were, so the shared NVIDIA_API_KEY quota needs more
 protection per call.
 
 Defaults to a local SQLite file. Pass ``postgres_dsn`` instead (set by
