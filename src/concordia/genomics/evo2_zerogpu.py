@@ -89,7 +89,9 @@ class ZeroGpuEvo2ForwardRunner:
         timeout_seconds: float = 330.0,
         poll_interval_seconds: float = 2.0,
         transport: httpx.BaseTransport | None = None,
+        hf_token: str | None = None,
     ):
+        self._auth = {"Authorization": f"Bearer {hf_token}"} if hf_token else {}
         self.artifacts = artifacts
         self.space_url = space_url.rstrip("/")
         self.scoring = scoring
@@ -118,7 +120,9 @@ class ZeroGpuEvo2ForwardRunner:
             }
         )
         started = time.monotonic()
-        with httpx.Client(timeout=self.timeout_seconds, transport=self._transport) as client:
+        with httpx.Client(
+            timeout=self.timeout_seconds, transport=self._transport, headers=self._auth
+        ) as client:
             submit_response = client.post(
                 f"{self.space_url}/call/{self.api_name}", json=request_payload
             )

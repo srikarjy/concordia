@@ -37,6 +37,7 @@ rather than silently degrading:
 | --- | --- | --- |
 | `NVIDIA_API_KEY` | `POST /nvidia/evo2/generate`, `/nvidia/boltz/predict`, `/nvidia/esmfold/predict` | `503` |
 | `CONCORDIA_EVO2_FORWARD_SPACE_URL` | `POST /nvidia/evo2/forward` (points at a deployed `deploy/hf-evo2-worker` Space) | `503` |
+| `CONCORDIA_EVO2_FORWARD_HF_TOKEN` | optional HF token sent to the worker Space; without it ZeroGPU may answer `429` | forward jobs fail with `HTTP 429` |
 | `CONCORDIA_TRUST_PROXY_HEADERS=1` | Honors `X-Forwarded-For` for per-client rate limiting | Falls back to the raw socket address, which is wrong behind a proxy (see below) |
 | `CONCORDIA_DATABASE_URL` | Persists rate limits, response caches, and job history to Postgres instead of local SQLite | Everything still works, but state resets on every redeploy/restart |
 

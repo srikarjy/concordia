@@ -363,6 +363,7 @@ def create_workspace_app(
             ContentAddressedStore(Path(state_root) / "artifacts"),
             space_url=forward_space_url,
             scoring=_hbb_scoring_semantics(),
+            hf_token=os.environ.get("CONCORDIA_EVO2_FORWARD_HF_TOKEN"),
         )
         forward_queue = Evo2ForwardJobQueue(
             _DictifyingForwardScorer(
