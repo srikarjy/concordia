@@ -1,0 +1,146 @@
+{
+ "schema_version": 1,
+ "report_id": "evo2-7b-backward-feasibility-v1",
+ "date": "2026-10-12",
+ "execution_mode": "real_zerogpu_probe",
+ "scientific_use_allowed": false,
+ "question": "Can gradients through Evo2-7B pre-filter positions for exact substitution rescoring?",
+ "setup": "Seeded pseudo-random ACGT window (the probe accepts no DNA); gradient of summed next-base log-likelihood w.r.t. input embeddings; first-order substitution estimate vs exact rescoring on 96 sampled substitutions.",
+ "findings": [
+  "Evo2.forward hardcodes torch.no_grad; the inner vtx model must be called directly.",
+  "Weights are inference tensors; autograd needs them cloned into normal tensors first (extra memory).",
+  "Backward completes at 512 and 2,048 bp with finite gradients; the full 8,192 bp window runs out of GPU memory (48 GB peak) without activation checkpointing.",
+  "First-order gradient estimates agree weakly with exact rescoring at 512 bp and at chance by 2,048 bp, so they are not a reliable pre-filter on this test.",
+  "With activation checkpointing the full 8,192 bp window fits (20.4 GB peak, 7.1 s backward) and the backward-path reference score matches the forward score.",
+  "On the real window, gradient estimates agree moderately with exact rescoring (Spearman 0.50, 24 pairs) but underestimate large effects: the HBB variant is estimated at -1.7 against an exact -21.0, though it ranks 84th of 8,192 positions, so the gradient is usable as a coarse pre-filter, not as a score."
+ ],
+ "limitations": [
+  "Random DNA has small, noisy effects (median |delta| about 0.25); a real regulatory window may behave differently and was not tested.",
+  "96 sampled substitutions per length gives wide intervals; embedding gradients are bf16.",
+  "No activation checkpointing or integrated gradients were tried."
+ ],
+ "runs": [
+  {
+   "schema_version": 1,
+   "purpose": "evo2_7b_backward_feasibility",
+   "length": 512,
+   "scientific_use_allowed": false,
+   "backward_completed": true,
+   "backward_seconds": 3.38,
+   "peak_memory_bytes": 16296898560,
+   "gradient_finite": true,
+   "gradient_nonzero_fraction": 1.0,
+   "embedding_dtype": "torch.bfloat16",
+   "reference_total_log_likelihood": -719.2188720703125,
+   "sampled_pairs": 96,
+   "spearman_predicted_vs_exact": 0.3540965816603364,
+   "sign_agreement": 0.6770833333333334,
+   "top_quartile_recall": 0.4166666666666667,
+   "exact_delta_abs_median": 0.246734619140625,
+   "exact_delta_abs_max": 1.181640625
+  },
+  {
+   "schema_version": 1,
+   "purpose": "evo2_7b_backward_feasibility",
+   "length": 2048,
+   "scientific_use_allowed": false,
+   "backward_completed": true,
+   "backward_seconds": 2.86,
+   "peak_memory_bytes": 25510866944,
+   "gradient_finite": true,
+   "gradient_nonzero_fraction": 1.0,
+   "embedding_dtype": "torch.bfloat16",
+   "reference_total_log_likelihood": -2861.84716796875,
+   "sampled_pairs": 96,
+   "spearman_predicted_vs_exact": 0.13700488334237657,
+   "sign_agreement": 0.4791666666666667,
+   "top_quartile_recall": 0.4166666666666667,
+   "exact_delta_abs_median": 0.247802734375,
+   "exact_delta_abs_max": 1.3837890625
+  },
+  {
+   "schema_version": 1,
+   "purpose": "evo2_7b_backward_feasibility",
+   "length": 8192,
+   "scientific_use_allowed": false,
+   "backward_completed": false,
+   "error_type": "RuntimeError",
+   "error": "NVML_SUCCESS == r INTERNAL ASSERT FAILED at \"/pytorch/c10/cuda/CUDACachingAllocator.cpp\":1131, please report a bug to PyTorch. ",
+   "peak_memory_bytes": 48082578944
+  }
+ ],
+ "updated": "2026-10-12 (second run, real window)",
+ "real_window_run": {
+  "input": "frozen HBB GRCh38 chr11:5223003-5231194 (8,192 bp), sha256 073522100ed6...",
+  "method": "activation-checkpointed backward through Evo2-7B plus first-order substitution estimates, via the worker's attribute_sequence endpoint",
+  "result": {
+   "schema_version": 1,
+   "model_checkpoint": "arcinstitute/evo2_7b@bda0089f92582d5baabf0f22d9fc85f3588f6b58/evo2_7b.pt",
+   "target": "mean_next_base_log_likelihood",
+   "attribution_method": "gradient_x_embedding_difference_first_order",
+   "scientific_use_allowed": false,
+   "execution_status": "COMPLETED",
+   "sequence_length": 8192,
+   "reference_total_log_likelihood": -9162.541015625,
+   "backward_seconds": 7.11,
+   "peak_memory_bytes": 20441893888,
+   "gradient_finite": true
+  },
+  "agreement_check": {
+   "pairs": 24,
+   "spearman_predicted_vs_exact": 0.4991304347826086,
+   "sign_agreement": 0.625,
+   "top_quartile_recall": 0.5,
+   "checked": [
+    {
+     "position": 4096,
+     "reference": "T",
+     "alternate": "A",
+     "predicted_delta": -0.31347227096557617,
+     "exact_delta": -6.552734375
+    },
+    {
+     "position": 7740,
+     "reference": "C",
+     "alternate": "T",
+     "predicted_delta": 0.1754157543182373,
+     "exact_delta": 1.4677734375
+    },
+    {
+     "position": 5121,
+     "reference": "T",
+     "alternate": "A",
+     "predicted_delta": -0.30747634172439575,
+     "exact_delta": 0.482421875
+    },
+    {
+     "position": 5605,
+     "reference": "A",
+     "alternate": "T",
+     "predicted_delta": 0.07117487490177155,
+     "exact_delta": 0.748046875
+    },
+    {
+     "position": 7350,
+     "reference": "T",
+     "alternate": "C",
+     "predicted_delta": -0.045441314578056335,
+     "exact_delta": -1.1650390625
+    },
+    {
+     "position": 4737,
+     "reference": "C",
+     "alternate": "G",
+     "predicted_delta": -0.46434056758880615,
+     "exact_delta": -1.333984375
+    }
+   ]
+  },
+  "variant_hbb_c_minus_78": {
+   "estimate_T_to_C": -1.71778,
+   "exact_delta_two_forward_runs": -21.03,
+   "rank_among_8192_by_worst_case_estimate": 84
+  },
+  "forward_backward_consistency": "backward-path reference log-likelihood -9162.541 vs forward-only -9162.542"
+ }
+}

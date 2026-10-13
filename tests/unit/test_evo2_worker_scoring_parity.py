@@ -56,3 +56,13 @@ def test_validate_protocol_sequence_enforces_exact_frozen_window() -> None:
     assert worker_scoring.validate_protocol_sequence("ACGT") is not None
     assert worker_scoring.validate_protocol_sequence("N" * 8192) is not None
     assert worker_scoring.validate_protocol_sequence("ACGT" * 2047) is not None
+
+
+def test_worker_unwraps_evo2_nested_forward_output() -> None:
+    module = _load_worker_scoring_module()
+    logits = np.zeros((1, 4, 8))
+    assert module.unwrap_logits(((logits,), None)) is not None
+    assert module.unwrap_logits(((logits,), None)) is logits
+    assert module.unwrap_logits(logits) is logits
+    with pytest.raises(ValueError):
+        module.unwrap_logits(((), None))

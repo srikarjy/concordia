@@ -18,7 +18,7 @@ from qualification import (
     build_runtime_qualification,
     installed_package_versions,
 )
-from scoring import score_causal_logits, validate_protocol_sequence
+from scoring import score_causal_logits, unwrap_logits, validate_protocol_sequence
 
 SCHEMA_VERSION = 1
 DECLARED_MINIMUM_VRAM_BYTES = 40 * 1024**3
@@ -177,7 +177,7 @@ def _forward_pass_logits(model: Any, token_ids: list[int]) -> np.ndarray:
     input_ids = torch.tensor(token_ids, dtype=torch.int).unsqueeze(0).to("cuda:0")
     with torch.no_grad():
         outputs = model(input_ids)
-    logits = outputs[0] if isinstance(outputs, tuple) else outputs
+    logits = unwrap_logits(outputs)
     return logits[0].float().cpu().numpy().astype(np.float64, copy=False)
 
 
@@ -260,6 +260,178 @@ def score_sequence(sequence: str) -> dict[str, Any]:
     }
 
 
+def _spearman(a: list[float], b: list[float]) -> float:
+    ra = np.argsort(np.argsort(a)).astype(np.float64)
+    rb = np.argsort(np.argsort(b)).astype(np.float64)
+    return float(np.corrcoef(ra, rb)[0, 1])
+
+
+def _make_autograd_safe(inner: Any) -> None:
+    """Re-materialize inference-mode weights as normal tensors, once per container."""
+
+    if getattr(inner, "_concordia_autograd_safe", False):
+        return
+    with torch.inference_mode(False):
+        for module in inner.modules():
+            for name, parameter in list(module._parameters.items()):
+                if parameter is not None:
+                    module._parameters[name] = torch.nn.Parameter(
+                        parameter.detach().clone(), requires_grad=False
+                    )
+            for name, buffer in list(module._buffers.items()):
+                if buffer is not None:
+                    module._buffers[name] = buffer.detach().clone()
+    inner._concordia_autograd_safe = True
+
+
+def _total_log_likelihood(
+    inner: Any, embeddings: torch.Tensor, tokens: torch.Tensor, *, checkpointed: bool
+) -> torch.Tensor:
+    """Summed next-base log-likelihood, optionally with activation checkpointing."""
+
+    from torch.utils.checkpoint import checkpoint
+
+    hidden = embeddings
+    for block in inner.blocks:
+        if checkpointed:
+            hidden = checkpoint(
+                lambda value, block=block: block(
+                    value, inference_params=None, padding_mask=None
+                )[0],
+                hidden,
+                use_reentrant=False,
+            )
+        else:
+            hidden, _ = block(hidden, inference_params=None, padding_mask=None)
+    hidden = inner.norm(hidden.to(inner.block_idx_to_device[0]))
+    logits = inner.unembed(hidden)[0, :-1].float()
+    log_probabilities = torch.log_softmax(logits, dim=-1)
+    targets = tokens[0, 1:].long()
+    return log_probabilities.gather(1, targets[:, None]).sum()
+
+
+@spaces.GPU(duration=300)
+def attribute_sequence(sequence: str, check_pairs: int = 24) -> dict[str, Any]:
+    """Forward score AND gradient attribution for one frozen-protocol window.
+
+    Same input contract as ``score_sequence`` (exactly 8,192 A/C/G/T bases).
+    Backward runs with activation checkpointing, since the full window does not
+    fit otherwise. For every position it returns a first-order estimate of the
+    change in total log-likelihood for each of the three alternative bases, and
+    it checks that estimate against exact rescoring at the middle position plus a
+    seeded sample of other positions.
+    """
+
+    import time
+
+    base_record: dict[str, Any] = {
+        "schema_version": 1,
+        "model_checkpoint": FORWARD_MODEL_CHECKPOINT,
+        "target": FORWARD_TARGET,
+        "attribution_method": "gradient_x_embedding_difference_first_order",
+        "scientific_use_allowed": False,
+    }
+    error = validate_protocol_sequence(sequence)
+    if error is not None:
+        return {**base_record, "execution_status": "FAILED_VALIDATION", "error": error}
+    normalized = sequence.strip().upper()
+    try:
+        wrapper = _load_evo2_model_once()
+        inner = wrapper.model
+        _make_autograd_safe(inner)
+        token_ids = _tokenize(wrapper, normalized)
+        base_ids = {base: _tokenize(wrapper, base)[0] for base in "ACGT"}
+        ids = torch.tensor(token_ids, dtype=torch.int).unsqueeze(0).to("cuda:0")
+
+        torch.cuda.reset_peak_memory_stats()
+        started = time.monotonic()
+        with torch.enable_grad():
+            embeddings = inner.embedding_layer(ids).detach().requires_grad_(True)
+            objective = _total_log_likelihood(inner, embeddings, ids, checkpointed=True)
+            objective.backward()
+        torch.cuda.synchronize()
+        gradient = embeddings.grad[0].float()
+        reference_total = float(objective.item())
+
+        with torch.no_grad():
+            table = {
+                base: inner.embedding_layer(
+                    torch.tensor([[token]], dtype=torch.int).to("cuda:0")
+                )[0, 0].float()
+                for base, token in base_ids.items()
+            }
+            estimates = {}
+            for base in "ACGT":
+                difference = table[base][None, :] - inner.embedding_layer(ids)[0].float()
+                estimates[base] = (gradient * difference).sum(dim=1).cpu().numpy()
+        backward_seconds = time.monotonic() - started
+        peak_memory = int(torch.cuda.max_memory_allocated())
+
+        length = len(normalized)
+        rng = np.random.default_rng(7)
+        positions = [length // 2] + [
+            int(value) for value in rng.integers(1, length, size=max(0, int(check_pairs) - 1))
+        ]
+        predicted: list[float] = []
+        exact: list[float] = []
+        checked: list[dict[str, Any]] = []
+        for position in positions:
+            reference_base = normalized[position]
+            alternate = str(rng.choice([b for b in "ACGT" if b != reference_base]))
+            mutated = list(token_ids)
+            mutated[position] = base_ids[alternate]
+            mutated_ids = torch.tensor(mutated, dtype=torch.int).unsqueeze(0).to("cuda:0")
+            with torch.no_grad():
+                mutated_total = float(
+                    _total_log_likelihood(
+                        inner, inner.embedding_layer(mutated_ids), mutated_ids, checkpointed=False
+                    ).item()
+                )
+            predicted.append(float(estimates[alternate][position]))
+            exact.append(mutated_total - reference_total)
+            checked.append(
+                {
+                    "position": position,
+                    "reference": reference_base,
+                    "alternate": alternate,
+                    "predicted_delta": predicted[-1],
+                    "exact_delta": exact[-1],
+                }
+            )
+        quartile = max(1, len(positions) // 4)
+        top_exact = set(np.argsort(-np.abs(exact))[:quartile].tolist())
+        top_predicted = set(np.argsort(-np.abs(predicted))[:quartile].tolist())
+        return {
+            **base_record,
+            "execution_status": "COMPLETED",
+            "sequence_length": length,
+            "reference_total_log_likelihood": reference_total,
+            "backward_seconds": round(backward_seconds, 2),
+            "peak_memory_bytes": peak_memory,
+            "gradient_finite": bool(torch.isfinite(gradient).all().item()),
+            "substitution_estimates": {
+                base: [round(float(v), 5) for v in values] for base, values in estimates.items()
+            },
+            "agreement_check": {
+                "pairs": len(positions),
+                "spearman_predicted_vs_exact": _spearman(predicted, exact),
+                "sign_agreement": float(np.mean(np.sign(predicted) == np.sign(exact))),
+                "top_quartile_recall": len(top_exact & top_predicted) / quartile,
+                "checked": checked,
+            },
+        }
+    except Exception as exc:  # noqa: BLE001 - fail closed with a typed record
+        return {
+            **base_record,
+            "execution_status": "FAILED_ATTRIBUTION",
+            "error_type": type(exc).__name__,
+            "error": str(exc)[:600],
+            "peak_memory_bytes": int(torch.cuda.max_memory_allocated())
+            if torch.cuda.is_available()
+            else None,
+        }
+
+
 with gr.Blocks(title="Concordia Evo2 Forward Worker") as demo:
     gr.Markdown(
         "# Concordia Evo2 Forward Worker\n"
@@ -287,6 +459,17 @@ with gr.Blocks(title="Concordia Evo2 Forward Worker") as demo:
         inputs=sequence_input,
         outputs=score_result,
         api_name="score_sequence",
+    )
+    attribute_button = gr.Button("Run forward score + gradient attribution", variant="stop")
+    attribute_result = gr.JSON(label="Forward + backward record")
+    attribute_button.click(
+        fn=attribute_sequence,
+        inputs=[
+            sequence_input,
+            gr.Number(value=24, label="agreement-check pairs", precision=0),
+        ],
+        outputs=attribute_result,
+        api_name="attribute_sequence",
     )
 
 
