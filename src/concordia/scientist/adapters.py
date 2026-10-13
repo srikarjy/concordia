@@ -14,6 +14,27 @@ import httpx
 from concordia.scientist.contracts import ModelResponse
 
 
+class LocalRuntimeNotReadyError(RuntimeError):
+    """The local model runtime is misconfigured, as opposed to a model call that failed.
+
+    The scientist runtime re-raises this instead of recording ``FAILED_MODEL``, which
+    colony and qualification reports would otherwise show as "no valid response" or
+    "not qualified". It is raised only where a live call is about to be made, so
+    replay and idempotent reruns of finished executions still work without Ollama.
+    """
+
+
+def require_local_scientist_runtime() -> None:
+    if os.environ.get("OLLAMA_NO_CLOUD") != "1":
+        raise LocalRuntimeNotReadyError("set OLLAMA_NO_CLOUD=1 before local scientist calls")
+    try:
+        import ollama  # noqa: F401
+    except ImportError as error:
+        raise LocalRuntimeNotReadyError(
+            "install the optional scientist dependency first: uv sync --extra scientist"
+        ) from error
+
+
 class ScientistModelAdapter(Protocol):
     @property
     def request_settings(self) -> dict[str, Any]: ...
@@ -91,12 +112,9 @@ class OllamaScientistAdapter:
         return self._checkpoint_digest
 
     def _client(self) -> Any:
-        if os.environ.get("OLLAMA_NO_CLOUD") != "1":
-            raise RuntimeError("set OLLAMA_NO_CLOUD=1 before local scientist calls")
-        try:
-            from ollama import Client
-        except ImportError as error:
-            raise RuntimeError("install the optional scientist dependency first") from error
+        require_local_scientist_runtime()
+        from ollama import Client
+
         return Client(host=self.host, timeout=self.timeout_seconds)
 
     def _load_identity(self) -> None:
@@ -120,8 +138,7 @@ class OllamaScientistAdapter:
         messages: Sequence[dict[str, str]],
         response_schema: dict[str, Any],
     ) -> ModelResponse:
-        if os.environ.get("OLLAMA_NO_CLOUD") != "1":
-            raise RuntimeError("set OLLAMA_NO_CLOUD=1 before local scientist calls")
+        require_local_scientist_runtime()
         self._load_identity()
         options = self.request_settings["options"]
         started = time.monotonic()

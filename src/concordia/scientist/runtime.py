@@ -16,7 +16,7 @@ from concordia.cellforge.contracts import (
     SandboxPolicy,
 )
 from concordia.graph.schema import EvidenceGraph
-from concordia.scientist.adapters import ScientistModelAdapter
+from concordia.scientist.adapters import LocalRuntimeNotReadyError, ScientistModelAdapter
 from concordia.scientist.contracts import (
     SCIENTIST_TURN_ADAPTER,
     FinalScientificResponse,
@@ -90,6 +90,8 @@ class SeedScientistRuntime:
             )
             if not set(task.evidence_node_ids).issubset({node.node_id for node in graph.nodes}):
                 raise ValueError("task contains evidence nodes absent from its frozen graph")
+        except LocalRuntimeNotReadyError:
+            raise
         except Exception as error:
             identity_error = error
 
@@ -114,6 +116,8 @@ class SeedScientistRuntime:
                 model_response = self.adapter.generate(
                     messages, SCIENTIST_TURN_ADAPTER.json_schema()
                 )
+            except LocalRuntimeNotReadyError:
+                raise
             except Exception as error:
                 records.append(
                     ScientistTurnRecord(

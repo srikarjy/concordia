@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import os
 import re
 import shutil
@@ -10,6 +11,10 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+
+
+def _ollama_package_installed() -> bool:
+    return importlib.util.find_spec("ollama") is not None
 
 
 def check_local_runtime(config_path: str | Path) -> dict[str, Any]:
@@ -22,6 +27,7 @@ def check_local_runtime(config_path: str | Path) -> dict[str, Any]:
         "host": config.get("host"),
         "cloud_disabled": os.environ.get("OLLAMA_NO_CLOUD") == "1",
         "ollama_executable": executable,
+        "ollama_python_package": _ollama_package_installed(),
         "server_reachable": False,
         "installed_models": [],
     }
@@ -58,6 +64,19 @@ def check_local_runtime(config_path: str | Path) -> dict[str, Any]:
             result["checkpoint_matches"] = installed_digest == expected_digest
         if configured_present and result.get("checkpoint_matches") is True:
             result["message"] = "Qualified local model and pinned checkpoint are ready."
+            missing = [
+                hint
+                for ready, hint in (
+                    (result["cloud_disabled"], "set OLLAMA_NO_CLOUD=1"),
+                    (result["ollama_python_package"], "uv sync --extra scientist"),
+                )
+                if not ready
+            ]
+            if missing:
+                result["message"] = (
+                    "Model and checkpoint are ready, but model calls will fail until you: "
+                    + "; ".join(missing)
+                )
         elif configured_present:
             result["message"] = "Configured model is present but its checkpoint is not verified."
         else:

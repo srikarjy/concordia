@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from collections.abc import Sequence
 from pathlib import Path
 from subprocess import CompletedProcess
@@ -327,6 +328,18 @@ def test_valid_json_with_invalid_schema_has_separate_metric(tmp_path) -> None:
     assert candidate.claim_schema_valid_rate == 0
 
 
+def test_runtime_setup_error_is_raised_not_recorded_as_a_failed_model(tmp_path) -> None:
+    from concordia.scientist.adapters import LocalRuntimeNotReadyError
+
+    class NotReadyAdapter(ScriptedAdapter):
+        def generate(self, messages, response_schema):
+            raise LocalRuntimeNotReadyError("set OLLAMA_NO_CLOUD=1 before local scientist calls")
+
+    runs, run_id = create_executing_run(tmp_path)
+    with pytest.raises(LocalRuntimeNotReadyError, match="OLLAMA_NO_CLOUD=1"):
+        make_runtime(tmp_path, runs, NotReadyAdapter([])).run(fixture_task(runs), run_id)
+
+
 def test_model_failure_preserves_request_and_does_not_retry(tmp_path) -> None:
     runs, run_id = create_executing_run(tmp_path)
     adapter = ScriptedAdapter([])
@@ -383,6 +396,25 @@ def test_doctor_verifies_pinned_local_checkpoint(tmp_path, monkeypatch) -> None:
         return CompletedProcess(command, 0, f"FROM /models/sha256-{'a' * 64}\n", "")
 
     monkeypatch.setattr("subprocess.run", completed)
+    monkeypatch.setattr("concordia.scientist.doctor._ollama_package_installed", lambda: True)
     result = check_local_runtime(config)
     assert result["checkpoint_matches"] is True
     assert result["message"] == "Qualified local model and pinned checkpoint are ready."
+
+    monkeypatch.setattr("concordia.scientist.doctor._ollama_package_installed", lambda: False)
+    monkeypatch.delenv("OLLAMA_NO_CLOUD")
+    result = check_local_runtime(config)
+    assert "uv sync --extra scientist" in result["message"]
+    assert "OLLAMA_NO_CLOUD=1" in result["message"]
+
+
+def test_local_scientist_preflight_names_the_missing_prerequisite(monkeypatch) -> None:
+    from concordia.scientist.adapters import require_local_scientist_runtime
+
+    monkeypatch.delenv("OLLAMA_NO_CLOUD", raising=False)
+    with pytest.raises(RuntimeError, match="OLLAMA_NO_CLOUD=1"):
+        require_local_scientist_runtime()
+    monkeypatch.setenv("OLLAMA_NO_CLOUD", "1")
+    monkeypatch.setitem(sys.modules, "ollama", None)
+    with pytest.raises(RuntimeError, match="uv sync --extra scientist"):
+        require_local_scientist_runtime()
