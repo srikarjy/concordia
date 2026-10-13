@@ -43,6 +43,63 @@ def test_generate_endpoint_is_excluded_from_the_read_only_tool_manifest(tmp_path
 
     assert "/nvidia/evo2/generate" not in schema["paths"]
     assert "/nvidia/evo2/forward" not in schema["paths"]
+    assert "/nvidia/evo2/attribute" not in schema["paths"]
+
+
+def test_attribution_endpoint_fails_closed_without_configured_space(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("CONCORDIA_EVO2_FORWARD_SPACE_URL", raising=False)
+    client = TestClient(create_workspace_app(tmp_path, "frontend/dist"))
+
+    submit = client.post("/nvidia/evo2/attribute", json={"sequence": "ACGT" * 2048})
+    poll = client.get("/nvidia/evo2/attribute/does-not-exist")
+
+    assert submit.status_code == 503
+    assert poll.status_code == 503
+
+
+def test_attribution_endpoint_rejects_wrong_length_before_queueing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("CONCORDIA_EVO2_FORWARD_SPACE_URL", "http://127.0.0.1:1")
+    client = TestClient(create_workspace_app(tmp_path, "frontend/dist"))
+
+    response = client.post("/nvidia/evo2/attribute", json={"sequence": "ACGT" * 100})
+
+    assert response.status_code == 422
+
+
+def test_attribution_endpoint_records_connection_failure_as_a_failed_job(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("CONCORDIA_EVO2_FORWARD_SPACE_URL", "http://127.0.0.1:1")
+    client = TestClient(create_workspace_app(tmp_path, "frontend/dist"))
+
+    submit = client.post("/nvidia/evo2/attribute", json={"sequence": "ACGT" * 2048})
+    assert submit.status_code == 200
+
+    poll = client.get(f"/nvidia/evo2/attribute/{submit.json()['job_id']}")
+    body = poll.json()
+    assert body["status"] == "FAILED"
+    assert body["result"] is None
+    assert body["error"]
+
+
+def test_forward_and_attribution_share_one_per_client_job_budget(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """One ZeroGPU allocation serves both, so the scarce budget is combined."""
+
+    monkeypatch.setenv("CONCORDIA_EVO2_FORWARD_SPACE_URL", "http://127.0.0.1:1")
+    client = TestClient(create_workspace_app(tmp_path, "frontend/dist"))
+    window = {"sequence": "ACGT" * 2048}
+
+    assert client.post("/nvidia/evo2/forward", json=window).status_code == 200
+    assert client.post("/nvidia/evo2/attribute", json=window).status_code == 200
+    # The per-client limit is two ZeroGPU jobs per hour, now spent.
+    assert client.post("/nvidia/evo2/attribute", json=window).status_code == 429
+    assert client.post("/nvidia/evo2/forward", json=window).status_code == 429
 
 
 def test_forward_endpoint_fails_closed_without_configured_space(

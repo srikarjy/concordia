@@ -6,6 +6,7 @@ import asyncio
 import json
 import logging
 import os
+import threading
 from collections.abc import Awaitable, Callable
 from copy import deepcopy
 from pathlib import Path
@@ -44,6 +45,7 @@ from concordia.genomics.boltz_nvidia import (
     NvidiaHostedBoltzResult,
     NvidiaHostedBoltzRunner,
 )
+from concordia.genomics.evo2_attribution import ZeroGpuEvo2AttributionRunner
 from concordia.genomics.evo2_forward_queue import Evo2ForwardJobQueue, JobNotFoundError
 from concordia.genomics.evo2_generation_gateway import (
     Evo2GenerationGateway,
@@ -150,6 +152,28 @@ class _DictifyingForwardScorer:
         return self._scorer.score(sequence).model_dump(mode="json")
 
 
+class _AttributionJob:
+    """Runs gradient attribution through the forward queue's job machinery.
+
+    The queue exists to serialize ZeroGPU work and record it; attribution needs
+    both, and shares the same single allocation. It satisfies the queue's
+    ``score`` contract without producing a score: the result it returns is
+    pinned to ``scientific_use_allowed=False``.
+    """
+
+    def __init__(self, runner: ZeroGpuEvo2AttributionRunner) -> None:
+        self._runner = runner
+
+    def preflight(self, sequence: GenomicSequence) -> None:
+        self._runner.preflight(sequence)
+
+    def score(
+        self, sequence: GenomicSequence, *, checkpoint: str, target: str
+    ) -> dict[str, object]:
+        result = self._runner.attribute(sequence, checkpoint=checkpoint, target=target)
+        return result.model_dump(mode="json")
+
+
 class Evo2GenerateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -162,6 +186,12 @@ class Evo2GenerateRequest(BaseModel):
 
 
 class Evo2ForwardRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    sequence: str = Field(min_length=8_192, max_length=8_192)
+
+
+class Evo2AttributeRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     sequence: str = Field(min_length=8_192, max_length=8_192)
@@ -366,23 +396,47 @@ def create_workspace_app(
 
     forward_space_url = os.environ.get("CONCORDIA_EVO2_FORWARD_SPACE_URL")
     forward_queue: Evo2ForwardJobQueue | None = None
+    attribution_queue: Evo2ForwardJobQueue | None = None
     if forward_space_url:
+        forward_hf_token = os.environ.get("CONCORDIA_EVO2_FORWARD_HF_TOKEN")
+        forward_artifacts = ContentAddressedStore(Path(state_root) / "artifacts")
+        forward_job_database = (
+            None if database_url else Path(state_root) / "evo2_forward_jobs.sqlite3"
+        )
+        # One ZeroGPU allocation serves both operations, so they share the
+        # single-flight lock and - because they record into the same job table -
+        # one combined per-client budget of scarce GPU jobs.
+        zerogpu_lock = threading.Lock()
         forward_runner = ZeroGpuEvo2ForwardRunner(
-            ContentAddressedStore(Path(state_root) / "artifacts"),
+            forward_artifacts,
             space_url=forward_space_url,
             scoring=_hbb_scoring_semantics(),
-            hf_token=os.environ.get("CONCORDIA_EVO2_FORWARD_HF_TOKEN"),
+            hf_token=forward_hf_token,
         )
         forward_queue = Evo2ForwardJobQueue(
             _DictifyingForwardScorer(
                 RealEvo2Scorer(forward_runner, checkpoint=HBB_CHECKPOINT, target=HBB_TARGET)
             ),
-            database_path=(
-                None if database_url else Path(state_root) / "evo2_forward_jobs.sqlite3"
-            ),
+            database_path=forward_job_database,
             postgres_dsn=database_url,
             checkpoint=HBB_CHECKPOINT,
             target=HBB_TARGET,
+            execution_lock=zerogpu_lock,
+        )
+        attribution_queue = Evo2ForwardJobQueue(
+            _AttributionJob(
+                ZeroGpuEvo2AttributionRunner(
+                    forward_artifacts,
+                    space_url=forward_space_url,
+                    scoring=_hbb_scoring_semantics(),
+                    hf_token=forward_hf_token,
+                )
+            ),
+            database_path=forward_job_database,
+            postgres_dsn=database_url,
+            checkpoint=HBB_CHECKPOINT,
+            target=HBB_TARGET,
+            execution_lock=zerogpu_lock,
         )
 
     @app.exception_handler(RateLimitExceededError)
@@ -715,6 +769,62 @@ def create_workspace_app(
             return forward_queue.get(job_id)
         except JobNotFoundError as error:
             raise HTTPException(status_code=404, detail="forward job not found") from error
+
+    @app.post(
+        "/nvidia/evo2/attribute",
+        summary="Submit an Evo2 gradient-attribution job (ranking signal, not a score)",
+        description=(
+            "Accepts an exact 8,192-base sequence and queues one forward pass plus "
+            "one backward pass on a ZeroGPU worker, returning a ranked shortlist of "
+            "the positions whose substitutions are estimated to be most damaging.\n\n"
+            "These are first-order estimates, so they are a ranking signal and not a "
+            "score: confirm any shortlisted position with POST /nvidia/evo2/forward "
+            "before relying on it. Measured against exact rescoring on the real HBB "
+            "window, rank correlation was 0.50 and the known c.-78A>G variant was "
+            "estimated at -1.7 against an exact -21.0 - roughly a twelvefold "
+            "underestimate - while still ranking 84th of 8,192. Every result is "
+            "returned with scientific_use_allowed=false.\n\n"
+            "This shares one ZeroGPU allocation and one per-client job budget with "
+            "/nvidia/evo2/forward; at most one job of either kind runs at a time. "
+            "Poll GET /nvidia/evo2/attribute/{job_id} for the result."
+        ),
+    )
+    def submit_attribution_job(
+        payload: Evo2AttributeRequest, request: Request, background_tasks: BackgroundTasks
+    ) -> dict[str, str]:
+        if attribution_queue is None:
+            raise HTTPException(
+                status_code=503,
+                detail="gradient attribution is not configured on this deployment "
+                "(CONCORDIA_EVO2_FORWARD_SPACE_URL is unset)",
+            )
+        client_id = _client_ip(request, trust_proxy_headers=trust_proxy_headers)
+        try:
+            sequence = GenomicSequence(
+                sequence_id="interactive:evo2-attribute", sequence=payload.sequence, strand="+"
+            )
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        job_id = attribution_queue.submit(client_id=client_id, sequence=sequence)
+        background_tasks.add_task(attribution_queue.run, job_id, sequence)
+        return {"job_id": job_id, "status": "QUEUED"}
+
+    @app.get(
+        "/nvidia/evo2/attribute/{job_id}",
+        summary="Poll an Evo2 gradient-attribution job",
+    )
+    def get_attribution_job(job_id: str) -> dict[str, object]:
+        if attribution_queue is None:
+            raise HTTPException(
+                status_code=503,
+                detail="gradient attribution is not configured on this deployment",
+            )
+        try:
+            return attribution_queue.get(job_id)
+        except JobNotFoundError as error:
+            raise HTTPException(
+                status_code=404, detail="attribution job not found"
+            ) from error
 
     @app.post(
         "/nvidia/openfold2/predict",

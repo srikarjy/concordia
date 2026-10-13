@@ -27,7 +27,7 @@ This result establishes artifact and import compatibility only. Checkpoint deser
 
 ## Interactive endpoints and their environment variables
 
-The deployed workspace is mostly read-only (see above), but exposes five
+The deployed workspace is mostly read-only (see above), but exposes six
 rate-limited, non-tool endpoints that make real outbound calls or execute
 real local code on a visitor's request. Each is controlled by an environment
 variable; omitting it makes that specific endpoint fail closed with a `503`
@@ -36,7 +36,7 @@ rather than silently degrading:
 | Variable | Enables | Behavior when unset |
 | --- | --- | --- |
 | `NVIDIA_API_KEY` | `POST /nvidia/evo2/generate`, `/nvidia/boltz/predict`, `/nvidia/openfold2/predict` | `503` |
-| `CONCORDIA_EVO2_FORWARD_SPACE_URL` | `POST /nvidia/evo2/forward` (points at a deployed `deploy/hf-evo2-worker` Space) | `503` |
+| `CONCORDIA_EVO2_FORWARD_SPACE_URL` | `POST /nvidia/evo2/forward` and `POST /nvidia/evo2/attribute` (points at a deployed `deploy/hf-evo2-worker` Space) | `503` |
 | `CONCORDIA_EVO2_FORWARD_HF_TOKEN` | optional HF token sent to the worker Space; without it ZeroGPU may answer `429` | forward jobs fail with `HTTP 429` |
 | `CONCORDIA_TRUST_PROXY_HEADERS=1` | Honors `X-Forwarded-For` for per-client rate limiting | Falls back to the raw socket address, which is wrong behind a proxy (see below) |
 | `CONCORDIA_DATABASE_URL` | Persists rate limits, response caches, and job history to Postgres instead of local SQLite | Everything still works, but state resets on every redeploy/restart |
@@ -57,7 +57,7 @@ project works well) makes `evo2_generation_gateway.py`, `structure_gateway.py`,
 `boltz_gateway.py`, `evo2_forward_queue.py`, and the colony-run rate limiter
 all use `genomics/postgres_backend.py` instead of their local SQLite files —
 see each module's docstring. Nothing else changes; this is purely a
-persistence upgrade for the five interactive endpoints above, not the core
+persistence upgrade for the six interactive endpoints above, not the core
 run/colony ledgers, which remain intentionally local per this project's
 zero-cost, local-first design.
 

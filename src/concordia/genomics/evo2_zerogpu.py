@@ -27,7 +27,7 @@ class Evo2ForwardExecutionError(RuntimeError):
     """Raised for any worker-reported or transport failure; never silently scored."""
 
 
-def _parse_gradio_call_event_id(response: httpx.Response) -> str:
+def parse_gradio_call_event_id(response: httpx.Response) -> str:
     try:
         payload = response.json()
     except json.JSONDecodeError as error:
@@ -40,7 +40,7 @@ def _parse_gradio_call_event_id(response: httpx.Response) -> str:
     return event_id
 
 
-def _parse_gradio_sse_result(body: str) -> Any:
+def parse_gradio_sse_result(body: str) -> Any:
     """Parse a Gradio ``/call/<name>/<event_id>`` SSE stream into its final payload.
 
     Gradio's queue API streams ``event: <kind>`` / ``data: <json>`` pairs and
@@ -135,7 +135,7 @@ class ZeroGpuEvo2ForwardRunner:
                 raise Evo2ForwardExecutionError(
                     f"ZeroGPU worker submit failed: HTTP {submit_response.status_code}"
                 )
-            event_id = _parse_gradio_call_event_id(submit_response)
+            event_id = parse_gradio_call_event_id(submit_response)
             poll_response = client.get(
                 f"{self.space_url}/gradio_api/call/{self.api_name}/{event_id}",
                 headers={"Accept": "text/event-stream"},
@@ -145,7 +145,7 @@ class ZeroGpuEvo2ForwardRunner:
                     f"ZeroGPU worker poll failed: HTTP {poll_response.status_code}"
                 )
         elapsed_seconds = time.monotonic() - started
-        worker_record = _parse_gradio_sse_result(poll_response.text)
+        worker_record = parse_gradio_sse_result(poll_response.text)
         if not isinstance(worker_record, dict):
             raise Evo2ForwardExecutionError("ZeroGPU worker result was not a JSON object")
         response_digest = self.artifacts.put_json(worker_record)
