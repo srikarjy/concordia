@@ -205,6 +205,9 @@ class Evo2GenerationGateway:
         cached = self._cached_result(request_key)
         if cached is not None:
             return cached
+        self.runner.preflight(
+            num_tokens=num_tokens, temperature=temperature, top_k=top_k, top_p=top_p
+        )
         self._check_and_record_rate_limit(client_id)
         result = self.runner.generate(
             sequence,

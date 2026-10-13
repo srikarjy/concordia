@@ -84,9 +84,7 @@ class NvidiaHostedOpenFold2Runner:
         self.timeout_seconds = timeout_seconds
         self._transport = transport
 
-    def predict(self, sequence: str) -> NvidiaHostedOpenFold2Result:
-        if not self._api_key:
-            raise RuntimeError("NVIDIA_API_KEY is required for hosted OpenFold2 prediction")
+    def _normalize_sequence(self, sequence: str) -> str:
         normalized = sequence.strip().upper()
         if not normalized or len(normalized) > self.max_sequence_length:
             raise ValueError(
@@ -99,6 +97,17 @@ class NvidiaHostedOpenFold2Runner:
                 "sequence contains characters outside the 20 standard amino acids: "
                 f"{''.join(invalid)}"
             )
+        return normalized
+
+    def preflight(self, sequence: str) -> None:
+        """Reject requests that can never succeed, so a gateway spends no quota on them."""
+        if not self._api_key:
+            raise RuntimeError("NVIDIA_API_KEY is required for hosted OpenFold2 prediction")
+        self._normalize_sequence(sequence)
+
+    def predict(self, sequence: str) -> NvidiaHostedOpenFold2Result:
+        self.preflight(sequence)
+        normalized = self._normalize_sequence(sequence)
         request_payload = {"sequence": normalized}
         input_hash = hashlib.sha256(normalized.encode("ascii")).hexdigest()
         request_digest = self.artifacts.put_json(

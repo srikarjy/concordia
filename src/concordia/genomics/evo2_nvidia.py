@@ -55,6 +55,32 @@ class NvidiaHostedEvo2GenerationRunner:
         self.timeout_seconds = timeout_seconds
         self._transport = transport
 
+    def preflight(
+        self,
+        *,
+        num_tokens: int = 8,
+        temperature: float = 0.7,
+        top_k: int = 3,
+        top_p: float = 0.0,
+    ) -> None:
+        """Reject bad parameters and a missing key before any quota is spent.
+
+        Sampling parameters are validated before the credential so that a
+        keyless deployment still answers a malformed request with ``422``
+        instead of masking it as ``503``.
+        """
+
+        if not 1 <= num_tokens <= 1_200:
+            raise ValueError("num_tokens must be between 1 and 1200")
+        if not 0 <= temperature <= 1.3:
+            raise ValueError("temperature must be between 0 and 1.3")
+        if not 0 <= top_k <= 6:
+            raise ValueError("top_k must be between 0 and 6")
+        if not 0 <= top_p <= 1:
+            raise ValueError("top_p must be between 0 and 1")
+        if not self._api_key:
+            raise RuntimeError("NVIDIA_API_KEY is required for hosted Evo2 generation")
+
     def generate(
         self,
         sequence: GenomicSequence,
@@ -65,16 +91,9 @@ class NvidiaHostedEvo2GenerationRunner:
         top_p: float = 0.0,
         random_seed: int = 1729,
     ) -> NvidiaHostedGenerationResult:
-        if not self._api_key:
-            raise RuntimeError("NVIDIA_API_KEY is required for hosted Evo2 generation")
-        if not 1 <= num_tokens <= 1_200:
-            raise ValueError("num_tokens must be between 1 and 1200")
-        if not 0 <= temperature <= 1.3:
-            raise ValueError("temperature must be between 0 and 1.3")
-        if not 0 <= top_k <= 6:
-            raise ValueError("top_k must be between 0 and 6")
-        if not 0 <= top_p <= 1:
-            raise ValueError("top_p must be between 0 and 1")
+        self.preflight(
+            num_tokens=num_tokens, temperature=temperature, top_k=top_k, top_p=top_p
+        )
         request_payload = {
             "sequence": sequence.sequence,
             "num_tokens": num_tokens,

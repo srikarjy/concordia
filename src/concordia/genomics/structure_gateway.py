@@ -27,6 +27,8 @@ __all__ = ["RateLimitExceededError", "StructureGateway"]
 
 
 class _StructureRunner(Protocol):
+    def preflight(self, sequence: str) -> None: ...
+
     def predict(self, sequence: str) -> Any: ...
 
 
@@ -133,6 +135,7 @@ class StructureGateway:
             cached_json = self._postgres.get_cached(request_key)
             if cached_json:
                 return self._result_model.model_validate_json(cached_json)
+            self.runner.preflight(sequence)
             self._check_and_record_rate_limit(client_id)
             result = self.runner.predict(sequence)
             self._postgres.store(request_key, result.model_dump_json(), self._now())
@@ -144,6 +147,7 @@ class StructureGateway:
             ).fetchone()
         if row is not None:
             return self._result_model.model_validate_json(row["result_json"])
+        self.runner.preflight(sequence)
         self._check_and_record_rate_limit(client_id)
         result = self.runner.predict(sequence)
         with self._connect() as connection:

@@ -42,6 +42,8 @@ class JobNotFoundError(LookupError):
 
 
 class ForwardScorer(Protocol):
+    def preflight(self, sequence: GenomicSequence) -> None: ...
+
     def score(
         self, sequence: GenomicSequence, *, checkpoint: str, target: str
     ) -> dict[str, Any]: ...
@@ -132,6 +134,7 @@ class Evo2ForwardJobQueue:
         must never block the HTTP request that submitted it.
         """
 
+        self.scorer.preflight(sequence)
         self._check_and_record_rate_limit(client_id)
         job_id = str(uuid.uuid4())
         if self._postgres is not None:

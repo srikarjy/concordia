@@ -18,6 +18,10 @@ class FakeRunner:
     def __init__(self) -> None:
         self.calls = 0
 
+    def preflight(self, sequence: str | None = None) -> None:
+        if sequence is not None and not sequence.isalpha():
+            raise ValueError("sequence contains invalid characters")
+
     def predict(self, sequence: str) -> NvidiaHostedBoltzResult:
         self.calls += 1
         return NvidiaHostedBoltzResult(
@@ -53,3 +57,16 @@ def test_per_client_rate_limit_is_enforced(tmp_path) -> None:
         gateway.predict(client_id="1.2.3.4", sequence="CCC")
 
     gateway.predict(client_id="5.6.7.8", sequence="DDD")
+
+
+def test_rejected_input_does_not_consume_quota(tmp_path) -> None:
+    runner = FakeRunner()
+    gateway = BoltzGateway(
+        runner, database_path=tmp_path / "boltz.sqlite3", per_client_limit=1, clock=FakeClock()
+    )
+
+    with pytest.raises(ValueError):
+        gateway.predict(client_id="1.2.3.4", sequence="MK1")
+
+    gateway.predict(client_id="1.2.3.4", sequence="MKT")
+    assert runner.calls == 1

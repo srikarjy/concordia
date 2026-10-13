@@ -132,6 +132,7 @@ class BoltzGateway:
             cached_json = self._postgres.get_cached(request_key)
             if cached_json:
                 return NvidiaHostedBoltzResult.model_validate_json(cached_json)
+            self.runner.preflight(sequence)
             self._check_and_record_rate_limit(client_id)
             result = self.runner.predict(sequence)
             self._postgres.store(request_key, result.model_dump_json(), self._now())
@@ -143,6 +144,7 @@ class BoltzGateway:
             ).fetchone()
         if row is not None:
             return NvidiaHostedBoltzResult.model_validate_json(row["result_json"])
+        self.runner.preflight(sequence)
         self._check_and_record_rate_limit(client_id)
         result = self.runner.predict(sequence)
         with self._connect() as connection:
@@ -164,6 +166,7 @@ class BoltzGateway:
             cached_json = self._postgres.get_cached(request_key)
             if cached_json:
                 return NvidiaHostedBoltzComplexResult.model_validate_json(cached_json)
+            self.runner.preflight()
             self._check_and_record_rate_limit(client_id)
             result = self.runner.predict_complex(request)
             self._postgres.store(request_key, result.model_dump_json(), self._now())
@@ -175,6 +178,7 @@ class BoltzGateway:
             ).fetchone()
         if row is not None:
             return NvidiaHostedBoltzComplexResult.model_validate_json(row["result_json"])
+        self.runner.preflight()
         self._check_and_record_rate_limit(client_id)
         result = self.runner.predict_complex(request)
         with self._connect() as connection:

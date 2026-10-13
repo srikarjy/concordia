@@ -99,14 +99,19 @@ class ZeroGpuEvo2ForwardRunner:
         self.poll_interval_seconds = poll_interval_seconds
         self._transport = transport
 
-    def score(
-        self, sequence: GenomicSequence, *, checkpoint: str, target: str
-    ) -> dict[str, Any]:
+    def preflight(self, sequence: GenomicSequence) -> None:
+        """Reject an off-window sequence before any quota slot is spent."""
+
         if len(sequence.sequence) != self.scoring.expected_sequence_length:
             raise Evo2ForwardExecutionError(
                 "sequence length does not match the frozen scoring window "
                 f"({self.scoring.expected_sequence_length} bases required)"
             )
+
+    def score(
+        self, sequence: GenomicSequence, *, checkpoint: str, target: str
+    ) -> dict[str, Any]:
+        self.preflight(sequence)
         request_payload = {"data": [sequence.sequence]}
         request_digest = self.artifacts.put_json(
             {

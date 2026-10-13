@@ -145,15 +145,7 @@ class NvidiaHostedBoltzRunner:
         self.timeout_seconds = timeout_seconds
         self._transport = transport
 
-    def predict(
-        self,
-        sequence: str,
-        *,
-        recycling_steps: int = 1,
-        sampling_steps: int = 20,
-        diffusion_samples: int = 1,
-        step_scale: float = 1.2,
-    ) -> NvidiaHostedBoltzResult:
+    def _normalize_sequence(self, sequence: str) -> str:
         normalized = sequence.strip().upper()
         if not normalized or len(normalized) > self.max_sequence_length:
             raise ValueError(
@@ -166,6 +158,25 @@ class NvidiaHostedBoltzRunner:
                 "sequence contains characters outside the 20 standard amino acids: "
                 + "".join(invalid)
             )
+        return normalized
+
+    def preflight(self, sequence: str | None = None) -> None:
+        """Reject requests that can never succeed, so a gateway spends no quota on them."""
+        if sequence is not None:
+            self._normalize_sequence(sequence)
+        if not self._api_key:
+            raise RuntimeError("NVIDIA_API_KEY is required for hosted Boltz-2 prediction")
+
+    def predict(
+        self,
+        sequence: str,
+        *,
+        recycling_steps: int = 1,
+        sampling_steps: int = 20,
+        diffusion_samples: int = 1,
+        step_scale: float = 1.2,
+    ) -> NvidiaHostedBoltzResult:
+        normalized = self._normalize_sequence(sequence)
         request_payload = {
             "polymers": [
                 {

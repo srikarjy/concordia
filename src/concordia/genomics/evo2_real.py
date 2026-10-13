@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Protocol
+from typing import Any, Protocol, runtime_checkable
 
 from concordia.genomics.evo2 import SequenceScore
 from concordia.genomics.schema import GenomicSequence
@@ -14,6 +14,13 @@ class Evo2ForwardRunner(Protocol):
     ) -> dict[str, Any]: ...
 
 
+@runtime_checkable
+class _SupportsPreflight(Protocol):
+    """A runner that can reject a sequence without executing a forward pass."""
+
+    def preflight(self, sequence: GenomicSequence) -> None: ...
+
+
 class RealEvo2Scorer:
     """Validate a caller-supplied Evo2 execution; never silently falls back to a fixture."""
 
@@ -23,6 +30,17 @@ class RealEvo2Scorer:
         self.runner = runner
         self.model_id = checkpoint
         self.target = target
+
+    def preflight(self, sequence: GenomicSequence) -> None:
+        """Delegate cheap input validation to runners that implement it.
+
+        Callers use this to reject a sequence before spending a quota slot.
+        A runner without ``preflight`` validates inside ``score`` instead, so
+        this is a no-op rather than an error.
+        """
+
+        if isinstance(self.runner, _SupportsPreflight):
+            self.runner.preflight(sequence)
 
     def score(self, sequence: GenomicSequence) -> SequenceScore:
         raw = self.runner.score(sequence, checkpoint=self.model_id, target=self.target)

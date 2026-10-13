@@ -140,6 +140,9 @@ class _DictifyingForwardScorer:
     def __init__(self, scorer: RealEvo2Scorer) -> None:
         self._scorer = scorer
 
+    def preflight(self, sequence: GenomicSequence) -> None:
+        self._scorer.preflight(sequence)
+
     def score(
         self, sequence: GenomicSequence, *, checkpoint: str, target: str
     ) -> dict[str, object]:
