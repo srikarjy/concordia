@@ -19,15 +19,14 @@ import copy
 import json
 from pathlib import Path
 
-from structure_measurements import _interface, load
+from structure_measurements import ANTIBODY_ROLES, interface_residues
 
 ROLE = {"A": "H", "B": "L"}  # Boltz output chain -> selection role
 
 
 def paratope(pred: Path) -> dict[str, list[int]]:
-    pairs, _ = _interface(load(pred))
     found: dict[str, set[int]] = {"H": set(), "L": set()}
-    for chain, index, _ in pairs:
+    for chain, index in interface_residues(pred, ANTIBODY_ROLES):
         found[ROLE[chain]].add(index)
     return {role: sorted(indices) for role, indices in found.items()}
 
