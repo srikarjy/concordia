@@ -100,10 +100,16 @@ git archive HEAD | tar -x -C /tmp/concordia-deploy && cd /tmp/concordia-deploy
 hf upload "$HF_SPACE_ID" . --repo-type space \
   --include Dockerfile README.md LICENSE pyproject.toml uv.lock 'src/**' 'frontend/**' \
     'configs/**' 'docs/**' 'reports/**' requirements-space.txt \
+    requirements-space.lock.txt \
   --exclude 'frontend/node_modules/**' 'frontend/dist/**' '.concordia/**' 'data/raw/**' \
     '**/__pycache__/**' \
   --commit-message "Publish reproducible scientific workspace"
 ```
+
+`requirements-space.lock.txt` is what the image installs, with hashes, so the build
+fails rather than silently resolving different versions. Leave it out of the upload and
+the Space build cannot install anything. Regenerate it with `make space-lock` after
+editing `requirements-space.txt`.
 
 Pass every pattern after a single `--include` and a single `--exclude`. With
 repeated `--include` flags the CLI keeps only the last one, uploads one file, and

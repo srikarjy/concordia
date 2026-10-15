@@ -1,4 +1,4 @@
-.PHONY: demo serve test frontend benchmark
+.PHONY: demo serve test frontend benchmark space-lock
 
 # Offline, no network, exits 0: runs the genomic evidence pipeline on the bundled fixture.
 demo:
@@ -22,3 +22,10 @@ test:
 benchmark:
 	uv sync --extra dev
 	.venv/bin/concordia benchmark --suite all --output reports/benchmark-local.json
+
+# Resolve the Space image's dependencies to exact versions with hashes, for the
+# deployment target rather than this machine. The Dockerfile installs only this file.
+space-lock:
+	uv pip compile requirements-space.txt --generate-hashes --no-annotate --no-header \
+	  --python-platform x86_64-unknown-linux-gnu --python-version 3.13 \
+	  -o requirements-space.lock.txt

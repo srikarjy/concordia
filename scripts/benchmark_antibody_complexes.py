@@ -59,7 +59,11 @@ CONTACT_ANGSTROM = 8.0
 # caller can retry it. A dropped connection after an hour of rate-limit waiting must
 # not end the run.
 TRANSPORT_FAILED = 598
-TRANSPORT_RETRIES = 3
+# Upstream GPU faults ("CUDA error: an illegal memory access") come back as a gateway
+# error within seconds and succeed on a later attempt, so they are retried like a
+# dropped connection. A 4xx from our own validation is not retried: it would never pass.
+RETRYABLE = frozenset({TRANSPORT_FAILED, 502, 503, 504})
+RETRY_LIMIT = 3
 
 
 def _post(url: str, body: dict, timeout: int = 480) -> tuple[int, dict, dict]:
@@ -229,7 +233,7 @@ def run(
         row = {k: entry[k] for k in ("pdb_id", "released", "method", "resolution", "antigen_desc")}
         row["lengths"] = {k: len(v) for k, v in entry["sequences"].items()}
         row["settings"] = settings
-        transport_failures = 0
+        attempts = 0
         while True:
             started = time.time()
             status, payload, headers = _post(base_url + "/nvidia/boltz/complex", body)
@@ -238,17 +242,17 @@ def run(
                 print(f"{pdb}: rate limited, waiting {wait}s", flush=True)
                 time.sleep(wait)
                 continue
-            if status == TRANSPORT_FAILED and transport_failures < TRANSPORT_RETRIES:
-                transport_failures += 1
+            if status in RETRYABLE and attempts < RETRY_LIMIT:
+                attempts += 1
+                detail = str(payload.get("detail", payload))[:120]
                 print(
-                    f"{pdb}: {payload['detail']}, retry {transport_failures}"
-                    f"/{TRANSPORT_RETRIES} in 120s",
+                    f"{pdb}: {status} {detail}, retry {attempts}/{RETRY_LIMIT} in 120s",
                     flush=True,
                 )
                 time.sleep(120)
                 continue
             break
-        row["transport_failures"] = transport_failures
+        row["retried"] = attempts
         row["http_status"] = status
         row["wall_seconds"] = round(time.time() - started, 1)
         if status == 200:
