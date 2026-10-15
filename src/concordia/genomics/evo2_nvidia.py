@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import time
 from typing import Any, Literal
@@ -12,6 +13,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from concordia.genomics.schema import GenomicSequence
 from concordia.storage.content import ContentAddressedStore
+
+_log = logging.getLogger(__name__)
 
 SHA256_PATTERN = r"^[0-9a-f]{64}$"
 
@@ -131,8 +134,13 @@ class NvidiaHostedEvo2GenerationRunner:
             raise RuntimeError("NVIDIA Evo2 generation response exceeded the configured limit")
         response_digest = self.artifacts.put_bytes(response.content)
         if response.is_error:
-            detail = response.text[:1_000].replace("\n", " ")
-            raise RuntimeError(f"NVIDIA Evo2 HTTP {response.status_code}: {detail}")
+            # Upstream detail goes to the server log, not to the (public) caller.
+            _log.warning(
+                "NVIDIA Evo2 HTTP %s: %s",
+                response.status_code,
+                response.text[:1_000].replace("\n", " "),
+            )
+            raise RuntimeError(f"NVIDIA Evo2 HTTP {response.status_code}")
         try:
             payload = response.json()
         except json.JSONDecodeError as error:

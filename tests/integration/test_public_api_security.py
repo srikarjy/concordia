@@ -75,9 +75,7 @@ def test_distinct_real_clients_are_limited_independently(
         assert response.status_code == 200
 
 
-def test_experiment_node_count_is_capped(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_experiment_node_count_is_capped(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(experiment_service, "MAX_NODES_PER_EXPERIMENT", 3)
     client = _client(tmp_path, monkeypatch)
     experiment_id, auth = _new_experiment(client)
@@ -109,3 +107,23 @@ def test_unreachable_database_url_falls_back_to_sqlite() -> None:
     assert _reachable_database_url(None) is None
     assert _reachable_database_url("not a dsn") is None
     assert _reachable_database_url("postgresql://u:p@127.0.0.1:1/db") is None
+
+
+def test_oversized_and_unsized_bodies_are_rejected_before_parsing(tmp_path, monkeypatch):
+    client = _client(tmp_path, monkeypatch)
+    big = client.post(
+        "/experiments",
+        content=b"{}",
+        headers={"content-type": "application/json", "content-length": "5000000"},
+    )
+    assert big.status_code == 413
+    assert "Content-Security-Policy" in big.headers
+
+    def chunks():
+        yield b'{"title": "x"}'
+
+    unsized = client.post(
+        "/experiments", content=chunks(), headers={"content-type": "application/json"}
+    )
+    assert unsized.status_code == 411
+    assert client.post("/experiments", json={"title": "ok"}).status_code == 200

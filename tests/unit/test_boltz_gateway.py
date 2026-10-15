@@ -70,3 +70,41 @@ def test_rejected_input_does_not_consume_quota(tmp_path) -> None:
 
     gateway.predict(client_id="1.2.3.4", sequence="MKT")
     assert runner.calls == 1
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [{"diffusion_samples": 5, "sampling_steps": 200}, {"recycling_steps": 10}],
+)
+def test_public_complex_calls_are_capped_before_any_quota_or_compute(tmp_path, overrides) -> None:
+    from concordia.genomics.boltz_nvidia import BoltzComplexRequest
+
+    runner = FakeRunner()
+    gateway = BoltzGateway(runner, database_path=tmp_path / "boltz.sqlite3", clock=FakeClock())
+    request = BoltzComplexRequest(
+        polymers=(
+            {"id": "H", "molecule_type": "protein", "sequence": "EVQLV"},
+            {"id": "A", "molecule_type": "protein", "sequence": "MKTAY"},
+        ),
+        **overrides,
+    )
+    with pytest.raises(ValueError, match="exceeds this endpoint's limit"):
+        gateway.predict_complex(client_id="1.2.3.4", request=request)
+    assert runner.calls == 0
+
+
+def test_public_complex_request_size_is_capped(tmp_path) -> None:
+    from concordia.genomics.boltz_nvidia import BoltzComplexRequest
+
+    gateway = BoltzGateway(
+        FakeRunner(), database_path=tmp_path / "boltz.sqlite3", max_request_bytes=2_000
+    )
+    huge_msa = {"uniref90": {"a3m": {"alignment": ">q\n" + "A" * 5_000, "format": "a3m"}}}
+    request = BoltzComplexRequest(
+        polymers=(
+            {"id": "H", "molecule_type": "protein", "sequence": "EVQLV", "msa": huge_msa},
+            {"id": "A", "molecule_type": "protein", "sequence": "MKTAY"},
+        )
+    )
+    with pytest.raises(ValueError, match="request bytes"):
+        gateway.predict_complex(client_id="1.2.3.4", request=request)

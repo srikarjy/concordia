@@ -97,6 +97,8 @@ def _client_ip(request: Request, *, trust_proxy_headers: bool) -> str:
     return request.client.host if request.client else "unknown"
 
 
+MAX_REQUEST_BODY_BYTES = 2_000_000
+
 # Spaces embed the app in a huggingface.co iframe, so framing is limited to
 # the app itself and Hugging Face rather than denied outright.
 _CONTENT_SECURITY_POLICY = "; ".join(
@@ -447,6 +449,21 @@ def create_workspace_app(
         )
         response.headers["Retry-After"] = str(error.retry_after_seconds)
         return response
+
+    @app.middleware("http")
+    async def bounded_request_body(
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        # Pydantic bounds fields only after the whole body is read, so the body is
+        # bounded first. Registered before the security-headers middleware so that
+        # these rejections still carry the security headers.
+        if request.method in {"POST", "PUT", "PATCH"}:
+            length = request.headers.get("content-length")
+            if length is None or not length.isdigit():
+                return JSONResponse(status_code=411, content={"detail": "Content-Length required"})
+            if int(length) > MAX_REQUEST_BODY_BYTES:
+                return JSONResponse(status_code=413, content={"detail": "request body too large"})
+        return await call_next(request)
 
     @app.middleware("http")
     async def public_security_headers(

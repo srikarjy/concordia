@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import re
 import time
@@ -19,6 +20,8 @@ import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
 from concordia.storage.content import ContentAddressedStore
+
+_log = logging.getLogger(__name__)
 
 SHA256_PATTERN = r"^[0-9a-f]{64}$"
 AMINO_ACID_PATTERN = r"^[ARNDCQEGHILKMFPSTWYV]+$"
@@ -139,8 +142,13 @@ class NvidiaHostedOpenFold2Runner:
         if response.status_code == 410:
             raise RuntimeError("NVIDIA OpenFold2 has been retired (HTTP 410)")
         if response.is_error:
-            detail = response.text[:1_000].replace("\n", " ")
-            raise RuntimeError(f"NVIDIA OpenFold2 HTTP {response.status_code}: {detail}")
+            # Upstream detail goes to the server log, not to the (public) caller.
+            _log.warning(
+                "NVIDIA OpenFold2 HTTP %s: %s",
+                response.status_code,
+                response.text[:1_000].replace("\n", " "),
+            )
+            raise RuntimeError(f"NVIDIA OpenFold2 HTTP {response.status_code}")
         try:
             payload = response.json()
         except json.JSONDecodeError as error:

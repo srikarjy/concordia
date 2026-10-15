@@ -42,9 +42,19 @@ class BoltzGateway:
         per_client_limit: int = 3,
         per_client_window_seconds: int = 3_600,
         global_daily_limit: int = 50,
+        max_diffusion_samples: int = 5,
+        max_sampling_steps: int = 50,
+        max_recycling_steps: int = 3,
+        max_request_bytes: int = 1_000_000,
         clock: Clock | None = None,
     ):
         self.runner = runner
+        # The rate limits count calls, not compute, so each public call's compute
+        # is capped too: at most the NIM defaults, five samples, and a bounded body.
+        self.max_diffusion_samples = max_diffusion_samples
+        self.max_sampling_steps = max_sampling_steps
+        self.max_recycling_steps = max_recycling_steps
+        self.max_request_bytes = max_request_bytes
         self.per_client_limit = per_client_limit
         self.per_client_window_seconds = per_client_window_seconds
         self.global_daily_limit = global_daily_limit
@@ -155,12 +165,24 @@ class BoltzGateway:
             )
         return result
 
+    def _check_compute(self, request: BoltzComplexRequest, size: int) -> None:
+        limits = (
+            ("diffusion_samples", request.diffusion_samples, self.max_diffusion_samples),
+            ("sampling_steps", request.sampling_steps, self.max_sampling_steps),
+            ("recycling_steps", request.recycling_steps, self.max_recycling_steps),
+            ("request bytes", size, self.max_request_bytes),
+        )
+        for name, value, limit in limits:
+            if value > limit:
+                raise ValueError(f"{name} {value} exceeds this endpoint's limit of {limit}")
+
     def predict_complex(
         self, *, client_id: str, request: BoltzComplexRequest
     ) -> NvidiaHostedBoltzComplexResult:
         """Rate-limit and cache a structured multi-chain Boltz request."""
 
         canonical = request.model_dump_json(exclude_none=True, by_alias=True)
+        self._check_compute(request, len(canonical.encode("utf-8")))
         request_key = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
         if self._postgres is not None:
             cached_json = self._postgres.get_cached(request_key)

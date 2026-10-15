@@ -52,9 +52,7 @@ def test_boltz_async_202_then_polls_to_completion(tmp_path: Path) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         if request.method == "POST":
             return httpx.Response(202, headers={"nvcf-reqid": "task-123"}, json={})
-        assert request.url == httpx.URL(
-            "https://api.nvcf.nvidia.com/v2/nvcf/pexec/status/task-123"
-        )
+        assert request.url == httpx.URL("https://api.nvcf.nvidia.com/v2/nvcf/pexec/status/task-123")
         calls["count"] += 1
         if calls["count"] < 2:
             return httpx.Response(202, json={})
@@ -187,3 +185,18 @@ def test_boltz_complex_rejects_duplicate_chain_ids() -> None:
                 {"id": "A", "sequence": "EVQ"},
             )
         )
+
+
+def test_upstream_error_detail_is_logged_not_returned(tmp_path: Path, caplog) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(500, text="internal upstream trace id=abc123")
+
+    runner = NvidiaHostedBoltzRunner(
+        ContentAddressedStore(tmp_path / "artifacts"),
+        api_key="test-secret",
+        transport=httpx.MockTransport(handler),
+    )
+    with caplog.at_level("WARNING"), pytest.raises(RuntimeError) as raised:
+        runner.predict("MKT")
+    assert str(raised.value) == "NVIDIA Boltz-2 HTTP 500"
+    assert "abc123" in caplog.text
