@@ -220,6 +220,7 @@ def verify_claim(
     groups: dict[EvidenceFamily, set[str]] = {}
     reasons: set[str] = set()
     counterfactual = False
+    counterfactual_assessed = False
     critical = False
     for evidence in sorted(claim.evidence, key=lambda value: value.evidence_id):
         path, artifacts, errors = check_provenance(
@@ -254,6 +255,8 @@ def verify_claim(
             groups.setdefault(evidence.family, set()).add(evidence.independence_group)
             if evidence.family == EvidenceFamily.COUNTERFACTUAL:
                 counterfactual |= evidence.counterfactual_passed is True
+        if evidence.family == EvidenceFamily.COUNTERFACTUAL:
+            counterfactual_assessed |= evidence.assessment != "missing"
         if evidence.assessment == "missing":
             reasons.add("declared evidence is missing")
 
@@ -288,7 +291,14 @@ def verify_claim(
     else:
         status = SupportStatus.MISSING_EVIDENCE
     if not counterfactual:
-        reasons.add("required counterfactual check is absent or did not pass")
+        # Never run and run-but-failed are different findings. Collapsing them lets a
+        # missing input read as evidence against the claim, which is the one thing a
+        # verifier must not do.
+        reasons.add(
+            "required counterfactual check did not pass"
+            if counterfactual_assessed
+            else "required counterfactual check was never run"
+        )
     if independent < policy.minimum_families:
         reasons.add("insufficient independent supporting evidence families")
     return VerificationResult(

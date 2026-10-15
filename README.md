@@ -17,7 +17,7 @@ app_port: 7860
 
 ## Problem
 
-A structure model reports 0.85 confidence on an antibody–antigen complex, and the antigen is placed 20 Å from where the crystal puts it. A team that trusts that score can spend months of wet-lab work on the wrong candidate. Confidence is not evidence. Teams need to know which model, input and settings produced a result, whether independent evidence supports it, and whether someone else can replay it. Today that record lives in notebooks.
+A structure model reports 0.84 confidence on an antibody–antigen complex. The antigen is 42 Å from where the crystal puts it, and none of the crystal's interface contacts are reproduced. That is row 9OAO of the benchmark below, not a hypothetical, and it is not the worst one. A team that trusts that score can spend months of wet-lab work on the wrong candidate. Confidence is not evidence. Teams need to know which model, input and settings produced a result, whether independent evidence supports it, and whether someone else can replay it. Today that record lives in notebooks.
 
 Recording lineage is a solved problem (W3C PROV, MLflow, DVC). What Concordia adds is the check: a claim gets a status from deterministic rules over independent evidence, and the rules say `UNVERIFIABLE` when the evidence is not there.
 
@@ -42,9 +42,9 @@ flowchart LR
 
 ## Results
 
-### Preliminary benchmark, under revision
+### Small benchmark: nine complexes, no baseline model
 
-> **Read this before the table.** These predictions were run with reduced settings: 20 sampling steps, 1 recycling step, 1 sample, and single-sequence input (no MSA). The hosted NIM defaults are 50 sampling and 3 recycling steps, and the Boltz-2 paper scores antibody interfaces with DockQ over 5 samples. Nine complexes are also too few to estimate a success rate. The table says something about this configuration, not about Boltz-2. A rerun at default settings with more samples, chain-pair ipTM and an AlphaFold 3 baseline is planned, and it will replace this table.
+> **Read this before the table.** Nine complexes are too few to estimate a success rate, and there is no second model to compare against, so this is a demonstration of the method and not a measurement of Boltz-2. The one confound that could be removed has been: the table was produced at reduced settings (20 sampling steps, 1 recycling step, 1 sample), and [a rerun at the hosted NIM defaults](reports/boltz2-antibody-benchmark-nim-defaults.json) — 50 sampling steps, 3 recycling steps, 5 samples — reproduces it, with the same 2 of 9 acceptable or better and the same CAPRI classes. An AlphaFold 3 baseline, submitted by hand, is still missing.
 
 **Boltz-2 antibody–antigen complexes released after the training cutoff (2023-06-01), scored against the experimental structure.** Selection was a seeded random draw from 94 eligible complexes, and the success rule was fixed before any result: antigen within 5 Å in the antibody frame and at least 50% of crystal contacts recovered. Failures are included.
 
@@ -67,7 +67,23 @@ flowchart LR
 
 *What this shows.* By the pre-registered rule none of the 9 passed. By DockQ, the field's standard interface metric, 2 of 9 are correct: 9VHZ is medium quality (0.72) and 8TUZ is acceptable (0.28). The custom rule rejected both because it measures the whole antigen, so a large antigen rotated about a correct interface fails it. The rule is kept because it was fixed in advance; DockQ was added afterwards and is labeled that way in the report. Model confidence does not separate the correct predictions from the wrong ones in this set: the two correct models scored 0.81 and 0.86, while the most confident model (8VTD, 0.90) is incorrect. That gap is what an independent check is for. The reference row is a 1989 structure that is likely in the training data, so it shows the pipeline works and not that the model generalizes. Selection file, method and scripts: [`data/benchmarks/boltz2-post-cutoff-antibody-selection.json`](data/benchmarks/boltz2-post-cutoff-antibody-selection.json), [`reports/boltz2-post-cutoff-antibody-benchmark.json`](reports/boltz2-post-cutoff-antibody-benchmark.json), [`scripts/benchmark_antibody_complexes.py`](scripts/benchmark_antibody_complexes.py), [`scripts/antibody_dockq.py`](scripts/antibody_dockq.py).
 
-**The verifier on the same nine, with the crystal held out.** Each prediction becomes a structure claim, and the verifier sees only what can be measured without the experimental structure; DockQ is used afterwards as the label. It supported none of the seven wrong poses and contradicted one (8XK6: 16 interface clashes and contacts outside the variable domain). It also could not confirm the two correct poses, returning `MISSING_EVIDENCE` for eight of nine. That is the expected result with one prediction per complex: six of the seven wrong poses are physically plausible, so a model's own output cannot verify itself. The evidence that can separate them is independent prediction (further samples, a second model, and a counterfactual run with the predicted paratope mutated), which the rerun adds. Report: [`reports/verifier-on-boltz-benchmark.json`](reports/verifier-on-boltz-benchmark.json); rules: [`src/concordia/verification/structure_rules.py`](src/concordia/verification/structure_rules.py).
+**The verifier on the same nine, with the crystal held out.** Each prediction becomes a structure claim. The verifier sees only what is measurable without the experimental structure — interface geometry, agreement across the model's own five samples, and a counterfactual re-prediction with every residue of the predicted paratope mutated to alanine. DockQ is then used as the label, never as evidence.
+
+| | Result |
+|---|---|
+| Wrong poses supported (false pass) | **0 of 7** |
+| Wrong poses contradicted | 1 of 7 (9SSM) |
+| Correct poses supported | 0 of 2 — both capped at `PARTIALLY_SUPPORTED` |
+
+**No pose reached `SUPPORTED`, including the correct ones.** That ceiling is the rule pack working as designed, not a bug: `SUPPORTED` requires two independent evidence families, and one model's own output can supply at most one, however many samples it draws. Reaching it needs a second engine, which is the missing AlphaFold 3 baseline. Reported this way the verifier has 0 false passes and 2 false fails.
+
+The one pose it contradicted is the one where the counterfactual failed: for 9SSM, 52% of the interface survived alanine-mutating the entire predicted paratope, so the pose was not using the interface it claimed. Its DockQ is 0.054. That verdict was reached without the crystal.
+
+Two things in this run are worth more than the counts. Self-reported confidence does not separate correct from wrong anywhere in the set — the range is 0.78 to 0.90, and the two correct poses sit inside it, at 0.82 and 0.87. Agreement across a model's own samples does: 0.64 and 0.89 for the two correct poses, against 0.00 to 0.17 for all seven wrong ones. On nine complexes that is a hypothesis worth testing at scale, not a result, and the rule pack deliberately treats same-model agreement as too weak to carry a claim by itself.
+
+An honest oddity: 9OAO's paratope-ablated control scored DockQ 0.753 against the crystal while the unmutated prediction scored 0.014. Mutating the binding site produced a better pose than the real sequence, which is a caveat on trusting any single prediction from this model.
+
+Report: [`reports/verifier-on-boltz-benchmark.json`](reports/verifier-on-boltz-benchmark.json); rules: [`src/concordia/verification/structure_rules.py`](src/concordia/verification/structure_rules.py); callable over HTTP at `POST /v1/structure-claims/verify`, which spends nothing and stores nothing.
 
 **Software validation.** The Python and browser test suites run in CI (`make test`). Local throughput is about 3,300 graph operations per second, and exact ledger replay matched on 10 of 10 repetitions. The claim-verifier benchmark scores 50 of 50, but those cases are self-generated, so it checks the plumbing and not real-world accuracy. A local `qwen3:1.7b` seed passed the structured-output qualification protocol, while `phi3:latest` and `gemma3:270m` did not.
 
@@ -94,9 +110,10 @@ make test     # pytest, ruff, mypy, frontend build and browser tests
 
 ## What I would do next
 
-1. Rerun the nine at the hosted defaults with five samples, and add AlphaFold 3 predictions and paratope-mutated reruns, so the verifier has independent evidence to work with. Then report its false-pass and false-fail rates again.
-2. Grow the set to 30-50 complexes from SAbDab under the same seeded selection rule, written down before running.
-3. Hash-chain the event ledger and persist it on the hosted workspace, so the audit trail survives restarts and edits are detectable.
+1. Add an AlphaFold 3 baseline by hand through AlphaFold Server, about 20 jobs a day. It is the one piece of evidence that would let a correct pose reach `SUPPORTED`, so without it the false-fail rate above is a ceiling imposed by the setup rather than by the rules.
+2. Grow the set to 30-50 complexes from SAbDab under the same seeded selection rule, written down before running. Nine is enough to show the method and not enough to measure anything.
+3. Test the one signal that tracked correctness here — agreement across a model's own samples — on that larger set, where it can be checked rather than noticed.
+4. Persist the hash-chained ledger on the hosted workspace. The chain and `concordia ledger verify` exist; on a Space the counters and events still live in a filesystem that is wiped on restart unless `CONCORDIA_DATABASE_URL` is set, which `/api/tools` now reports.
 
 ## Related work
 
