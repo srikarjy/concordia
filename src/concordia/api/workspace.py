@@ -284,7 +284,7 @@ TOOL_PATHS = (
 )
 
 
-def _tool_manifest() -> dict[str, object]:
+def _tool_manifest(persistence: str = "ephemeral_sqlite") -> dict[str, object]:
     return {
         "schema_version": 1,
         "name": "concordia-read-only-evidence-tools",
@@ -321,6 +321,20 @@ def _tool_manifest() -> dict[str, object]:
             "sequence accepted, always scientific_use_allowed=false since the evaluated "
             "task is a frozen software fixture). See /privacy."
         ),
+        # Rate limits and the event ledger are only as durable as what stores them.
+        # On a Space the local filesystem is wiped on restart, so a visitor cannot
+        # otherwise tell whether a stated per-client cap survives one. Reporting the
+        # backend makes the claim checkable instead of a matter of trust.
+        "state_persistence": {
+            "backend": persistence,
+            "survives_restart": persistence == "postgres",
+            "note": (
+                "Rate-limit counters, the event ledger and cached model responses live "
+                "in this backend. With ephemeral_sqlite a restart resets per-client "
+                "and global daily counters; set CONCORDIA_DATABASE_URL to a reachable "
+                "Postgres instance for counters that persist."
+            ),
+        },
         "verification_endpoint": {
             "path": "/v1/structure-claims/verify",
             "method": "POST",
@@ -1312,7 +1326,7 @@ def create_workspace_app(
     @app.get("/.well-known/concordia-tools.json", include_in_schema=False)
     @app.get("/api/tools", include_in_schema=False)
     def tool_manifest():
-        return _tool_manifest()
+        return _tool_manifest("postgres" if database_url else "ephemeral_sqlite")
 
     @app.get("/api/frameworks", summary="List scientific frameworks and evidence boundaries")
     def frameworks():

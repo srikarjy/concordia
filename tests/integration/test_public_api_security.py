@@ -199,3 +199,21 @@ def test_structure_claim_verification_rejects_overlapping_chains(tmp_path, monke
     )
     assert response.status_code == 422
     assert "disjoint" in response.json()["detail"]
+
+
+def test_manifest_states_whether_rate_limit_counters_survive_a_restart(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The caps are only real if their counters outlive the process that enforces them.
+
+    On a Space the filesystem is wiped on restart, and a visitor has no other way to
+    tell which backend is in use, so the manifest has to say.
+    """
+    client = _client(tmp_path, monkeypatch)
+
+    persistence = client.get("/api/tools").json()["state_persistence"]
+
+    assert persistence["backend"] == "ephemeral_sqlite"
+    assert persistence["survives_restart"] is False
+    assert "CONCORDIA_DATABASE_URL" in persistence["note"]
+    assert client.get("/.well-known/concordia-tools.json").json() == client.get("/api/tools").json()
