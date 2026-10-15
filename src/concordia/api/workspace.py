@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import logging
 import os
@@ -67,6 +68,13 @@ from concordia.genomics.schema import GenomicSequence
 from concordia.genomics.structure_gateway import StructureGateway
 from concordia.reporting.workspace import build_workspace
 from concordia.scientific.frameworks import framework_catalog
+from concordia.verification.cross import StructureScope
+from concordia.verification.structure_rules import (
+    RULE_PACK_VERSION,
+    StructureMeasurements,
+    plausibility,
+    verify_measurements,
+)
 
 HBB_CHECKPOINT = "arcinstitute/evo2_7b@bda0089f92582d5baabf0f22d9fc85f3588f6b58/evo2_7b.pt"
 HBB_TARGET: Literal["mean_next_base_log_likelihood"] = "mean_next_base_log_likelihood"
@@ -95,6 +103,27 @@ def _client_ip(request: Request, *, trust_proxy_headers: bool) -> str:
             if len(entries) >= hops:
                 return entries[-hops]
     return request.client.host if request.client else "unknown"
+
+
+class StructureClaimVerifyRequest(BaseModel):
+    """Measured signals for one predicted interface, plus the scope they were measured in."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    complex_id: str = Field(min_length=1, max_length=120)
+    receptor_chains: tuple[str, ...] = Field(min_length=1, max_length=12)
+    ligand_chains: tuple[str, ...] = Field(min_length=1, max_length=12)
+    model: str = Field(min_length=1, max_length=120)
+    assay: str = Field(default="predicted_interface", min_length=1, max_length=80)
+    # Free-form but bounded: whatever pins the run that produced the prediction.
+    settings: dict[str, str | int | float | bool] = Field(default_factory=dict, max_length=32)
+    measurements: StructureMeasurements
+    # DockQ against an experimental structure. Must stay false when the verifier
+    # itself is being evaluated, because the reference is then the label.
+    include_reference: bool = False
+    claim_text: str = Field(
+        default="The predicted interface is correct.", min_length=1, max_length=500
+    )
 
 
 MAX_REQUEST_BODY_BYTES = 2_000_000
@@ -292,6 +321,21 @@ def _tool_manifest() -> dict[str, object]:
             "sequence accepted, always scientific_use_allowed=false since the evaluated "
             "task is a frozen software fixture). See /privacy."
         ),
+        "verification_endpoint": {
+            "path": "/v1/structure-claims/verify",
+            "method": "POST",
+            "spends_nothing": True,
+            "stores_nothing": True,
+            "accepts_user_sequences": False,
+            "description": (
+                "Applies the deterministic structure rule pack to measured interface "
+                "signals and returns a status with its reasons. No language model "
+                "judges anything. A claim needs independent evidence families and a "
+                "passing counterfactual; agreement across samples of one model is "
+                "deliberately too weak to carry a claim alone, so a lone prediction "
+                "cannot verify itself."
+            ),
+        },
     }
 
 
@@ -1201,6 +1245,69 @@ def create_workspace_app(
         return ExperimentBoltzPredictResponse(
             result=result, run_node=run_node, output_node=output_node
         )
+
+    @app.post(
+        "/v1/structure-claims/verify",
+        summary="Verify a predicted interface against deterministic rules",
+        description=(
+            "Applies the structure rule pack to measured signals and returns a status "
+            "with its reasons. No language model is involved and no threshold is "
+            "learned: a claim needs independent evidence families and a passing "
+            "counterfactual, or it is reported as unverifiable. Nothing is stored and "
+            "no external model is called, so this endpoint spends nothing. Supply "
+            "measurements from scripts/structure_measurements.py or your own tooling; "
+            "agreement measured across samples of one model is deliberately too weak "
+            "to carry a claim on its own."
+        ),
+    )
+    def verify_structure_claim(payload: StructureClaimVerifyRequest) -> dict[str, object]:
+        try:
+            scope = StructureScope(
+                complex_id=payload.complex_id,
+                receptor_chains=payload.receptor_chains,
+                ligand_chains=payload.ligand_chains,
+                model_checkpoint=payload.model,
+                settings_digest=hashlib.sha256(
+                    json.dumps(
+                        payload.settings, sort_keys=True, separators=(",", ":")
+                    ).encode()
+                ).hexdigest(),
+                assay=payload.assay,
+            )
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        result = verify_measurements(
+            payload.measurements,
+            scope,
+            claim_text=payload.claim_text,
+            include_reference=payload.include_reference,
+        )
+        _, findings = plausibility(payload.measurements)
+        return {
+            "schema_version": 1,
+            "rule_pack": RULE_PACK_VERSION,
+            "status": result.status.value,
+            "reasons": list(result.reasons),
+            "supporting_families": [family.value for family in result.supporting_families],
+            "contradicting_families": [
+                family.value for family in result.contradicting_families
+            ],
+            "physical_findings": list(findings),
+            "checks": [
+                {
+                    "evidence_id": check.evidence_id,
+                    "family": check.family.value,
+                    "method": check.method,
+                    "assessment": check.assessment,
+                    "valid": check.valid,
+                    "reasons": list(check.reasons),
+                }
+                for check in result.checks
+            ],
+            "settings_digest": scope.settings_digest,
+            "scientific_use_allowed": result.scientific_use_allowed,
+            "limitation": result.limitation,
+        }
 
     @app.get("/.well-known/concordia-tools.json", include_in_schema=False)
     @app.get("/api/tools", include_in_schema=False)

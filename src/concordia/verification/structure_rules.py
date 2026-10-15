@@ -19,12 +19,23 @@ independent of the claim it would support.
 
 from __future__ import annotations
 
+import hashlib
+import json
 from typing import Literal
 
 from pydantic import Field
 
 from concordia.genomes.schema import EvidenceFamily
-from concordia.verification.cross import EvidenceRecord, Frozen, StructureScope
+from concordia.verification.cross import (
+    ClaimRequest,
+    EvidenceRecord,
+    Frozen,
+    ProvenanceArtifact,
+    StructureScope,
+    VerificationPolicy,
+    VerificationResult,
+    verify_claim,
+)
 
 RULE_PACK_VERSION = "structure-rules-v1"
 
@@ -220,3 +231,89 @@ def evidence_records(
             critical=not correct,
         )
     return tuple(records)
+
+
+class _MemoryArtifactStore:
+    """In-memory content-addressed store, so verification needs no filesystem.
+
+    ``verify_measurements`` synthesises throwaway provenance envelopes purely so
+    the ordinary verifier can walk them. Nothing here outlives the call.
+    """
+
+    def __init__(self) -> None:
+        self._blobs: dict[str, bytes] = {}
+
+    def put_json(self, value: object) -> str:
+        payload = json.dumps(
+            value, sort_keys=True, separators=(",", ":"), allow_nan=False
+        ).encode()
+        digest = hashlib.sha256(payload).hexdigest()
+        self._blobs[digest] = payload
+        return digest
+
+    def get_bytes(self, digest: str) -> bytes:
+        return self._blobs[digest]
+
+
+SIGNAL_NAMES: tuple[str, ...] = (
+    "physical",
+    "samples",
+    "second_model",
+    "counterfactual",
+    "reference",
+)
+
+
+def verify_measurements(
+    measured: StructureMeasurements,
+    scope: StructureScope,
+    *,
+    claim_text: str,
+    include_reference: bool = False,
+    policy: VerificationPolicy | None = None,
+) -> VerificationResult:
+    """Verify measured signals directly, persisting nothing.
+
+    The caller supplies measurements and a scope; the provenance envelopes the
+    verifier expects are built in memory. ``include_reference`` admits DockQ
+    against an experimental structure and must stay off whenever the verifier
+    itself is being evaluated, because the reference is then the label rather
+    than evidence.
+    """
+
+    store = _MemoryArtifactStore()
+    description = f"structure measurements for {scope.complex_id}"
+
+    def envelope(
+        kind: Literal["sequence", "evidence"],
+        payload: dict[str, object],
+        parents: tuple[str, ...] = (),
+    ) -> str:
+        return store.put_json(
+            ProvenanceArtifact(
+                kind=kind,
+                payload_digest=store.put_json(payload),
+                dependencies=parents,
+                execution_mode="recorded_real",
+                scientific_use_allowed=True,
+                source=description,
+                producing_tool=f"structure_rules/{RULE_PACK_VERSION}",
+            ).model_dump(mode="json")
+        )
+
+    source = envelope("sequence", {"complex_id": scope.complex_id})
+    measured_json = measured.model_dump(mode="json", exclude_none=True)
+    artifacts = {
+        name: envelope("evidence", {"signal": name, **measured_json}, (source,))
+        for name in SIGNAL_NAMES
+    }
+    claim = ClaimRequest(
+        claim_id=scope.complex_id,
+        text=claim_text,
+        scope=scope,
+        source_sequence=source,
+        evidence=evidence_records(
+            measured, scope, artifacts, include_reference=include_reference
+        ),
+    )
+    return verify_claim(claim, store, policy)
