@@ -53,7 +53,7 @@ Concordia answers those mechanically and keeps the receipt.
   training data, so it shows the pipeline works, not that the model generalizes. See
   `reports/boltz2-3hfm-reference-reproduction.json`.
 - **Not yet real:** there is **no novel or validated scientific finding** in this repository. Evo 2 forward
-  scoring is not wired. RFantibody and ProteinMPNN are planned, not integrated. All fixture output is
+  scoring is not wired. RFantibody is not integrated. All fixture output is
   labeled `scientific_use_allowed=false`.
 - **Why that is a feature:** the system refuses to overclaim, which is exactly what a diligence
   reviewer wants from the layer that sits under model outputs.

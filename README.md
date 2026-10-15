@@ -78,6 +78,7 @@ flowchart LR
 - Rule-based claim verifier with five statuses and fixture rejection.
 - Hosted Boltz-2 complex prediction, OpenFold2 monomer prediction and Evo 2 generation, each recorded with request and response artifacts.
 - React workspace with a WebGL provenance graph, a browser-local sequence sandbox and a colony view.
+- De novo binder design through hosted RFdiffusion and ProteinMPNN, re-folded with Boltz-2 and checked by the structure verifier, which has no reference structure to fall back on ([`scripts/design_binder.py`](scripts/design_binder.py)).
 
 ### Experimental modules
 
@@ -103,7 +104,7 @@ make test     # pytest, ruff, mypy, frontend build and browser tests
 
 ## Scientific boundaries
 
-Nothing here is a validated biological finding or a therapeutic claim. Fixture outputs are labeled `scientific_use_allowed=false` and cannot receive scientific support status. Structure predictions are computational hypotheses. Evo 2 forward scoring, RFantibody and ProteinMPNN are not integrated yet.
+Nothing here is a validated biological finding or a therapeutic claim. Fixture outputs are labeled `scientific_use_allowed=false` and cannot receive scientific support status. Structure predictions are computational hypotheses. RFdiffusion and ProteinMPNN are integrated as hosted calls, but no designed binder here has been expressed or assayed, and a design that passes every reference-free check is still only a hypothesis. RFantibody is not integrated.
 
 ## License
 
