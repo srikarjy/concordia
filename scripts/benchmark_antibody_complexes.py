@@ -33,6 +33,7 @@ reported; neither replaces the other.
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 import time
 import urllib.error
@@ -54,6 +55,13 @@ RECALL_MIN = 0.5
 CONTACT_ANGSTROM = 8.0
 
 
+# Not an HTTP status: a transport failure with no response, reported like one so the
+# caller can retry it. A dropped connection after an hour of rate-limit waiting must
+# not end the run.
+TRANSPORT_FAILED = 598
+TRANSPORT_RETRIES = 3
+
+
 def _post(url: str, body: dict, timeout: int = 480) -> tuple[int, dict, dict]:
     request = urllib.request.Request(
         url, data=json.dumps(body).encode(), headers={"content-type": "application/json"}
@@ -61,6 +69,7 @@ def _post(url: str, body: dict, timeout: int = 480) -> tuple[int, dict, dict]:
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
             return response.status, json.load(response), dict(response.headers)
+    # HTTPError subclasses URLError, so it has to be caught first.
     except urllib.error.HTTPError as error:
         raw = error.read() or b"{}"
         try:
@@ -68,6 +77,8 @@ def _post(url: str, body: dict, timeout: int = 480) -> tuple[int, dict, dict]:
         except json.JSONDecodeError:
             payload = {"detail": raw[:300].decode(errors="replace")}
         return error.code, payload, dict(error.headers)
+    except (TimeoutError, urllib.error.URLError, http.client.HTTPException) as error:
+        return TRANSPORT_FAILED, {"detail": f"{type(error).__name__}: {error}"[:300]}, {}
 
 
 def _ca_residues(model) -> dict[str, list]:
@@ -218,6 +229,7 @@ def run(
         row = {k: entry[k] for k in ("pdb_id", "released", "method", "resolution", "antigen_desc")}
         row["lengths"] = {k: len(v) for k, v in entry["sequences"].items()}
         row["settings"] = settings
+        transport_failures = 0
         while True:
             started = time.time()
             status, payload, headers = _post(base_url + "/nvidia/boltz/complex", body)
@@ -226,7 +238,17 @@ def run(
                 print(f"{pdb}: rate limited, waiting {wait}s", flush=True)
                 time.sleep(wait)
                 continue
+            if status == TRANSPORT_FAILED and transport_failures < TRANSPORT_RETRIES:
+                transport_failures += 1
+                print(
+                    f"{pdb}: {payload['detail']}, retry {transport_failures}"
+                    f"/{TRANSPORT_RETRIES} in 120s",
+                    flush=True,
+                )
+                time.sleep(120)
+                continue
             break
+        row["transport_failures"] = transport_failures
         row["http_status"] = status
         row["wall_seconds"] = round(time.time() - started, 1)
         if status == 200:
