@@ -16,7 +16,7 @@ flowchart LR
 
 The HTTP control plane persists inputs and schedules work without executing the scientific stage in the request process. SQLite events, rather than a mutable run row, are authoritative. The operational jobs table tracks queue state, bounded attempts, cancellation, and expiring leases; it does not replace the event history. A separate local worker claims jobs, heartbeats its lease, resumes stale executions from recorded events, and retries only failures explicitly classified as infrastructure failures.
 
-Each state change is checked before append; event sequence numbers provide optimistic concurrency; and artifact references identify their producing event and tool. Server-Sent Events use sequence numbers as event IDs, accept `Last-Event-ID`, bound each database read, emit idle heartbeats, and close after terminal delivery. The server binds to `127.0.0.1` by default.
+Each state change is checked before append; event sequence numbers provide optimistic concurrency; and artifact references identify their producing event and tool. Events are hash-chained per run (`prev_hash`, `event_hash`); `concordia ledger verify` recomputes the chain and names the first edited, deleted or reordered event, and `concordia ledger root` prints one Merkle root over every run's head for publishing outside the database. The chain makes tampering detectable, not impossible, and covers history only from the migration that introduced it. Server-Sent Events use sequence numbers as event IDs, accept `Last-Event-ID`, bound each database read, emit idle heartbeats, and close after terminal delivery. The server binds to `127.0.0.1` by default.
 
 ### Tool-execution boundary
 

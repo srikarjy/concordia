@@ -61,6 +61,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     workspace_api.add_argument("--frontend", type=Path, default=Path("frontend/dist"))
     workspace_api.add_argument("--port", type=int, default=7860)
+    ledger = subparsers.add_parser(
+        "ledger", help="check the event ledger's hash chain or print its root"
+    )
+    ledger.add_argument("action", choices=("verify", "root"))
+    ledger.add_argument("--state-root", type=Path, default=Path(".concordia"))
+    ledger.add_argument("--run-id")
     worker = subparsers.add_parser("run-worker", help="run the durable local worker")
     worker.add_argument("--state-root", type=Path, default=Path(".concordia"))
     worker.add_argument("--owner")
@@ -248,6 +254,17 @@ def main() -> None:
             host="0.0.0.0",
             port=args.port,
         )
+    elif args.command == "ledger":
+        from concordia.events.sqlite import SQLiteEventLedger
+
+        event_ledger = SQLiteEventLedger(args.state_root / "events.sqlite3")
+        if args.action == "root":
+            print(event_ledger.ledger_root())
+        else:
+            chain = event_ledger.verify_chain(args.run_id)
+            print(json.dumps(chain.model_dump(mode="json") | {"intact": chain.intact}, indent=2))
+            if not chain.intact:
+                raise SystemExit(1)
     elif args.command == "run-worker":
         from concordia.runtime.service import RunService
         from concordia.runtime.worker import LocalWorker

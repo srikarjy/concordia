@@ -94,17 +94,20 @@ Create an empty Docker Space in your own Hugging Face namespace, set `HF_SPACE_I
 
 ```bash
 hf auth login
-hf upload "$HF_SPACE_ID" . \
-  --type space \
-  --include Dockerfile --include README.md --include LICENSE \
-  --include pyproject.toml --include uv.lock --include 'src/**' \
-  --include 'frontend/**' --include 'configs/**' --include 'docs/**' \
-  --include 'reports/**' --include requirements-space.txt \
-  --exclude 'frontend/node_modules/**' --exclude 'frontend/dist/**' \
-  --exclude '.concordia/**' --exclude 'data/raw/**' \
-  --exclude '**/__pycache__/**' \
+# Deploy a commit, not the working tree, so uncommitted edits never ship.
+rm -rf /tmp/concordia-deploy && mkdir /tmp/concordia-deploy
+git archive HEAD | tar -x -C /tmp/concordia-deploy && cd /tmp/concordia-deploy
+hf upload "$HF_SPACE_ID" . --repo-type space \
+  --include Dockerfile README.md LICENSE pyproject.toml uv.lock 'src/**' 'frontend/**' \
+    'configs/**' 'docs/**' 'reports/**' requirements-space.txt \
+  --exclude 'frontend/node_modules/**' 'frontend/dist/**' '.concordia/**' 'data/raw/**' \
+    '**/__pycache__/**' \
   --commit-message "Publish reproducible scientific workspace"
 ```
+
+Pass every pattern after a single `--include` and a single `--exclude`. With
+repeated `--include` flags the CLI keeps only the last one, uploads one file, and
+reports that nothing changed.
 
 The Hub CLI requires an authenticated account and network access; this repository cannot infer a namespace or create a public Space without those user-controlled choices. The deployment remains optional and replaceable. A Space running this image is a software demonstration, not a scientific validation environment.
 
