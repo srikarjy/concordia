@@ -113,6 +113,10 @@ class NvidiaHostedBoltzComplexResult(BaseModel):
     structure_text: str = Field(min_length=1)
     structure_format: str = Field(min_length=1)
     confidence_scores: tuple[float, ...] = Field(default_factory=tuple)
+    # Structures after the first when diffusion_samples > 1, in the NIM's order.
+    additional_structures: tuple[str, ...] = Field(default_factory=tuple)
+    # Every numeric per-sample list the NIM returned (for example ipTM), by key.
+    score_lists: dict[str, tuple[float, ...]] = Field(default_factory=dict)
     elapsed_seconds: float = Field(ge=0)
     request_artifact_digest: str = Field(pattern=SHA256_PATTERN)
     response_artifact_digest: str = Field(pattern=SHA256_PATTERN)
@@ -281,11 +285,14 @@ class NvidiaHostedBoltzRunner:
         structure_text, structure_format, confidence_scores = self._parse_response(
             submitted["payload"]
         )
+        additional, score_lists = self._sample_outputs(submitted["payload"])
         return NvidiaHostedBoltzComplexResult(
             input_payload_hash=input_hash,
             structure_text=structure_text,
             structure_format=structure_format,
             confidence_scores=confidence_scores,
+            additional_structures=additional,
+            score_lists=score_lists,
             elapsed_seconds=submitted["elapsed_seconds"],
             request_artifact_digest=submitted["request_digest"],
             response_artifact_digest=submitted["response_digest"],
@@ -348,6 +355,28 @@ class NvidiaHostedBoltzRunner:
             "request_digest": request_digest,
             "response_digest": response_digest,
         }
+
+    @staticmethod
+    def _sample_outputs(
+        payload: Any,
+    ) -> tuple[tuple[str, ...], dict[str, tuple[float, ...]]]:
+        """Keep every returned sample and numeric score list, not only the first."""
+
+        structures = payload.get("structures") or []
+        additional = tuple(
+            entry["structure"]
+            for entry in structures[1:]
+            if isinstance(entry, dict) and isinstance(entry.get("structure"), str)
+        )
+        score_lists = {
+            key: tuple(float(v) for v in value)
+            for key, value in payload.items()
+            if key.endswith("_scores")
+            and isinstance(value, list)
+            and value
+            and all(isinstance(v, int | float) and not isinstance(v, bool) for v in value)
+        }
+        return additional, score_lists
 
     @staticmethod
     def _parse_response(payload: Any) -> tuple[str, str, tuple[float, ...]]:

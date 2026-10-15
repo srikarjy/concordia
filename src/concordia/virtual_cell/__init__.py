@@ -1,4 +1,7 @@
-"""Typed virtual-cell execution boundary."""
+"""Typed virtual-cell execution boundary.
+
+Experimental: a research side path, not part of the audit, verify and replay core.
+"""
 
 from concordia.virtual_cell.cellxgene import (
     AnndataH5adInspector,

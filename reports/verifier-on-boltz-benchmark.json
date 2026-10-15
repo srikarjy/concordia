@@ -1,0 +1,205 @@
+{
+  "rule_pack": "structure-rules-v1",
+  "label": "DockQ >= 0.23 against the experimental structure (CAPRI acceptable)",
+  "held_out": "The experimental structure is never given to the verifier.",
+  "passing_statuses": [
+    "SUPPORTED"
+  ],
+  "results": [
+    {
+      "pdb_id": "8TUZ",
+      "label_correct": true,
+      "dockq": 0.282,
+      "self_reported_confidence": 0.8061196208000183,
+      "measurements": {
+        "schema_version": 1,
+        "clash_count": 1,
+        "variable_domain_fraction": 1.0,
+        "buried_surface_area": 1711.8,
+        "reference_dockq": 0.282,
+        "self_reported_confidence": 0.8061196208000183
+      },
+      "physical_findings": [],
+      "status": "MISSING_EVIDENCE",
+      "reasons": [
+        "insufficient independent supporting evidence families",
+        "required counterfactual check is absent or did not pass"
+      ]
+    },
+    {
+      "pdb_id": "8VTD",
+      "label_correct": false,
+      "dockq": 0.112,
+      "self_reported_confidence": 0.9010229110717773,
+      "measurements": {
+        "schema_version": 1,
+        "clash_count": 4,
+        "variable_domain_fraction": 1.0,
+        "buried_surface_area": 2057.4,
+        "reference_dockq": 0.112,
+        "self_reported_confidence": 0.9010229110717773
+      },
+      "physical_findings": [],
+      "status": "MISSING_EVIDENCE",
+      "reasons": [
+        "insufficient independent supporting evidence families",
+        "required counterfactual check is absent or did not pass"
+      ]
+    },
+    {
+      "pdb_id": "8XK6",
+      "label_correct": false,
+      "dockq": 0.009,
+      "self_reported_confidence": 0.79648756980896,
+      "measurements": {
+        "schema_version": 1,
+        "clash_count": 16,
+        "variable_domain_fraction": 0.795,
+        "buried_surface_area": 3107.9,
+        "reference_dockq": 0.009,
+        "self_reported_confidence": 0.79648756980896
+      },
+      "physical_findings": [
+        "16 interface clashes",
+        "only 80% of antibody contacts are in the variable domain"
+      ],
+      "status": "CONTRADICTED",
+      "reasons": [
+        "insufficient independent supporting evidence families",
+        "required counterfactual check is absent or did not pass"
+      ]
+    },
+    {
+      "pdb_id": "9LY5",
+      "label_correct": false,
+      "dockq": 0.029,
+      "self_reported_confidence": 0.7837544083595276,
+      "measurements": {
+        "schema_version": 1,
+        "clash_count": 0,
+        "variable_domain_fraction": 1.0,
+        "buried_surface_area": 2176.1,
+        "reference_dockq": 0.029,
+        "self_reported_confidence": 0.7837544083595276
+      },
+      "physical_findings": [],
+      "status": "MISSING_EVIDENCE",
+      "reasons": [
+        "insufficient independent supporting evidence families",
+        "required counterfactual check is absent or did not pass"
+      ]
+    },
+    {
+      "pdb_id": "9NPH",
+      "label_correct": false,
+      "dockq": 0.054,
+      "self_reported_confidence": 0.7662240862846375,
+      "measurements": {
+        "schema_version": 1,
+        "clash_count": 1,
+        "variable_domain_fraction": 1.0,
+        "buried_surface_area": 1833.4,
+        "reference_dockq": 0.054,
+        "self_reported_confidence": 0.7662240862846375
+      },
+      "physical_findings": [],
+      "status": "MISSING_EVIDENCE",
+      "reasons": [
+        "insufficient independent supporting evidence families",
+        "required counterfactual check is absent or did not pass"
+      ]
+    },
+    {
+      "pdb_id": "9NPI",
+      "label_correct": false,
+      "dockq": 0.039,
+      "self_reported_confidence": 0.7655850648880005,
+      "measurements": {
+        "schema_version": 1,
+        "clash_count": 3,
+        "variable_domain_fraction": 1.0,
+        "buried_surface_area": 1790.2,
+        "reference_dockq": 0.039,
+        "self_reported_confidence": 0.7655850648880005
+      },
+      "physical_findings": [],
+      "status": "MISSING_EVIDENCE",
+      "reasons": [
+        "insufficient independent supporting evidence families",
+        "required counterfactual check is absent or did not pass"
+      ]
+    },
+    {
+      "pdb_id": "9OAO",
+      "label_correct": false,
+      "dockq": 0.015,
+      "self_reported_confidence": 0.8448095321655273,
+      "measurements": {
+        "schema_version": 1,
+        "clash_count": 0,
+        "variable_domain_fraction": 1.0,
+        "buried_surface_area": 1569.7,
+        "reference_dockq": 0.015,
+        "self_reported_confidence": 0.8448095321655273
+      },
+      "physical_findings": [],
+      "status": "MISSING_EVIDENCE",
+      "reasons": [
+        "insufficient independent supporting evidence families",
+        "required counterfactual check is absent or did not pass"
+      ]
+    },
+    {
+      "pdb_id": "9SSM",
+      "label_correct": false,
+      "dockq": 0.079,
+      "self_reported_confidence": 0.8249350786209106,
+      "measurements": {
+        "schema_version": 1,
+        "clash_count": 2,
+        "variable_domain_fraction": 1.0,
+        "buried_surface_area": 2085.6,
+        "reference_dockq": 0.079,
+        "self_reported_confidence": 0.8249350786209106
+      },
+      "physical_findings": [],
+      "status": "MISSING_EVIDENCE",
+      "reasons": [
+        "insufficient independent supporting evidence families",
+        "required counterfactual check is absent or did not pass"
+      ]
+    },
+    {
+      "pdb_id": "9VHZ",
+      "label_correct": true,
+      "dockq": 0.716,
+      "self_reported_confidence": 0.8599831461906433,
+      "measurements": {
+        "schema_version": 1,
+        "clash_count": 2,
+        "variable_domain_fraction": 1.0,
+        "buried_surface_area": 1642.9,
+        "reference_dockq": 0.716,
+        "self_reported_confidence": 0.8599831461906433
+      },
+      "physical_findings": [],
+      "status": "MISSING_EVIDENCE",
+      "reasons": [
+        "insufficient independent supporting evidence families",
+        "required counterfactual check is absent or did not pass"
+      ]
+    }
+  ],
+  "summary": {
+    "n": 9,
+    "correct_poses": 2,
+    "incorrect_poses": 7,
+    "false_pass": 0,
+    "false_fail": 2,
+    "contradicted": 1,
+    "statuses": {
+      "CONTRADICTED": 1,
+      "MISSING_EVIDENCE": 8
+    }
+  }
+}

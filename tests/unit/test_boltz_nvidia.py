@@ -142,6 +142,43 @@ def test_boltz_complex_sends_multiple_polymers_and_retains_bounded_provenance(
     assert "EVQLV" not in json.dumps(retained_request)
 
 
+def test_boltz_complex_keeps_every_sample_and_score_list(tmp_path: Path) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert json.loads(request.content)["diffusion_samples"] == 3
+        return httpx.Response(
+            200,
+            json={
+                "structures": [
+                    {"format": "mmcif", "structure": STRUCTURE_STUB},
+                    {"format": "mmcif", "structure": STRUCTURE_STUB + "\n# sample 2"},
+                    {"format": "mmcif", "structure": STRUCTURE_STUB + "\n# sample 3"},
+                ],
+                "confidence_scores": [0.8, 0.7, 0.6],
+                "iptm_scores": [0.5, 0.4, 0.3],
+                "metrics_scores": ["not", "numeric"],
+            },
+        )
+
+    request = BoltzComplexRequest(
+        polymers=(
+            {"id": "H", "molecule_type": "protein", "sequence": "EVQLV"},
+            {"id": "A", "molecule_type": "protein", "sequence": "MKTAY"},
+        ),
+        diffusion_samples=3,
+    )
+    result = NvidiaHostedBoltzRunner(
+        ContentAddressedStore(tmp_path / "artifacts"),
+        api_key="test-secret",
+        transport=httpx.MockTransport(handler),
+    ).predict_complex(request)
+
+    assert len(result.additional_structures) == 2
+    assert result.score_lists == {
+        "confidence_scores": (0.8, 0.7, 0.6),
+        "iptm_scores": (0.5, 0.4, 0.3),
+    }
+
+
 def test_boltz_complex_rejects_duplicate_chain_ids() -> None:
     with pytest.raises(ValueError, match="IDs must be unique"):
         BoltzComplexRequest(

@@ -40,6 +40,30 @@ class Scope(Frozen):
         return self
 
 
+class StructureScope(Frozen):
+    """Scope of a claim about one predicted complex, such as an antibody-antigen pose."""
+
+    kind: Literal["structure"] = "structure"
+    complex_id: str = Field(min_length=1)
+    receptor_chains: tuple[str, ...] = Field(min_length=1)
+    ligand_chains: tuple[str, ...] = Field(min_length=1)
+    model_checkpoint: str = Field(min_length=1)
+    settings_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    assay: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def disjoint(self) -> StructureScope:
+        if set(self.receptor_chains) & set(self.ligand_chains):
+            raise ValueError("receptor and ligand chains must be disjoint")
+        return self
+
+
+ClaimScope = Scope | StructureScope
+STRUCTURE_ONLY_FAMILIES = frozenset(
+    {EvidenceFamily.PHYSICAL_PLAUSIBILITY, EvidenceFamily.STRUCTURAL_REFERENCE}
+)
+
+
 class ProvenanceArtifact(Frozen):
     """Envelope created at ingestion; dependencies include every consumed artifact."""
 
@@ -64,7 +88,7 @@ class EvidenceRecord(Frozen):
     method: str = Field(min_length=1)
     independence_group: str = Field(min_length=1)
     artifact_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
-    scope: Scope
+    scope: ClaimScope
     assessment: Literal["supports", "contradicts", "null", "missing"]
     strength: float = Field(ge=0, le=1)
     critical: bool = False
@@ -77,13 +101,15 @@ class EvidenceRecord(Frozen):
                 raise ValueError("perturbation methods belong to the counterfactual family")
         if self.family != EvidenceFamily.COUNTERFACTUAL and self.counterfactual_passed is not None:
             raise ValueError("counterfactual checks require the counterfactual family")
+        if self.family in STRUCTURE_ONLY_FAMILIES and not isinstance(self.scope, StructureScope):
+            raise ValueError(f"{self.family} evidence requires a structure scope")
         return self
 
 
 class ClaimRequest(Frozen):
     claim_id: str = Field(min_length=1)
     text: str = Field(min_length=1)
-    scope: Scope
+    scope: ClaimScope
     source_sequence: str = Field(pattern=r"^[0-9a-f]{64}$")
     evidence: tuple[EvidenceRecord, ...]
 

@@ -14,6 +14,11 @@
     "interface_recall_min": 0.5,
     "fixed_before_results": true
   },
+  "secondary_metric": {
+    "name": "DockQ, antibody (H+L) vs antigen, CAPRI classes",
+    "acceptable_min": 0.23,
+    "fixed_before_results": false
+  },
   "results": [
     {
       "pdb_id": "8TUZ",
@@ -45,7 +50,12 @@
         "interface_pairs_crystal": 20,
         "interface_pairs_predicted": 35,
         "interface_precision": 0.4,
-        "interface_recall": 0.7
+        "interface_recall": 0.7,
+        "dockq": 0.282,
+        "fnat": 0.463,
+        "irmsd": 2.94,
+        "lrmsd": 18.36,
+        "capri_class": "acceptable"
       },
       "verdict": "failure"
     },
@@ -79,7 +89,12 @@
         "interface_pairs_crystal": 30,
         "interface_pairs_predicted": 41,
         "interface_precision": 0.024,
-        "interface_recall": 0.033
+        "interface_recall": 0.033,
+        "dockq": 0.112,
+        "fnat": 0.03,
+        "irmsd": 7.72,
+        "lrmsd": 13.99,
+        "capri_class": "incorrect"
       },
       "verdict": "failure"
     },
@@ -113,7 +128,12 @@
         "interface_pairs_crystal": 38,
         "interface_pairs_predicted": 21,
         "interface_precision": 0.0,
-        "interface_recall": 0.0
+        "interface_recall": 0.0,
+        "dockq": 0.009,
+        "fnat": 0.0,
+        "irmsd": 14.19,
+        "lrmsd": 66.3,
+        "capri_class": "incorrect"
       },
       "verdict": "failure"
     },
@@ -147,7 +167,12 @@
         "interface_pairs_crystal": 27,
         "interface_pairs_predicted": 37,
         "interface_precision": 0.054,
-        "interface_recall": 0.074
+        "interface_recall": 0.074,
+        "dockq": 0.029,
+        "fnat": 0.043,
+        "irmsd": 13.13,
+        "lrmsd": 48.47,
+        "capri_class": "incorrect"
       },
       "verdict": "failure"
     },
@@ -181,7 +206,12 @@
         "interface_pairs_crystal": 34,
         "interface_pairs_predicted": 36,
         "interface_precision": 0.0,
-        "interface_recall": 0.0
+        "interface_recall": 0.0,
+        "dockq": 0.054,
+        "fnat": 0.022,
+        "irmsd": 12.37,
+        "lrmsd": 22.47,
+        "capri_class": "incorrect"
       },
       "verdict": "failure"
     },
@@ -215,7 +245,12 @@
         "interface_pairs_crystal": 42,
         "interface_pairs_predicted": 33,
         "interface_precision": 0.03,
-        "interface_recall": 0.024
+        "interface_recall": 0.024,
+        "dockq": 0.039,
+        "fnat": 0.015,
+        "irmsd": 14.13,
+        "lrmsd": 27.03,
+        "capri_class": "incorrect"
       },
       "verdict": "failure"
     },
@@ -249,7 +284,12 @@
         "interface_pairs_crystal": 60,
         "interface_pairs_predicted": 25,
         "interface_precision": 0.0,
-        "interface_recall": 0.0
+        "interface_recall": 0.0,
+        "dockq": 0.015,
+        "fnat": 0.0,
+        "irmsd": 17.4,
+        "lrmsd": 42.4,
+        "capri_class": "incorrect"
       },
       "verdict": "failure"
     },
@@ -283,7 +323,12 @@
         "interface_pairs_crystal": 21,
         "interface_pairs_predicted": 53,
         "interface_precision": 0.0,
-        "interface_recall": 0.0
+        "interface_recall": 0.0,
+        "dockq": 0.079,
+        "fnat": 0.114,
+        "irmsd": 8.81,
+        "lrmsd": 26.18,
+        "capri_class": "incorrect"
       },
       "verdict": "failure"
     },
@@ -317,7 +362,12 @@
         "interface_pairs_crystal": 38,
         "interface_pairs_predicted": 32,
         "interface_precision": 0.938,
-        "interface_recall": 0.789
+        "interface_recall": 0.789,
+        "dockq": 0.716,
+        "fnat": 0.833,
+        "irmsd": 0.58,
+        "lrmsd": 9.51,
+        "capri_class": "medium"
       },
       "verdict": "failure"
     }
@@ -325,6 +375,19 @@
   "summary": {
     "n": 9,
     "success": 0,
-    "failure": 9
+    "failure": 9,
+    "dockq_acceptable_or_better": 2,
+    "capri_classes": {
+      "acceptable": 1,
+      "incorrect": 7,
+      "medium": 1
+    }
+  },
+  "prediction_settings": {
+    "sampling_steps": 20,
+    "recycling_steps": 1,
+    "diffusion_samples": 1,
+    "msa": "single-sequence (an a3m containing only the query)",
+    "note": "Below the hosted NIM defaults (50 sampling, 3 recycling). A rerun at defaults is pending."
   }
 }

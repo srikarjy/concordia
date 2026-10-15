@@ -19,6 +19,8 @@ class EvidenceFamily(StrEnum):
     BIOLOGICAL_ANNOTATION = "biological_annotation"
     CROSS_MODEL = "cross_model"
     LITERATURE = "literature"
+    PHYSICAL_PLAUSIBILITY = "physical_plausibility"
+    STRUCTURAL_REFERENCE = "structural_reference"
 
 
 class MutationOperator(StrEnum):

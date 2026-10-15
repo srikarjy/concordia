@@ -45,7 +45,7 @@ Concordia answers those mechanically and keeps the receipt.
 ## What is real, and what is not (say this first)
 
 - **Real and tested:** the audit layer, experiment DAG, claim verifier, replay, integrity checks,
-  security controls, and the Boltz-2 integration code. 243 automated tests and 8 browser tests pass.
+  security controls, and the Boltz-2 integration code. The Python and browser test suites run in CI.
 - **First real measurement:** the live Boltz-2 integration reproduced the HyHEL-10 Fab and lysozyme
   complex (PDB 3HFM) in about 5 seconds. Against the crystal structure: per-chain CA RMSD 0.76 to
   1.55 Å, antigen placement 2.07 Å in the antibody frame, and 81% of crystal interface contacts
