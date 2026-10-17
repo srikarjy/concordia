@@ -12,6 +12,13 @@ Before inference, the runtime stores the task, versioned prompt, turn schema, ex
 
 The Ollama adapter restricts its endpoint to loopback, requires `OLLAMA_NO_CLOUD=1`, and records the local checkpoint digest and quantization metadata. It disables model reasoning traces, requests JSON output, and validates the complete turn schema locally. This accommodates local runtimes whose decoding grammar does not support the union schema. Each call requests at most 1,024 generated tokens, uses an 8,192-token context, has a 300-second transport timeout, and uses a one-second model keep-alive so the scientific tool process can reclaim memory between turns. The session permits four turns.
 
+An optional `LlamaCppScientistAdapter` provides the same provider-neutral
+interface for a pinned local GGUF file. Install it with `uv sync --extra llama`.
+It requires `OLLAMA_NO_CLOUD=1`, hashes the GGUF before generation, requests a
+JSON object, and records the exact backend settings. It is a local transport
+substitution, not a second scientist or a verifier; generated claims remain
+subject to the same deterministic validation boundary.
+
 `OpenRouterScientistAdapter` is an optional hosted fallback for low-volume software experiments. It accepts only `openrouter/free` or a model identifier ending in `:free`, requires `OPENROUTER_API_KEY`, never stores the key, and records the provider-resolved model name. Free routing may change providers or checkpoints and supplies no immutable checkpoint digest, so it is not the pinned default and cannot replace deterministic scientific verification.
 
 ## Qualification

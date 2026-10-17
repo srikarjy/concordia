@@ -186,6 +186,22 @@ def test_hash_chain_is_intact_and_root_is_stable(tmp_path) -> None:
     assert ledger.ledger_root() != root
 
 
+def test_ledger_export_contains_root_chain_and_verifiable_artifacts(tmp_path) -> None:
+    from concordia.events.sqlite import verify_ledger_export
+
+    ledger = _ledger_with_run(tmp_path)
+    export = ledger.export_manifest(
+        artifact_manifest={
+            "run-1": ({"digest": "a" * 64, "scientific_use_allowed": False},)
+        }
+    )
+    assert export.chain_report.intact
+    assert len(export.ledger_root) == 64
+    assert verify_ledger_export(export)
+    tampered = export.model_copy(update={"ledger_root": "b" * 64})
+    assert not verify_ledger_export(tampered)
+
+
 def test_hash_chain_reports_an_edited_event(tmp_path) -> None:
     ledger = _ledger_with_run(tmp_path)
     with ledger._connect() as connection:

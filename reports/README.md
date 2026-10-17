@@ -21,3 +21,17 @@ optional real Boltz-2 latency suite. The default Boltz suite is reported as
 Benchmark metrics describe software behavior or service latency. They do not
 establish structure quality, binding affinity, biological validity, or clinical
 utility.
+## Structure baseline control
+
+`structure-null-baseline-benchmark.json` is a reproducible retrospective
+control generated from the held-out antibody verifier report:
+
+```bash
+PYTHONPATH=src python scripts/benchmark_structure_null.py \
+  reports/verifier-on-boltz-benchmark.json \
+  --output reports/structure-null-baseline-benchmark.json
+```
+
+It uses only geometry measurements, records the source digest, and ignores
+DockQ/reference fields during prediction. Its report is permanently marked
+`scientific_use_allowed=false` and `prospective_claim_allowed=false`.

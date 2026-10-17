@@ -8,16 +8,87 @@ import json
 import logging
 import os
 import threading
+import uuid
 from collections.abc import Awaitable, Callable
 from copy import deepcopy
+from dataclasses import asdict
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 
 from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 
+from concordia.campaigns.artifacts import CampaignArtifactStore
+from concordia.campaigns.assay import parse_assay_csv
+from concordia.campaigns.benchmark import benchmark_digest, run_retrospective_benchmark
+from concordia.campaigns.connectors import (
+    BioNeMoInferenceConnector,
+    BioNeMoInferenceRunner,
+    BioNeMoTrainingConnector,
+    BioNeMoTrainingRunner,
+    BoltzCampaignConnector,
+    HttpBioNeMoInferenceRunner,
+    HttpBioNeMoTrainingRunner,
+    MeasuredStabilityConnector,
+    ProteinBaselineTrainingConnector,
+    ProteinMPNNCampaignConnector,
+    RFdiffusionCampaignConnector,
+    UnconfiguredBioNeMoInferenceRunner,
+    UnconfiguredBioNeMoTrainingRunner,
+)
+from concordia.campaigns.constraints import candidate_constraint_report
+from concordia.campaigns.design import CampaignDesignRecord, build_binder_design_plan
+from concordia.campaigns.postgres import PostgresCampaignStore
+from concordia.campaigns.recommendations import SelectionCandidate, select_candidates
+from concordia.campaigns.replay import replay_execute, replay_read
+from concordia.campaigns.reporting import build_report_manifest, verify_report_manifest
+from concordia.campaigns.schema import (
+    Campaign,
+    CampaignAuditEvent,
+    CampaignModelJob,
+    CampaignModelRun,
+    CampaignRound,
+    Candidate,
+    DatasetSnapshot,
+    EvidenceClaim,
+    Measurement,
+    Recommendation,
+)
+from concordia.campaigns.security import CampaignAction, CampaignPrincipal, require_action
+from concordia.campaigns.service import (
+    AddCandidateRequest,
+    CampaignConflictError,
+    CampaignNotFoundError,
+    CampaignStore,
+    CreateAccessGrantRequest,
+    CreateAccessGrantResponse,
+    CreateCampaignRequest,
+    CreateCampaignResponse,
+    CreateDesignPlanRequest,
+    CreateEvidenceClaimRequest,
+    CreateRoundRequest,
+    CreateStudyRequest,
+    EnqueueModelJobRequest,
+    ImportAssayCSVRequest,
+    RecordMeasurementRequest,
+    RecordModelRunRequest,
+    ReplayExecuteRequest,
+    TransitionCampaignRequest,
+    TransitionRoundRequest,
+    VerifyEvidenceClaimRequest,
+)
+from concordia.campaigns.study import CampaignStudy
+from concordia.campaigns.validation import (
+    ALLOWED_EXTERNAL_PROVIDERS,
+    ValidationCheck,
+    ValidationReport,
+    validate_campaign_round,
+    validate_recommendation_replay,
+)
+from concordia.campaigns.worker import CampaignModelWorker, ModelConnector, ModelConnectorError
 from concordia.colonies.live_run import run_live_colony
 from concordia.experiments.schema import (
     CreateExperimentNodeRequest,
@@ -63,12 +134,20 @@ from concordia.genomics.openfold2_nvidia import (
     NvidiaHostedOpenFold2Result,
     NvidiaHostedOpenFold2Runner,
 )
+from concordia.genomics.proteinmpnn_nvidia import NvidiaHostedProteinMpnnRunner
 from concordia.genomics.rate_limiting import SqliteRateLimiter
+from concordia.genomics.rfdiffusion_nvidia import NvidiaHostedRFdiffusionRunner
 from concordia.genomics.schema import GenomicSequence
 from concordia.genomics.structure_gateway import StructureGateway
 from concordia.reporting.workspace import build_workspace
+from concordia.runtime.model_registry import model_registry_report
+from concordia.runtime.secrets import nvidia_api_key
 from concordia.scientific.frameworks import framework_catalog
 from concordia.verification.cross import StructureScope
+from concordia.verification.structure_baseline import (
+    StructureBaselineCase,
+    run_structure_baseline,
+)
 from concordia.verification.structure_rules import (
     RULE_PACK_VERSION,
     StructureMeasurements,
@@ -124,6 +203,14 @@ class StructureClaimVerifyRequest(BaseModel):
     claim_text: str = Field(
         default="The predicted interface is correct.", min_length=1, max_length=500
     )
+
+
+class StructureBaselineRequest(BaseModel):
+    """Retrospective labelled cases for the geometry-only control."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    cases: tuple[StructureBaselineCase, ...] = Field(min_length=2, max_length=500)
 
 
 MAX_REQUEST_BODY_BYTES = 2_000_000
@@ -274,6 +361,54 @@ class ExperimentBoltzPredictResponse(BaseModel):
     output_node: ExperimentNode
 
 
+class RecommendationCandidateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    candidate_id: str = Field(min_length=1, max_length=200)
+    score: float | None = None
+    sequence: str = Field(default="", max_length=100_000)
+    is_reference: bool = False
+    measured: bool = False
+    uncertainty: float | None = None
+    constraint_violations: tuple[str, ...] = Field(default_factory=tuple, max_length=100)
+
+
+class SelectRecommendationRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    policy: str = Field(min_length=1, max_length=50)
+    batch_size: int = Field(ge=1, le=100_000)
+    seed: int = 0
+    candidates: tuple[RecommendationCandidateRequest, ...] = Field(min_length=1, max_length=100_000)
+    evidence_snapshot: tuple[str, ...] = Field(default_factory=tuple, max_length=100)
+    rationale: dict[str, object] = Field(default_factory=dict)
+    reference_candidate_id: str | None = None
+    require_measured: bool = False
+    max_uncertainty: float | None = Field(default=None, ge=0)
+
+
+class ReplayRecommendationRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    batch_size: int = Field(ge=1, le=100_000)
+    seed: int = 0
+    candidates: tuple[RecommendationCandidateRequest, ...] = Field(min_length=1, max_length=100_000)
+
+
+def _selection_input_digest(candidates: tuple[RecommendationCandidateRequest, ...]) -> str:
+    canonical = [
+        {
+            "candidate_id": candidate.candidate_id,
+            "score": candidate.score,
+            "sequence_hash": hashlib.sha256(candidate.sequence.encode("utf-8")).hexdigest(),
+        }
+        for candidate in candidates
+    ]
+    return hashlib.sha256(
+        json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+
+
 TOOL_PATHS = (
     "/api/workspace",
     "/api/artifacts",
@@ -290,9 +425,7 @@ def _tool_manifest(persistence: str = "ephemeral_sqlite") -> dict[str, object]:
         "name": "concordia-read-only-evidence-tools",
         "mode": "read_only_fixture",
         "openapi_url": "/api/tools/openapi.json",
-        "privacy_policy_url": (
-            "https://srikarjy025-concordia-colony.hf.space/privacy"
-        ),
+        "privacy_policy_url": ("https://srikarjy025-concordia-colony.hf.space/privacy"),
         "operation_ids": [
             "inspect_saved_workspace",
             "list_saved_artifacts",
@@ -305,6 +438,16 @@ def _tool_manifest(persistence: str = "ephemeral_sqlite") -> dict[str, object]:
         "accepts_user_sequences": False,
         "model_inference_exposed": False,
         "scientific_use_allowed": False,
+        "state_persistence": {
+            "backend": persistence,
+            "survives_restart": persistence == "postgres",
+            "note": (
+                "Rate-limit counters, the event ledger and cached model responses live "
+                "in this backend. With ephemeral_sqlite, a restart resets per-client "
+                "and global daily counters; set CONCORDIA_DATABASE_URL to a reachable "
+                "Postgres instance for counters that persist."
+            ),
+        },
         "note": (
             "This manifest describes the curated GET-only tool contract above only. "
             "This deployment separately exposes five rate-limited, non-tool endpoints: "
@@ -321,20 +464,6 @@ def _tool_manifest(persistence: str = "ephemeral_sqlite") -> dict[str, object]:
             "sequence accepted, always scientific_use_allowed=false since the evaluated "
             "task is a frozen software fixture). See /privacy."
         ),
-        # Rate limits and the event ledger are only as durable as what stores them.
-        # On a Space the local filesystem is wiped on restart, so a visitor cannot
-        # otherwise tell whether a stated per-client cap survives one. Reporting the
-        # backend makes the claim checkable instead of a matter of trust.
-        "state_persistence": {
-            "backend": persistence,
-            "survives_restart": persistence == "postgres",
-            "note": (
-                "Rate-limit counters, the event ledger and cached model responses live "
-                "in this backend. With ephemeral_sqlite a restart resets per-client "
-                "and global daily counters; set CONCORDIA_DATABASE_URL to a reachable "
-                "Postgres instance for counters that persist."
-            ),
-        },
         "verification_endpoint": {
             "path": "/v1/structure-claims/verify",
             "method": "POST",
@@ -353,8 +482,8 @@ def _tool_manifest(persistence: str = "ephemeral_sqlite") -> dict[str, object]:
     }
 
 
-def _reachable_database_url(database_url: str | None) -> str | None:
-    """Return the Postgres URL only if it connects now; otherwise fall back to SQLite.
+def _reachable_database_url(database_url: str | None, *, required: bool = False) -> str | None:
+    """Return a reachable Postgres URL, optionally failing closed instead of falling back.
 
     A wrong secret must degrade persistence, not take every write endpoint down.
     """
@@ -365,17 +494,105 @@ def _reachable_database_url(database_url: str | None) -> str | None:
 
         with psycopg.connect(database_url, connect_timeout=5):
             return database_url
-    except Exception as error:  # noqa: BLE001 - any failure means fall back
+    except Exception as error:  # noqa: BLE001 - any failure means fallback or fail-closed
+        if required:
+            logging.getLogger(__name__).error(
+                "CONCORDIA_DATABASE_URL unusable (%s); refusing SQLite fallback",
+                type(error).__name__,
+            )
+            raise RuntimeError(
+                "CONCORDIA_REQUIRE_POSTGRES=1 but CONCORDIA_DATABASE_URL is unreachable"
+            ) from error
         logging.getLogger(__name__).warning(
             "CONCORDIA_DATABASE_URL unusable (%s); using local SQLite state", type(error).__name__
         )
         return None
 
 
+def _live_probe(
+    url: str,
+    *,
+    headers: dict[str, str] | None = None,
+    expect_json: Callable[[object], bool] | None = None,
+) -> dict[str, object]:
+    """Perform a bounded liveness request without returning response contents."""
+    from datetime import datetime
+
+    import httpx
+
+    try:
+        response = httpx.get(url, headers=headers, timeout=3.0)
+        body: object = {}
+        if expect_json is not None:
+            try:
+                body = response.json()
+            except ValueError:
+                body = {}
+        reachable = 200 <= response.status_code < 400 and (
+            expect_json(body) if expect_json is not None else True
+        )
+        return {
+            "reachable": reachable,
+            "reachable_at": datetime.now(UTC).isoformat() if reachable else None,
+            "status_code": response.status_code,
+        }
+    except httpx.HTTPError:
+        return {"reachable": False, "reachable_at": None, "status_code": None}
+
+
+def _ollama_probe(url: str, model: str) -> dict[str, object]:
+    return _live_probe(
+        f"{url.rstrip('/')}/api/tags",
+        expect_json=lambda body: (
+            isinstance(body, dict)
+            and isinstance(body.get("models"), list)
+            and any(
+                isinstance(item, dict) and item.get("name") == model
+                for item in body["models"]
+            )
+        ),
+    )
+
+
+def _connector_state(
+    *,
+    configured: bool,
+    probe: dict[str, object] | None = None,
+    tested: bool = False,
+    last_success: str | None = None,
+) -> dict[str, object]:
+    """Map connector observations to mutually exclusive operational states."""
+    if not configured:
+        status = "unconfigured"
+    elif not tested:
+        status = "untested"
+    else:
+        code = probe.get("status_code") if probe else None
+        if code == 429:
+            status = "rate_limited"
+        elif bool(probe and probe.get("reachable")):
+            status = "healthy"
+        else:
+            status = "unavailable"
+    return {
+        "state": status,
+        "reachable_at": probe.get("reachable_at") if probe else None,
+        "last_success": last_success,
+    }
+
+
 def create_workspace_app(
     state_root: str | Path = ".concordia/workspace",
     frontend: str | Path = "frontend/dist",
+    *,
+    bionemo_training_runner: BioNeMoTrainingRunner | None = None,
+    bionemo_inference_runner: BioNeMoInferenceRunner | None = None,
 ) -> FastAPI:
+    state_path = Path(state_root)
+    secret_root = state_path.parent.parent if state_path.name == "workspace" else state_path
+    local_nvidia_key = nvidia_api_key(secret_root)
+    if local_nvidia_key and not os.environ.get("NVIDIA_API_KEY"):
+        os.environ["NVIDIA_API_KEY"] = local_nvidia_key
     data = build_workspace(state_root)
     app = FastAPI(
         title="Concordia scientific workspace",
@@ -391,13 +608,22 @@ def create_workspace_app(
     # Postgres/Supabase connection string) swaps every one of these for a
     # Postgres-backed equivalent instead; see genomics/postgres_backend.py
     # and docs/deployment.md. Local development is unaffected either way.
-    database_url = _reachable_database_url(os.environ.get("CONCORDIA_DATABASE_URL"))
+    database_url = _reachable_database_url(
+        os.environ.get("CONCORDIA_DATABASE_URL"),
+        required=os.environ.get("CONCORDIA_REQUIRE_POSTGRES") == "1",
+    )
     experiment_store = ExperimentStore(Path(state_root) / "experiments")
+    campaign_store = (
+        PostgresCampaignStore(database_url)
+        if database_url
+        else CampaignStore(Path(state_root) / "campaigns")
+    )
+    campaign_artifact_store = CampaignArtifactStore(
+        ContentAddressedStore(Path(state_root) / "artifacts")
+    )
 
     generation_gateway = Evo2GenerationGateway(
-        NvidiaHostedEvo2GenerationRunner(
-            ContentAddressedStore(Path(state_root) / "artifacts")
-        ),
+        NvidiaHostedEvo2GenerationRunner(ContentAddressedStore(Path(state_root) / "artifacts")),
         database_path=None if database_url else Path(state_root) / "evo2_generation.sqlite3",
         postgres_dsn=database_url,
     )
@@ -414,6 +640,59 @@ def create_workspace_app(
         NvidiaHostedBoltzRunner(ContentAddressedStore(Path(state_root) / "artifacts")),
         database_path=None if database_url else Path(state_root) / "boltz.sqlite3",
         postgres_dsn=database_url,
+    )
+    campaign_connectors: dict[str, ModelConnector] = {
+        "nvidia-boltz": BoltzCampaignConnector(boltz_gateway, client_id="campaign-api"),
+        "nvidia-rfdiffusion": RFdiffusionCampaignConnector(
+            NvidiaHostedRFdiffusionRunner(ContentAddressedStore(Path(state_root) / "artifacts"))
+        ),
+        "nvidia-proteinmpnn": ProteinMPNNCampaignConnector(
+            NvidiaHostedProteinMpnnRunner(ContentAddressedStore(Path(state_root) / "artifacts"))
+        ),
+        "concordia-protein-baseline": ProteinBaselineTrainingConnector(
+            campaign_store,
+            campaign_artifact_store,
+        ),
+        "concordia-measured-stability": MeasuredStabilityConnector(campaign_artifact_store),
+    }
+    if bionemo_training_runner is None:
+        bionemo_endpoint = os.environ.get("CONCORDIA_BIONEMO_TRAINING_URL")
+        bionemo_api_key = os.environ.get("CONCORDIA_BIONEMO_API_KEY")
+        if bionemo_endpoint and bionemo_api_key:
+            try:
+                bionemo_training_runner = HttpBioNeMoTrainingRunner(
+                    bionemo_endpoint, bionemo_api_key
+                )
+            except ValueError as error:
+                logging.getLogger(__name__).warning(
+                    "BioNeMo runner configuration rejected (%s)", type(error).__name__
+                )
+    if bionemo_training_runner is None:
+        bionemo_training_runner = UnconfiguredBioNeMoTrainingRunner()
+    campaign_connectors["nvidia-bionemo-framework"] = BioNeMoTrainingConnector(
+        bionemo_training_runner
+    )
+    if bionemo_inference_runner is None:
+        bionemo_inference_endpoint = os.environ.get("CONCORDIA_BIONEMO_INFERENCE_URL")
+        bionemo_inference_api_key = os.environ.get("CONCORDIA_BIONEMO_API_KEY")
+        if bionemo_inference_endpoint and bionemo_inference_api_key:
+            try:
+                bionemo_inference_runner = HttpBioNeMoInferenceRunner(
+                    bionemo_inference_endpoint, bionemo_inference_api_key
+                )
+            except ValueError as error:
+                logging.getLogger(__name__).warning(
+                    "BioNeMo inference configuration rejected (%s)", type(error).__name__
+                )
+    if bionemo_inference_runner is None:
+        bionemo_inference_runner = UnconfiguredBioNeMoInferenceRunner()
+    campaign_connectors["nvidia-bionemo-inference"] = BioNeMoInferenceConnector(
+        bionemo_inference_runner
+    )
+    campaign_worker = CampaignModelWorker(
+        cast(CampaignStore, campaign_store),
+        campaign_connectors,
+        owner="campaign-api-worker",
     )
 
     if database_url:
@@ -436,14 +715,12 @@ def create_workspace_app(
         )
 
     if database_url:
-        experiment_create_limiter: SqliteRateLimiter | PostgresRateLimiter = (
-            PostgresRateLimiter(
-                dsn=database_url,
-                namespace="experiment_create",
-                per_client_limit=10,
-                per_client_window_seconds=3_600,
-                global_daily_limit=500,
-            )
+        experiment_create_limiter: SqliteRateLimiter | PostgresRateLimiter = PostgresRateLimiter(
+            dsn=database_url,
+            namespace="experiment_create",
+            per_client_limit=10,
+            per_client_window_seconds=3_600,
+            global_daily_limit=500,
         )
     else:
         experiment_create_limiter = SqliteRateLimiter(
@@ -538,6 +815,162 @@ def create_workspace_app(
         if request.headers.get("x-forwarded-proto") == "https" or request.url.scheme == "https":
             response.headers["Strict-Transport-Security"] = "max-age=31536000"
         return response
+
+    @app.get("/api/capabilities")
+    def capabilities() -> dict[str, object]:
+        """Report configuration only; never expose credentials or claim live health."""
+        return {
+            "nvidia": bool(os.environ.get("NVIDIA_API_KEY", "").strip()),
+            "forward": forward_queue is not None,
+            "attribution": attribution_queue is not None,
+        }
+
+    @app.get("/api/models")
+    def models() -> dict[str, object]:
+        """Expose pinned model identities and loading policy, never model bytes."""
+        return model_registry_report()
+
+    @app.get("/api/connectors/health")
+    def connector_health() -> dict[str, object]:
+        """Expose configured, live reachability, and last-call state separately."""
+        nvidia_key = nvidia_api_key(secret_root)
+        nvidia_configured = nvidia_key is not None
+        nvidia_probe = (
+            _live_probe(
+                "https://health.api.nvidia.com",
+                headers={"Authorization": f"Bearer {nvidia_key}"},
+            )
+            if nvidia_key
+            else {"reachable": False, "reachable_at": None}
+        )
+        ollama_url = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")
+        ollama_configured = bool(os.environ.get("OLLAMA_HOST", "").strip())
+        ollama_probe = (
+            _ollama_probe(ollama_url, os.environ.get("OLLAMA_MODEL", "qwen3:1.7b"))
+            if ollama_configured
+            else {"reachable": False, "reachable_at": None}
+        )
+        training_endpoint = os.environ.get("CONCORDIA_BIONEMO_TRAINING_URL", "").strip()
+        inference_endpoint = os.environ.get("CONCORDIA_BIONEMO_INFERENCE_URL", "").strip()
+        bionemo_key = os.environ.get("CONCORDIA_BIONEMO_API_KEY", "").strip()
+        bionemo_headers = {"Authorization": f"Bearer {bionemo_key}"} if bionemo_key else None
+        training_probe = (
+            _live_probe(f"{training_endpoint}/healthz", headers=bionemo_headers)
+            if training_endpoint and bionemo_key
+            else {"reachable": False, "reachable_at": None}
+        )
+        inference_probe = (
+            _live_probe(f"{inference_endpoint}/healthz", headers=bionemo_headers)
+            if inference_endpoint and bionemo_key
+            else {"reachable": False, "reachable_at": None}
+        )
+
+        return {
+            "connectors": {
+                "nvidia_hosted": {
+                    "configured": nvidia_configured,
+                    **_connector_state(
+                        configured=nvidia_configured,
+                        probe=nvidia_probe,
+                        tested=nvidia_configured,
+                    ),
+                },
+                "evo2_generate": {
+                    "configured": nvidia_configured,
+                    **_connector_state(
+                        configured=nvidia_configured,
+                        probe=nvidia_probe,
+                        tested=nvidia_configured,
+                    ),
+                },
+                "evo2_forward": {
+                    "configured": forward_queue is not None,
+                    **_connector_state(
+                        configured=forward_queue is not None,
+                        tested=False,
+                    ),
+                },
+                "evo2_attribute": {
+                    "configured": attribution_queue is not None,
+                    **_connector_state(
+                        configured=attribution_queue is not None,
+                        tested=False,
+                    ),
+                },
+                "openfold2": {
+                    "configured": nvidia_configured,
+                    **_connector_state(
+                        configured=nvidia_configured,
+                        probe=nvidia_probe,
+                        tested=nvidia_configured,
+                    ),
+                },
+                "boltz": {
+                    "configured": nvidia_configured,
+                    **_connector_state(
+                        configured=nvidia_configured,
+                        probe=nvidia_probe,
+                        tested=nvidia_configured,
+                    ),
+                },
+                "boltz_complex": {
+                    "configured": nvidia_configured,
+                    **_connector_state(
+                        configured=nvidia_configured,
+                        probe=nvidia_probe,
+                        tested=nvidia_configured,
+                    ),
+                },
+                "proteinmpnn": {
+                    "configured": nvidia_configured,
+                    **_connector_state(
+                        configured=nvidia_configured,
+                        probe=nvidia_probe,
+                        tested=nvidia_configured,
+                    ),
+                },
+                "rfdiffusion": {
+                    "configured": nvidia_configured,
+                    **_connector_state(
+                        configured=nvidia_configured,
+                        probe=nvidia_probe,
+                        tested=nvidia_configured,
+                    ),
+                },
+                "ollama_local": {
+                    "configured": ollama_configured,
+                    **_connector_state(
+                        configured=ollama_configured,
+                        probe=ollama_probe,
+                        tested=ollama_configured,
+                    ),
+                    "endpoint": ollama_url,
+                    "model": os.environ.get("OLLAMA_MODEL", "qwen3:1.7b"),
+                    "cloud_disabled": os.environ.get("OLLAMA_NO_CLOUD", "") == "1",
+                },
+                "bionemo_training": {
+                    "configured": bool(training_endpoint and bionemo_key),
+                    **_connector_state(
+                        configured=bool(training_endpoint and bionemo_key),
+                        probe=training_probe,
+                        tested=bool(training_endpoint and bionemo_key),
+                    ),
+                },
+                "bionemo_inference": {
+                    "configured": bool(inference_endpoint and bionemo_key),
+                    **_connector_state(
+                        configured=bool(inference_endpoint and bionemo_key),
+                        probe=inference_probe,
+                        tested=bool(inference_endpoint and bionemo_key),
+                    ),
+                },
+                "biorender": {
+                    "configured": False,
+                    **_connector_state(configured=False),
+                },
+            },
+            "scientific_use_allowed": False,
+        }
 
     @app.get("/health")
     def health():
@@ -806,9 +1239,9 @@ def create_workspace_app(
             "Accepts an exact 8,192-base sequence and queues one real forward pass on "
             "a ZeroGPU worker under the frozen HBB scoring protocol. At most one job "
             "runs at a time across all visitors; a job submitted while another is "
-            "running completes as REJECTED_BUSY. This has not yet completed a "
-            "successful real run anywhere; expect failures while the worker is "
-            "being brought up. Poll GET /nvidia/evo2/forward/{job_id} for the result."
+            "running completes as REJECTED_BUSY. The result is computational evidence "
+            "only and is always marked scientific_use_allowed=false. Poll GET "
+            "/nvidia/evo2/forward/{job_id} for the result."
         ),
     )
     def submit_forward_job(
@@ -852,12 +1285,14 @@ def create_workspace_app(
             "Accepts an exact 8,192-base sequence and queues one forward pass plus "
             "one backward pass on a ZeroGPU worker, returning a ranked shortlist of "
             "the positions whose substitutions are estimated to be most damaging.\n\n"
-            "These are first-order estimates, so they are a ranking signal and not a "
-            "score: confirm any shortlisted position with POST /nvidia/evo2/forward "
-            "before relying on it. Measured against exact rescoring on the real HBB "
-            "window, rank correlation was 0.50 and the known c.-78A>G variant was "
-            "estimated at -1.7 against an exact -21.0 - roughly a twelvefold "
-            "underestimate - while still ranking 84th of 8,192. Every result is "
+            "These are first-order estimates, so they are a weak ranking signal and "
+            "not a score: confirm any shortlisted position with POST "
+            "/nvidia/evo2/forward before relying on it, and do not assume the "
+            "shortlist is complete. Measured against exact rescoring on the real HBB "
+            "window over 256 sampled substitutions, rank correlation was 0.27 and "
+            "effect magnitudes were understated about sevenfold; as a pre-filter for "
+            "the most damaging substitutions that is roughly a 1.8-3.6x enrichment "
+            "over random at equal budget, so it misses most of them. Every result is "
             "returned with scientific_use_allowed=false.\n\n"
             "This shares one ZeroGPU allocation and one per-client job budget with "
             "/nvidia/evo2/forward; at most one job of either kind runs at a time. "
@@ -897,9 +1332,7 @@ def create_workspace_app(
         try:
             return attribution_queue.get(job_id)
         except JobNotFoundError as error:
-            raise HTTPException(
-                status_code=404, detail="attribution job not found"
-            ) from error
+            raise HTTPException(status_code=404, detail="attribution job not found") from error
 
     @app.post(
         "/nvidia/openfold2/predict",
@@ -943,9 +1376,7 @@ def create_workspace_app(
             "response is a real structure but is never scientific evidence."
         ),
     )
-    def predict_boltz(
-        payload: BoltzPredictRequest, request: Request
-    ) -> NvidiaHostedBoltzResult:
+    def predict_boltz(payload: BoltzPredictRequest, request: Request) -> NvidiaHostedBoltzResult:
         client_id = _client_ip(request, trust_proxy_headers=trust_proxy_headers)
         try:
             return boltz_gateway.predict(client_id=client_id, sequence=payload.sequence)
@@ -1022,6 +1453,1043 @@ def create_workspace_app(
             raise HTTPException(
                 status_code=403, detail="invalid experiment access token"
             ) from error
+
+    def authorize_campaign_principal(campaign_id: str, token: str | None) -> CampaignPrincipal:
+        if not token:
+            raise HTTPException(status_code=401, detail="campaign access token is required")
+        try:
+            return campaign_store.authorize_principal(campaign_id, token)
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="campaign not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=403, detail="invalid campaign access token") from error
+
+    def authorize_campaign_action(
+        campaign_id: str, token: str | None, action: CampaignAction
+    ) -> Campaign:
+        principal = authorize_campaign_principal(campaign_id, token)
+        try:
+            require_action(principal, action)
+        except PermissionError as error:
+            raise HTTPException(
+                status_code=403, detail="campaign action is not permitted"
+            ) from error
+        return campaign_store.get_campaign(campaign_id)
+
+    def authorize_campaign(campaign_id: str, token: str | None) -> Campaign:
+        return authorize_campaign_action(campaign_id, token, CampaignAction.READ)
+
+    @app.post(
+        "/campaigns",
+        response_model=CreateCampaignResponse,
+        summary="Create a private protein engineering campaign",
+    )
+    def create_campaign(payload: CreateCampaignRequest, request: Request) -> CreateCampaignResponse:
+        experiment_create_limiter.check_and_record(
+            _client_ip(request, trust_proxy_headers=trust_proxy_headers)
+        )
+        return campaign_store.create_campaign_with_token(payload)
+
+    @app.get("/campaigns/{campaign_id}", response_model=Campaign)
+    def get_campaign(
+        campaign_id: str,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> Campaign:
+        return authorize_campaign(campaign_id, x_concordia_campaign_token)
+
+    @app.post(
+        "/campaigns/{campaign_id}/access-grants",
+        response_model=CreateAccessGrantResponse,
+        summary="Create a scoped campaign access token",
+    )
+    def create_campaign_access_grant(
+        campaign_id: str,
+        payload: CreateAccessGrantRequest,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> CreateAccessGrantResponse:
+        try:
+            return campaign_store.create_access_grant(
+                campaign_id, x_concordia_campaign_token or "", payload
+            )
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="campaign not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=403, detail="invalid campaign access token") from error
+        except PermissionError as error:
+            raise HTTPException(
+                status_code=403, detail="access management is not permitted"
+            ) from error
+
+    @app.post(
+        "/campaigns/{campaign_id}/access-grants/{grant_id}/revoke",
+        status_code=204,
+        summary="Revoke a scoped campaign access token",
+    )
+    def revoke_campaign_access_grant(
+        campaign_id: str,
+        grant_id: str,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> Response:
+        try:
+            campaign_store.revoke_access_grant(
+                campaign_id, x_concordia_campaign_token or "", grant_id
+            )
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="access grant not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=403, detail="invalid campaign access token") from error
+        except PermissionError as error:
+            raise HTTPException(
+                status_code=403, detail="access management is not permitted"
+            ) from error
+        return Response(status_code=204)
+
+    @app.get("/campaigns/{campaign_id}/audit-events", response_model=list[CampaignAuditEvent])
+    def list_campaign_audit_events(
+        campaign_id: str,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> list[CampaignAuditEvent]:
+        authorize_campaign(campaign_id, x_concordia_campaign_token)
+        return list(campaign_store.list_audit_events(campaign_id))
+
+    @app.post("/campaigns/{campaign_id}/status", response_model=Campaign)
+    def transition_campaign_status(
+        campaign_id: str,
+        payload: TransitionCampaignRequest,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> Campaign:
+        authorize_campaign_action(
+            campaign_id, x_concordia_campaign_token, CampaignAction.EDIT_PROTOCOL
+        )
+        try:
+            return campaign_store.transition_campaign(campaign_id, payload.status)
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="campaign not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.get("/campaigns/{campaign_id}/rounds", response_model=list[CampaignRound])
+    def list_campaign_rounds(
+        campaign_id: str,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> list[CampaignRound]:
+        authorize_campaign(campaign_id, x_concordia_campaign_token)
+        return list(campaign_store.list_rounds(campaign_id))
+
+    @app.get("/campaigns/{campaign_id}/rounds/{round_id}", response_model=CampaignRound)
+    def get_campaign_round(
+        campaign_id: str,
+        round_id: str,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> CampaignRound:
+        authorize_campaign(campaign_id, x_concordia_campaign_token)
+        try:
+            round_record = campaign_store.get_round(round_id)
+            if round_record.campaign_id != campaign_id:
+                raise CampaignConflictError("round does not belong to campaign")
+            return round_record
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="round not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=403, detail=str(error)) from error
+
+    @app.post("/campaigns/{campaign_id}/rounds/{round_id}/status", response_model=CampaignRound)
+    def transition_campaign_round_status(
+        campaign_id: str,
+        round_id: str,
+        payload: TransitionRoundRequest,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> CampaignRound:
+        authorize_campaign_action(
+            campaign_id, x_concordia_campaign_token, CampaignAction.EDIT_PROTOCOL
+        )
+        try:
+            round_record = campaign_store.get_round(round_id)
+            if round_record.campaign_id != campaign_id:
+                raise CampaignConflictError("round does not belong to campaign")
+            return campaign_store.transition_round(round_id, payload.status)
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="round not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.post("/campaigns/{campaign_id}/rounds", response_model=CampaignRound)
+    def create_campaign_round(
+        campaign_id: str,
+        payload: CreateRoundRequest,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> CampaignRound:
+        authorize_campaign_action(
+            campaign_id, x_concordia_campaign_token, CampaignAction.EDIT_PROTOCOL
+        )
+        try:
+            return campaign_store.create_round(campaign_id, payload)
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="campaign not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.post(
+        "/campaigns/{campaign_id}/rounds/{round_id}/candidates",
+        response_model=Candidate,
+    )
+    def add_campaign_candidate(
+        campaign_id: str,
+        round_id: str,
+        payload: AddCandidateRequest,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> Candidate:
+        authorize_campaign_action(
+            campaign_id, x_concordia_campaign_token, CampaignAction.EDIT_PROTOCOL
+        )
+        try:
+            round_record = campaign_store.get_round(round_id)
+            if round_record.campaign_id != campaign_id:
+                raise CampaignConflictError("round does not belong to campaign")
+            return campaign_store.add_candidate(round_id, payload)
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="round not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.get(
+        "/campaigns/{campaign_id}/rounds/{round_id}/candidates",
+        response_model=list[Candidate],
+    )
+    def list_campaign_candidates(
+        campaign_id: str,
+        round_id: str,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> list[Candidate]:
+        authorize_campaign(campaign_id, x_concordia_campaign_token)
+        try:
+            round_record = campaign_store.get_round(round_id)
+            if round_record.campaign_id != campaign_id:
+                raise CampaignConflictError("round does not belong to campaign")
+            return list(campaign_store.list_candidates(round_id))
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="round not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=403, detail=str(error)) from error
+
+    @app.post(
+        "/campaigns/{campaign_id}/rounds/{round_id}/design-plans",
+        response_model=CampaignDesignRecord,
+        summary="Persist a staged binder-design plan",
+    )
+    def create_campaign_design_plan(
+        campaign_id: str,
+        round_id: str,
+        payload: CreateDesignPlanRequest,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> CampaignDesignRecord:
+        authorize_campaign_action(
+            campaign_id, x_concordia_campaign_token, CampaignAction.EDIT_PROTOCOL
+        )
+        try:
+            round_record = campaign_store.get_round(round_id)
+            if round_record.campaign_id != campaign_id:
+                raise CampaignConflictError("round does not belong to campaign")
+            plan = build_binder_design_plan(
+                plan_id=str(uuid.uuid4()),
+                target_structure_digest=payload.target_structure_digest,
+                contigs=payload.contigs,
+                hotspot_residues=payload.hotspot_residues,
+                num_backbones=payload.num_backbones,
+                sequences_per_backbone=payload.sequences_per_backbone,
+                max_cofolds=payload.max_cofolds,
+                budget_units=payload.budget_units,
+            )
+            return campaign_store.create_design_plan(round_id, plan)
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="round not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.post(
+        "/campaigns/{campaign_id}/rounds/{round_id}/evidence-claims",
+        response_model=EvidenceClaim,
+        summary="Create an unverified campaign evidence claim",
+    )
+    def create_campaign_evidence_claim(
+        campaign_id: str,
+        round_id: str,
+        payload: CreateEvidenceClaimRequest,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> EvidenceClaim:
+        authorize_campaign_action(
+            campaign_id, x_concordia_campaign_token, CampaignAction.VERIFY_EVIDENCE
+        )
+        try:
+            round_record = campaign_store.get_round(round_id)
+            if round_record.campaign_id != campaign_id:
+                raise CampaignConflictError("round does not belong to campaign")
+            return campaign_store.create_evidence_claim(round_id, payload)
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="round not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.post(
+        "/campaigns/{campaign_id}/evidence-claims/{claim_id}/verify",
+        response_model=EvidenceClaim,
+        summary="Verify a campaign evidence claim",
+    )
+    def verify_campaign_evidence_claim(
+        campaign_id: str,
+        claim_id: str,
+        payload: VerifyEvidenceClaimRequest,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> EvidenceClaim:
+        authorize_campaign_action(
+            campaign_id, x_concordia_campaign_token, CampaignAction.VERIFY_EVIDENCE
+        )
+        try:
+            claim = campaign_store.get_evidence_claim(claim_id)
+            if claim.campaign_id != campaign_id:
+                raise CampaignConflictError("evidence claim does not belong to campaign")
+            return campaign_store.verify_evidence_claim(
+                claim_id,
+                status=payload.status,
+                verifier=payload.verifier,
+                independent_validation=payload.independent_validation,
+            )
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="evidence claim not found") from error
+        except (CampaignConflictError, ValueError) as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.get(
+        "/campaigns/{campaign_id}/rounds/{round_id}/report",
+        summary="Get a redacted BioRender-compatible campaign report manifest",
+    )
+    def get_campaign_report(
+        campaign_id: str,
+        round_id: str,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> dict[str, object]:
+        authorize_campaign(campaign_id, x_concordia_campaign_token)
+        try:
+            round_record = campaign_store.get_round(round_id)
+            if round_record.campaign_id != campaign_id:
+                raise CampaignConflictError("round does not belong to campaign")
+            manifest = build_report_manifest(
+                campaign_store.get_campaign(campaign_id),
+                candidates=campaign_store.list_candidates(round_id),
+                datasets=campaign_store.list_datasets(round_id),
+                model_runs=campaign_store.list_model_runs(round_id),
+                recommendations=campaign_store.list_recommendations(round_id),
+                evidence_claims=campaign_store.list_evidence_claims(round_id),
+                audit_events=campaign_store.list_audit_events(campaign_id),
+                generated_at=datetime.now(UTC),
+            )
+            return manifest
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="round not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.post(
+        "/campaigns/{campaign_id}/rounds/{round_id}/report:verify",
+        summary="Verify an exported campaign report manifest digest",
+    )
+    def verify_campaign_report(
+        campaign_id: str,
+        round_id: str,
+        manifest: dict[str, object],
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> dict[str, object]:
+        authorize_campaign(campaign_id, x_concordia_campaign_token)
+        try:
+            round_record = campaign_store.get_round(round_id)
+            if round_record.campaign_id != campaign_id:
+                raise CampaignConflictError("round does not belong to campaign")
+            valid = verify_report_manifest(manifest)
+            return {
+                "valid": valid,
+                "manifest_digest": manifest.get("manifest_digest"),
+                "reason": "manifest digest matches canonical payload"
+                if valid
+                else "manifest digest does not match canonical payload",
+            }
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="round not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.post(
+        "/campaigns/{campaign_id}/rounds/{round_id}/measurements",
+    )
+    def record_campaign_measurement(
+        campaign_id: str,
+        round_id: str,
+        payload: RecordMeasurementRequest,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> dict[str, object]:
+        authorize_campaign_action(
+            campaign_id, x_concordia_campaign_token, CampaignAction.WRITE_ASSAY
+        )
+        try:
+            round_record = campaign_store.get_round(round_id)
+            if round_record.campaign_id != campaign_id:
+                raise CampaignConflictError("round does not belong to campaign")
+            measurement = campaign_store.record_measurement(round_id, payload)
+            return measurement.model_dump(mode="json")
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="round not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.get(
+        "/campaigns/{campaign_id}/rounds/{round_id}/measurements",
+        response_model=list[Measurement],
+    )
+    def list_campaign_measurements(
+        campaign_id: str,
+        round_id: str,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> list[Measurement]:
+        authorize_campaign(campaign_id, x_concordia_campaign_token)
+        try:
+            round_record = campaign_store.get_round(round_id)
+            if round_record.campaign_id != campaign_id:
+                raise CampaignConflictError("round does not belong to campaign")
+            return list(campaign_store.list_measurements(round_id))
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="round not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=403, detail=str(error)) from error
+
+    @app.get("/campaigns/{campaign_id}/rounds/{round_id}/feedback-summary")
+    def campaign_feedback_summary(
+        campaign_id: str,
+        round_id: str,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> dict[str, object]:
+        """Summarize imported experimental feedback for the next training round."""
+        authorize_campaign(campaign_id, x_concordia_campaign_token)
+        try:
+            round_record = campaign_store.get_round(round_id)
+            if round_record.campaign_id != campaign_id:
+                raise CampaignConflictError("round does not belong to campaign")
+            measurements = campaign_store.list_measurements(round_id)
+            grouped: dict[tuple[str, str], list[float]] = {}
+            for item in measurements:
+                if item.status.value == "measured" and item.value is not None:
+                    grouped.setdefault((item.candidate_id, item.metric), []).append(item.value)
+            rows = []
+            for (candidate_id, metric), values in sorted(grouped.items()):
+                mean = sum(values) / len(values)
+                variance = sum((value - mean) ** 2 for value in values) / len(values)
+                rows.append({
+                    "candidate_id": candidate_id,
+                    "metric": metric,
+                    "replicates": len(values),
+                    "mean": mean,
+                    "std": variance ** 0.5,
+                })
+            return {
+                "round_id": round_id,
+                "rows": rows,
+                "measurement_count": len(measurements),
+                "status": "ready_for_training" if rows else "insufficient_evidence",
+                "scientific_use_allowed": False,
+            }
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="round not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.post("/campaigns/{campaign_id}/rounds/{round_id}/constraint-check")
+    def check_campaign_constraints(
+        campaign_id: str,
+        round_id: str,
+        reference_sequence: str = Query(min_length=1, max_length=100_000),
+        candidate_sequence: str = Query(min_length=1, max_length=100_000),
+        protected_positions: tuple[int, ...] = Query(default=()),
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> dict[str, object]:
+        authorize_campaign(campaign_id, x_concordia_campaign_token)
+        try:
+            round_record = campaign_store.get_round(round_id)
+            if round_record.campaign_id != campaign_id:
+                raise CampaignConflictError("round does not belong to campaign")
+            return candidate_constraint_report(
+                reference_sequence, candidate_sequence, protected_positions
+            )
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="round not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.post(
+        "/campaigns/{campaign_id}/rounds/{round_id}/assays:import",
+        summary="Import a validated assay CSV atomically",
+    )
+    def import_campaign_assays(
+        campaign_id: str,
+        round_id: str,
+        payload: ImportAssayCSVRequest,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> dict[str, object]:
+        authorize_campaign_action(
+            campaign_id, x_concordia_campaign_token, CampaignAction.WRITE_ASSAY
+        )
+        try:
+            round_record = campaign_store.get_round(round_id)
+            if round_record.campaign_id != campaign_id:
+                raise CampaignConflictError("round does not belong to campaign")
+            report = parse_assay_csv(payload.csv_text)
+            if not report.valid:
+                return {
+                    "accepted_count": report.accepted_count,
+                    "imported_count": 0,
+                    "errors": [error.__dict__ for error in report.errors],
+                }
+            measurements = campaign_store.record_measurements(round_id, report.rows)
+            return {
+                "accepted_count": report.accepted_count,
+                "imported_count": len(measurements),
+                "measurement_ids": [measurement.measurement_id for measurement in measurements],
+                "errors": [],
+            }
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="round not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.post(
+        "/campaigns/{campaign_id}/rounds/{round_id}/model-runs",
+        response_model=CampaignModelRun,
+    )
+    def record_campaign_model_run(
+        campaign_id: str,
+        round_id: str,
+        payload: RecordModelRunRequest,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> CampaignModelRun:
+        authorize_campaign_action(campaign_id, x_concordia_campaign_token, CampaignAction.RUN_MODEL)
+        if payload.scientific_use_allowed:
+            raise HTTPException(
+                status_code=422,
+                detail="scientific_use_allowed cannot be set by clients",
+            )
+        if payload.provider not in ALLOWED_EXTERNAL_PROVIDERS | {
+            "concordia-protein-baseline",
+            "concordia-measured-stability",
+        }:
+            raise HTTPException(status_code=422, detail="provider is not allow-listed")
+        try:
+            round_record = campaign_store.get_round(round_id)
+            if round_record.campaign_id != campaign_id:
+                raise CampaignConflictError("round does not belong to campaign")
+            return campaign_store.record_model_run(round_id, payload)
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="round not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.get(
+        "/campaigns/{campaign_id}/model-runs/{model_run_id}/replay-read",
+        summary="Replay a recorded campaign model result without execution",
+    )
+    def replay_read_campaign_model_run(
+        campaign_id: str,
+        model_run_id: str,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> dict[str, object]:
+        authorize_campaign(campaign_id, x_concordia_campaign_token)
+        try:
+            run = campaign_store.get_model_run(model_run_id)
+            if run.campaign_id != campaign_id:
+                raise CampaignConflictError("model run does not belong to campaign")
+            return replay_read(run).model_dump(mode="json")
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="model run not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.post(
+        "/campaigns/{campaign_id}/model-runs/{model_run_id}/replay-execute",
+        summary="Queue a fresh campaign model execution for comparison",
+    )
+    def replay_execute_campaign_model_run(
+        campaign_id: str,
+        model_run_id: str,
+        payload: ReplayExecuteRequest,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> dict[str, object]:
+        authorize_campaign_action(campaign_id, x_concordia_campaign_token, CampaignAction.RUN_MODEL)
+        try:
+            source = campaign_store.get_model_run(model_run_id)
+            if source.campaign_id != campaign_id:
+                raise CampaignConflictError("model run does not belong to campaign")
+            replay = campaign_store.clone_model_run_for_replay(model_run_id)
+            job = campaign_store.enqueue_model_job(
+                campaign_id,
+                EnqueueModelJobRequest(
+                    model_run_id=replay.model_run_id,
+                    budget_units=payload.budget_units,
+                ),
+            )
+            return {"replay": replay_execute(source, replay), "job": job}
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="model run not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.get("/campaigns/{campaign_id}/model-jobs", response_model=list[CampaignModelJob])
+    def list_campaign_model_jobs(
+        campaign_id: str,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> list[CampaignModelJob]:
+        authorize_campaign(campaign_id, x_concordia_campaign_token)
+        return list(campaign_store.list_model_jobs(campaign_id))
+
+    @app.post("/campaigns/{campaign_id}/model-jobs", response_model=CampaignModelJob)
+    def enqueue_campaign_model_job(
+        campaign_id: str,
+        payload: EnqueueModelJobRequest,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> CampaignModelJob:
+        authorize_campaign_action(campaign_id, x_concordia_campaign_token, CampaignAction.RUN_MODEL)
+        try:
+            return campaign_store.enqueue_model_job(campaign_id, payload)
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="model run not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.get("/campaigns/{campaign_id}/model-jobs/{job_id}", response_model=CampaignModelJob)
+    def get_campaign_model_job(
+        campaign_id: str,
+        job_id: str,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> CampaignModelJob:
+        authorize_campaign(campaign_id, x_concordia_campaign_token)
+        try:
+            job = campaign_store.get_model_job(job_id)
+            if job.campaign_id != campaign_id:
+                raise CampaignConflictError("model job does not belong to campaign")
+            return job
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="model job not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=403, detail=str(error)) from error
+
+    @app.post(
+        "/campaigns/{campaign_id}/model-jobs/{job_id}/cancel",
+        response_model=CampaignModelJob,
+    )
+    def cancel_campaign_model_job(
+        campaign_id: str,
+        job_id: str,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> CampaignModelJob:
+        authorize_campaign_action(campaign_id, x_concordia_campaign_token, CampaignAction.RUN_MODEL)
+        try:
+            job = campaign_store.get_model_job(job_id)
+            if job.campaign_id != campaign_id:
+                raise CampaignConflictError("model job does not belong to campaign")
+            return campaign_store.cancel_model_job(job_id)
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="model job not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.post("/campaigns/{campaign_id}/model-jobs/{job_id}/run", response_model=CampaignModelJob)
+    def run_campaign_model_job(
+        campaign_id: str,
+        job_id: str,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> CampaignModelJob:
+        """Execute one explicitly selected job through its registered connector."""
+        authorize_campaign_action(campaign_id, x_concordia_campaign_token, CampaignAction.RUN_MODEL)
+        try:
+            job = campaign_store.get_model_job(job_id)
+            if job.campaign_id != campaign_id:
+                raise CampaignConflictError("model job does not belong to campaign")
+            result = campaign_worker.run_once(job_id=job_id)
+            if result is None:
+                raise HTTPException(status_code=409, detail="model job is not runnable")
+            return result
+        except ModelConnectorError as error:
+            raise HTTPException(status_code=502, detail="model connector failed") from error
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="model job not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.post("/campaigns/{campaign_id}/rounds/{round_id}/datasets", response_model=DatasetSnapshot)
+    def freeze_campaign_dataset(
+        campaign_id: str,
+        round_id: str,
+        transformation_policy: str = Query(min_length=1, max_length=500),
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> DatasetSnapshot:
+        authorize_campaign_action(
+            campaign_id, x_concordia_campaign_token, CampaignAction.WRITE_ASSAY
+        )
+        try:
+            round_record = campaign_store.get_round(round_id)
+            if round_record.campaign_id != campaign_id:
+                raise CampaignConflictError("round does not belong to campaign")
+            return campaign_store.freeze_dataset(round_id, transformation_policy)
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="round not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.post(
+        "/campaigns/{campaign_id}/rounds/{round_id}/studies",
+        response_model=CampaignStudy,
+        summary="Create a preregistered campaign study record",
+    )
+    def create_campaign_study(
+        campaign_id: str,
+        round_id: str,
+        payload: CreateStudyRequest,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> CampaignStudy:
+        authorize_campaign_action(
+            campaign_id, x_concordia_campaign_token, CampaignAction.EDIT_PROTOCOL
+        )
+        try:
+            round_record = campaign_store.get_round(round_id)
+            if round_record.campaign_id != campaign_id:
+                raise CampaignConflictError("round does not belong to campaign")
+            return campaign_store.create_study(round_id, payload)
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="round or dataset not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.get(
+        "/campaigns/{campaign_id}/studies/{study_id}",
+        response_model=CampaignStudy,
+        summary="Read a campaign study admission record",
+    )
+    def get_campaign_study(
+        campaign_id: str,
+        study_id: str,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> CampaignStudy:
+        authorize_campaign(campaign_id, x_concordia_campaign_token)
+        try:
+            study = campaign_store.get_study(study_id)
+            if study.campaign_id != campaign_id:
+                raise CampaignConflictError("study does not belong to campaign")
+            return study
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="study not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.post(
+        "/campaigns/{campaign_id}/studies/{study_id}/freeze",
+        response_model=CampaignStudy,
+        summary="Freeze a preregistered campaign study",
+    )
+    def freeze_campaign_study(
+        campaign_id: str,
+        study_id: str,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> CampaignStudy:
+        authorize_campaign_action(
+            campaign_id, x_concordia_campaign_token, CampaignAction.EDIT_PROTOCOL
+        )
+        try:
+            study = campaign_store.get_study(study_id)
+            if study.campaign_id != campaign_id:
+                raise CampaignConflictError("study does not belong to campaign")
+            return campaign_store.freeze_study_record(study_id)
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="study not found") from error
+        except (CampaignConflictError, ValueError) as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.post(
+        "/campaigns/{campaign_id}/studies/{study_id}/admit",
+        response_model=dict[str, object],
+        summary="Evaluate fail-closed study admission",
+    )
+    def admit_campaign_study(
+        campaign_id: str,
+        study_id: str,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> dict[str, object]:
+        authorize_campaign_action(
+            campaign_id, x_concordia_campaign_token, CampaignAction.VERIFY_EVIDENCE
+        )
+        try:
+            study = campaign_store.get_study(study_id)
+            if study.campaign_id != campaign_id:
+                raise CampaignConflictError("study does not belong to campaign")
+            updated, report = campaign_store.admit_study(study_id)
+            return {"study": updated, "report": report, "passed": report.passed}
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="study not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.post(
+        "/campaigns/{campaign_id}/rounds/{round_id}/datasets/{dataset_id}/benchmark",
+        summary="Run a retrospective benchmark on a frozen campaign dataset",
+    )
+    def benchmark_campaign_dataset(
+        campaign_id: str,
+        round_id: str,
+        dataset_id: str,
+        metric: str | None = Query(default=None, min_length=1, max_length=200),
+        seeds: tuple[int, ...] = Query(default=(0, 1, 2), min_length=1, max_length=10),
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> dict[str, object]:
+        authorize_campaign(campaign_id, x_concordia_campaign_token)
+        try:
+            round_record = campaign_store.get_round(round_id)
+            dataset = campaign_store.get_dataset_snapshot(dataset_id)
+            if round_record.campaign_id != campaign_id or dataset.round_id != round_id:
+                raise CampaignConflictError("dataset does not belong to this campaign round")
+            examples = campaign_store.get_training_examples(dataset_id, metric=metric)
+            benchmark = run_retrospective_benchmark(examples, seeds=seeds)
+            digest = benchmark_digest(benchmark)
+            artifact_payload = {
+                "schema_version": 1,
+                "kind": "campaign_retrospective_benchmark",
+                "campaign_id": campaign_id,
+                "round_id": round_id,
+                "dataset_id": dataset_id,
+                "metric": metric,
+                "seeds": list(seeds),
+                "benchmark_digest": digest,
+                "benchmark": asdict(benchmark),
+            }
+            artifact = campaign_artifact_store.put(
+                json.dumps(artifact_payload, sort_keys=True, separators=(",", ":")).encode(),
+                kind="report",
+                media_type="application/json",
+            )
+            campaign_store.append_audit_event(
+                campaign_id,
+                actor="campaign-token",
+                action="benchmark.completed",
+                resource_type="dataset",
+                resource_id=dataset_id,
+                payload={
+                    "round_id": round_id,
+                    "metric": metric,
+                    "seeds": seeds,
+                    "benchmark_digest": digest,
+                    "artifact_digest": artifact.digest,
+                    "prospective_claim_allowed": benchmark.prospective_claim_allowed,
+                },
+            )
+            return asdict(benchmark) | {
+                "benchmark_digest": digest,
+                "benchmark_artifact": artifact,
+            }
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="dataset or round not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+
+    @app.get(
+        "/campaigns/{campaign_id}/artifacts/{digest}",
+        response_class=Response,
+        summary="Read an authenticated campaign artifact",
+    )
+    def read_campaign_artifact(
+        campaign_id: str,
+        digest: str,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> Response:
+        authorize_campaign(campaign_id, x_concordia_campaign_token)
+        if len(digest) != 64 or any(character not in "0123456789abcdef" for character in digest):
+            raise HTTPException(status_code=404, detail="artifact not found")
+        linked = any(
+            event.action == "benchmark.completed"
+            and event.payload.get("artifact_digest") == digest
+            for event in campaign_store.list_audit_events(campaign_id)
+        )
+        if not linked:
+            raise HTTPException(status_code=404, detail="artifact not found")
+        try:
+            payload = campaign_artifact_store.store.get_bytes(digest)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="artifact not found") from error
+        except ValueError as error:
+            raise HTTPException(
+                status_code=409, detail="artifact integrity check failed"
+            ) from error
+        if hashlib.sha256(payload).hexdigest() != digest:
+            raise HTTPException(status_code=409, detail="artifact integrity check failed")
+        return Response(
+            content=payload,
+            media_type="application/json",
+            headers={"ETag": f'"{digest}"'},
+        )
+
+    @app.get(
+        "/campaigns/{campaign_id}/rounds/{round_id}/validation",
+        summary="Run campaign release validation gates",
+    )
+    def validate_campaign_round_api(
+        campaign_id: str,
+        round_id: str,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> dict[str, object]:
+        authorize_campaign(campaign_id, x_concordia_campaign_token)
+        try:
+            round_record = campaign_store.get_round(round_id)
+            if round_record.campaign_id != campaign_id:
+                raise CampaignConflictError("round does not belong to campaign")
+            report = validate_campaign_round(
+                campaign_store.list_measurements(round_id),
+                campaign_store.list_model_runs(round_id),
+                campaign_store.list_datasets(round_id),
+                campaign_store.list_audit_events(campaign_id),
+            )
+            return asdict(report) | {"passed": report.passed}
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="round not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.post(
+        "/campaigns/{campaign_id}/rounds/{round_id}/recommendations",
+        response_model=Recommendation,
+    )
+    def create_campaign_recommendation(
+        campaign_id: str,
+        round_id: str,
+        candidate_ids: tuple[str, ...],
+        policy: str = Query(min_length=1, max_length=200),
+        evidence_snapshot: tuple[str, ...] = (),
+        rationale: dict[str, object] | None = None,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> Recommendation:
+        authorize_campaign_action(campaign_id, x_concordia_campaign_token, CampaignAction.RUN_MODEL)
+        try:
+            round_record = campaign_store.get_round(round_id)
+            if round_record.campaign_id != campaign_id:
+                raise CampaignConflictError("round does not belong to campaign")
+            return campaign_store.create_recommendation(
+                round_id,
+                candidate_ids,
+                policy=policy,
+                evidence_snapshot=evidence_snapshot,
+                rationale=rationale or {},
+            )
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="round not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.post(
+        "/campaigns/{campaign_id}/rounds/{round_id}/recommendations:select",
+        response_model=Recommendation,
+        summary="Select and persist a deterministic recommendation batch",
+    )
+    def select_campaign_recommendation(
+        campaign_id: str,
+        round_id: str,
+        payload: SelectRecommendationRequest,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> Recommendation:
+        authorize_campaign_action(campaign_id, x_concordia_campaign_token, CampaignAction.RUN_MODEL)
+        try:
+            round_record = campaign_store.get_round(round_id)
+            if round_record.campaign_id != campaign_id:
+                raise CampaignConflictError("round does not belong to campaign")
+            result = select_candidates(
+                tuple(
+                    SelectionCandidate(
+                        candidate_id=candidate.candidate_id,
+                        score=candidate.score,
+                        sequence=candidate.sequence,
+                        is_reference=candidate.is_reference,
+                        measured=candidate.measured,
+                        uncertainty=candidate.uncertainty,
+                        constraint_violations=candidate.constraint_violations,
+                    )
+                    for candidate in payload.candidates
+                ),
+                policy=payload.policy,
+                batch_size=payload.batch_size,
+                seed=payload.seed,
+                reference_candidate_id=payload.reference_candidate_id,
+                require_measured=payload.require_measured,
+                max_uncertainty=payload.max_uncertainty,
+            )
+            rationale = {
+                **result.rationale,
+                **payload.rationale,
+                "selection_input_digest": _selection_input_digest(payload.candidates),
+            }
+            return campaign_store.create_recommendation(
+                round_id,
+                result.candidate_ids,
+                policy=result.policy,
+                evidence_snapshot=payload.evidence_snapshot,
+                rationale=rationale,
+            )
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="round not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+
+    @app.post(
+        "/campaigns/{campaign_id}/recommendations/{recommendation_id}/replay",
+        summary="Replay a persisted recommendation against scored candidates",
+    )
+    def replay_campaign_recommendation(
+        campaign_id: str,
+        recommendation_id: str,
+        payload: ReplayRecommendationRequest,
+        x_concordia_campaign_token: str | None = Header(default=None),
+    ) -> dict[str, object]:
+        authorize_campaign(campaign_id, x_concordia_campaign_token)
+        try:
+            recommendation = campaign_store.get_recommendation(recommendation_id)
+            if recommendation.campaign_id != campaign_id:
+                raise CampaignConflictError("recommendation does not belong to campaign")
+            report = validate_recommendation_replay(
+                recommendation,
+                tuple(
+                    SelectionCandidate(
+                        candidate_id=candidate.candidate_id,
+                        score=candidate.score,
+                        sequence=candidate.sequence,
+                    )
+                    for candidate in payload.candidates
+                ),
+                batch_size=payload.batch_size,
+                seed=payload.seed,
+            )
+            expected_digest = recommendation.rationale.get("selection_input_digest")
+            if isinstance(expected_digest, str):
+                digest_matches = expected_digest == _selection_input_digest(payload.candidates)
+                report = ValidationReport(
+                    (
+                        ValidationCheck(
+                            "selection_input_digest",
+                            digest_matches,
+                            "replay inputs match the persisted selection input digest"
+                            if digest_matches
+                            else "replay inputs differ from the persisted selection input digest",
+                        ),
+                        *report.checks,
+                    )
+                )
+            return asdict(report) | {"passed": report.passed}
+        except CampaignNotFoundError as error:
+            raise HTTPException(status_code=404, detail="recommendation not found") from error
+        except CampaignConflictError as error:
+            raise HTTPException(status_code=403, detail=str(error)) from error
 
     @app.post(
         "/experiments",
@@ -1282,9 +2750,7 @@ def create_workspace_app(
                 ligand_chains=payload.ligand_chains,
                 model_checkpoint=payload.model,
                 settings_digest=hashlib.sha256(
-                    json.dumps(
-                        payload.settings, sort_keys=True, separators=(",", ":")
-                    ).encode()
+                    json.dumps(payload.settings, sort_keys=True, separators=(",", ":")).encode()
                 ).hexdigest(),
                 assay=payload.assay,
             )
@@ -1303,9 +2769,7 @@ def create_workspace_app(
             "status": result.status.value,
             "reasons": list(result.reasons),
             "supporting_families": [family.value for family in result.supporting_families],
-            "contradicting_families": [
-                family.value for family in result.contradicting_families
-            ],
+            "contradicting_families": [family.value for family in result.contradicting_families],
             "physical_findings": list(findings),
             "checks": [
                 {
@@ -1322,6 +2786,23 @@ def create_workspace_app(
             "scientific_use_allowed": result.scientific_use_allowed,
             "limitation": result.limitation,
         }
+
+    @app.post(
+        "/v1/structure-claims/baseline",
+        summary="Benchmark the independent geometry-only structure control",
+        description=(
+            "Evaluates a fixed physical-plausibility rule against retrospective "
+            "external labels. The labels are benchmark outcomes, never evidence for "
+            "a claim. Both positive and negative cases are required, and the returned "
+            "report is always ineligible for scientific or prospective use."
+        ),
+    )
+    def benchmark_structure_baseline(payload: StructureBaselineRequest) -> dict[str, object]:
+        try:
+            report = run_structure_baseline(payload.cases)
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return report.model_dump(mode="json")
 
     @app.get("/.well-known/concordia-tools.json", include_in_schema=False)
     @app.get("/api/tools", include_in_schema=False)

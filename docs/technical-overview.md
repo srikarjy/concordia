@@ -151,7 +151,7 @@ Every integrated tool call records its exact request and result in the event led
 
 ### Local seed scientist and qualification
 
-The genomic seed runtime now accepts four typed turns, preserves prompts and raw responses, validates evidence references, and routes bounded tool requests through the local executor. Each session starts with fresh messages. Model-proposed claims have no verification-status field; deterministic infrastructure retains that responsibility. Ollama remains the local default. An optional OpenRouter adapter accepts only `openrouter/free` or explicit `:free` models, records the resolved model identity, and never acts as the scientific verifier.
+The genomic seed runtime now accepts four typed turns, preserves prompts and raw responses, validates evidence references, and routes bounded tool requests through the local executor. Each session starts with fresh messages. Model-proposed claims have no verification-status field; deterministic infrastructure retains that responsibility. Ollama remains the local default, with an optional checksum-pinned local GGUF adapter behind the same interface. An optional OpenRouter adapter accepts only `openrouter/free` or explicit `:free` models, records the resolved model identity, and never acts as the scientific verifier.
 
 `concordia qualify-scientist --model MODEL --repetitions 2` runs installed Ollama candidates against a frozen software fixture and stores separate validity, tool-use, reference, stability, latency, token, and memory measurements. Set `OLLAMA_NO_CLOUD=1`. Completed executions can be replayed without inference. See [the runtime and qualification guide](seed-scientist.md).
 

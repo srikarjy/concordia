@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity, AlertTriangle, ArrowRight, Atom, Box, CheckCircle2, ChevronRight, CircleHelp, Dna,
   FlaskConical, GitBranch, Loader2, Network, Pause, Play, RotateCcw, Search,
@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { EvidenceGraph } from './Graph';
 import type {
-  Claim, EvidenceCheck, Evo2ForwardJob, Evo2GenerationResult, Member, Workspace,
+  Claim, EvidenceCheck, Evo2AttributionJob, Evo2ForwardJob, Evo2GenerationResult, Member, Workspace,
   ExperimentComparison, ExperimentManifest, ScientificFramework,
 } from './types';
 
@@ -241,11 +241,26 @@ function Sandbox({ workspace, position, onPosition }: { workspace: Workspace; po
     </section></div></>;
 }
 
-function LiveCallBadge() {
-  return <span className="live-badge"><AlertTriangle size={14} /> Real NVIDIA call</span>;
+type Capabilities = { nvidia: boolean; forward: boolean; attribution: boolean };
+const CapabilityContext = createContext<Capabilities>({ nvidia: false, forward: false, attribution: false });
+
+function CapabilityPanel({ feature, children }: { feature: keyof Capabilities; children: React.ReactNode }) {
+  const capabilities = useContext(CapabilityContext);
+  const enabled = capabilities[feature];
+  return <div>
+    {!enabled && <p role="status" className="gateway-error">{feature === 'nvidia'
+      ? 'NVIDIA inference is unavailable: this server needs an NVIDIA API key. You can use HF forward scoring below.'
+      : 'The Hugging Face worker is not configured or configuration could not be checked. Reload after configuring the server.'}</p>}
+    <fieldset disabled={!enabled} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>{children}</fieldset>
+  </div>;
+}
+
+function LiveCallBadge({ provider = 'NVIDIA' }: { provider?: string }) {
+  return <span className="live-badge"><AlertTriangle size={14} /> {provider} inference</span>;
 }
 
 function ExperimentCanvas() {
+  const capabilities = useContext(CapabilityContext);
   const [title, setTitle] = useState('Molecular design study');
   const [sequence, setSequence] = useState('ACGTACGT');
   const [moleculeMode, setMoleculeMode] = useState<'dna' | 'protein'>('dna');
@@ -260,6 +275,23 @@ function ExperimentCanvas() {
   const [structure, setStructure] = useState<{ text: string; format: string } | null>(null);
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [comparison, setComparison] = useState<ExperimentComparison | null>(null);
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem('concordia.experiment-access');
+    if (!saved) return;
+    try {
+      const parsed = JSON.parse(saved) as { experimentId?: string; accessToken?: string };
+      if (parsed.experimentId && parsed.accessToken) {
+        setToken(parsed.accessToken);
+        void refresh(parsed.experimentId, parsed.accessToken).catch(() => {
+          window.localStorage.removeItem('concordia.experiment-access');
+          setToken(null);
+        });
+      }
+    } catch {
+      window.localStorage.removeItem('concordia.experiment-access');
+    }
+  }, []);
 
   const refresh = async (experimentId: string, accessToken: string) => {
     const response = await fetch(`${API_ROOT}/experiments/${experimentId}`, { headers: { 'X-Concordia-Experiment-Token': accessToken } });
@@ -285,6 +317,7 @@ function ExperimentCanvas() {
       const root = await rootResponse.json();
       if (!rootResponse.ok) throw new Error(root.detail ?? 'Reference creation failed');
       setToken(accessToken); setSelectedParent(root.node_id);
+      window.localStorage.setItem('concordia.experiment-access', JSON.stringify({ experimentId, accessToken }));
       await refresh(experimentId, accessToken);
     } catch (reason) {
       setCanvasError(reason instanceof Error ? reason.message : 'Experiment creation failed');
@@ -393,7 +426,7 @@ function ExperimentCanvas() {
 
   return <><div className="view-intro"><div><p className="kicker">Molecular experiment DAG</p><h2>Create, branch, compare, and replay designs without losing lineage.</h2></div><span className="view-stat"><strong>{manifest?.nodes.length ?? 0}</strong> experiment nodes</span></div>
     {!manifest ? <section className="card sandbox-controls"><div className="card-heading"><div><p className="kicker">New experiment</p><h2>Start from DNA or protein</h2></div></div><div className="generation-grid"><button className={moleculeMode === 'dna' ? 'secondary-button active' : 'secondary-button'} onClick={() => { setMoleculeMode('dna'); setSequence('ACGTACGT'); }}>DNA</button><button className={moleculeMode === 'protein' ? 'secondary-button active' : 'secondary-button'} onClick={() => { setMoleculeMode('protein'); setSequence('MKT'); }}>Protein</button></div><label>Experiment title<input value={title} maxLength={200} onChange={event => setTitle(event.target.value)} /></label><label>Reference {moleculeMode.toUpperCase()}<textarea className="generation-textarea" value={sequence} onChange={event => setSequence(event.target.value.toUpperCase())} /></label><button className="run-button" disabled={busy || !title || !sequence || (moleculeMode === 'dna' ? /[^ACGTN]/.test(sequence) : /[^ARNDCQEGHILKMFPSTWYVX]/.test(sequence))} onClick={create}>{busy ? <Loader2 className="spin" size={17} /> : <GitBranch size={17} />} Create experiment</button>{canvasError && <div className="gateway-error"><XCircle size={18} /><p>{canvasError}</p></div>}</section> : <div className="sandbox-layout">
-      <section className="card sandbox-controls"><div className="card-heading"><div><p className="kicker">Branch controls</p><h2>{manifest.experiment.title}</h2></div><code>{shortDigest(manifest.manifest_digest)}</code></div><label>Current {moleculeMode.toUpperCase()}<textarea className="generation-textarea" value={sequence} onChange={event => setSequence(event.target.value.toUpperCase())} /></label>{moleculeMode === 'dna' && <><div className="generation-grid"><label>Position<input type="number" min={0} max={Math.max(0, sequence.length - 1)} value={position} onChange={event => setPosition(Number(event.target.value))} /></label><label>Alternate<select value={alternate} onChange={event => setAlternate(event.target.value)}>{BASES.map(base => <option key={base}>{base}</option>)}</select></label></div><button className="run-button" disabled={busy || modelBusy} onClick={branch}>{busy ? <Loader2 className="spin" size={17} /> : <GitBranch size={17} />} Create mutation branch</button><button className="secondary-button" disabled={busy || modelBusy} onClick={generateBranch}>{modelBusy ? <Loader2 className="spin" size={17} /> : <Wand2 size={17} />} Generate branch with Evo2</button></>}{moleculeMode === 'protein' && <button className="run-button" disabled={modelBusy} onClick={predictStructure}>{modelBusy ? <Loader2 className="spin" size={17} /> : <Atom size={17} />} Predict structure with Boltz-2</button>}<button className="secondary-button" disabled={!selectedParent} onClick={saveCandidate}><CheckCircle2 size={17} /> Save selected candidate</button>{structure && <ProteinStructureViewer structureText={structure.text} structureFormat={structure.format} />}{canvasError && <div className="gateway-error"><XCircle size={18} /><p>{canvasError}</p></div>}<p className="control-note"><ShieldCheck size={14} /> The access token stays in this page state. Model actions make real rate-limited NVIDIA calls and remain non-validated computational outputs.</p></section>
+      <section className="card sandbox-controls"><div className="card-heading"><div><p className="kicker">Branch controls</p><h2>{manifest.experiment.title}</h2></div><code>{shortDigest(manifest.manifest_digest)}</code></div><label>Current {moleculeMode.toUpperCase()}<textarea className="generation-textarea" value={sequence} onChange={event => setSequence(event.target.value.toUpperCase())} /></label>{moleculeMode === 'dna' && <><div className="generation-grid"><label>Position<input type="number" min={0} max={Math.max(0, sequence.length - 1)} value={position} onChange={event => setPosition(Number(event.target.value))} /></label><label>Alternate<select value={alternate} onChange={event => setAlternate(event.target.value)}>{BASES.map(base => <option key={base}>{base}</option>)}</select></label></div><button className="run-button" disabled={busy || modelBusy} onClick={branch}>{busy ? <Loader2 className="spin" size={17} /> : <GitBranch size={17} />} Create mutation branch</button><button className="secondary-button" disabled={!capabilities.nvidia || busy || modelBusy} title={!capabilities.nvidia ? "NVIDIA API key is not configured" : undefined} onClick={generateBranch}>{modelBusy ? <Loader2 className="spin" size={17} /> : <Wand2 size={17} />} Generate branch with Evo2</button></>}{moleculeMode === 'protein' && <button className="run-button" disabled={!capabilities.nvidia || modelBusy} title={!capabilities.nvidia ? "NVIDIA API key is not configured" : undefined} onClick={predictStructure}>{modelBusy ? <Loader2 className="spin" size={17} /> : <Atom size={17} />} Predict structure with Boltz-2</button>}<button className="secondary-button" disabled={!selectedParent} onClick={saveCandidate}><CheckCircle2 size={17} /> Save selected candidate</button>{structure && <ProteinStructureViewer structureText={structure.text} structureFormat={structure.format} />}{canvasError && <div className="gateway-error"><XCircle size={18} /><p>{canvasError}</p></div>}<p className="control-note"><ShieldCheck size={14} /> The access token stays in this page state. Model actions make real rate-limited NVIDIA calls and remain non-validated computational outputs.</p></section>
       <section className="card sandbox-result"><div className="card-heading"><div><p className="kicker">Lineage</p><h2>Immutable experiment nodes</h2></div><span className="count-badge">{manifest.edges.length} edges</span></div><div className="claim-list">{manifest.nodes.map(node => <div key={node.node_id} className={selectedParent === node.node_id ? 'claim-item active' : 'claim-item'}><button onClick={() => void chooseParent(node.node_id)}><span className="claim-number">{node.kind === 'dna_sequence' ? 'DNA' : node.kind === 'protein_sequence' ? 'PRO' : node.kind === 'structure' ? '3D' : 'RUN'}</span><span><strong>{node.label}{manifest.selected_candidate_ids.includes(node.node_id) ? ' ★' : ''}</strong><small>{humanize(node.operation)} · {node.branch} · {shortDigest(node.artifact_digest)}</small></span><ChevronRight size={17} /></button><input aria-label={`Compare ${node.label}`} type="checkbox" checked={compareIds.includes(node.node_id)} onChange={() => toggleCompare(node.node_id)} /></div>)}</div><button className="secondary-button" disabled={compareIds.length !== 2} onClick={compare}>Compare selected nodes</button>{comparison && <div className="result-panel"><strong>{comparison.comparable ? 'Comparable' : 'Not comparable'}</strong>{comparison.comparable ? <p>{comparison.differing_positions.length} differing positions · length delta {comparison.length_delta ?? '—'}{comparison.value_delta !== null ? ` · value delta ${comparison.value_delta}` : ''}</p> : <p>{comparison.reasons.join(' ')}</p>}</div>}</section>
     </div>}</>;
 }
@@ -728,8 +761,8 @@ function ForwardScoringPanel() {
     setJob(null); setSubmitError(null);
   };
 
-  return <section className="card forward-panel"><div className="card-heading"><div><p className="kicker">Real forward scoring</p><h2>One Evo2 7B forward pass on ZeroGPU</h2></div><LiveCallBadge /></div>
-    <p className="forward-warning"><AlertTriangle size={14} /> Unverified: this worker has never completed a successful run. Early attempts may fail or time out. At most one job runs at a time for all visitors.</p>
+  return <section className="card forward-panel"><div className="card-heading"><div><p className="kicker">Real forward scoring</p><h2>One Evo2 7B forward pass on ZeroGPU</h2></div><LiveCallBadge provider="Hugging Face ZeroGPU" /></div>
+    <p className="forward-warning"><AlertTriangle size={14} /> Forward scoring has completed a live integration check. GPU availability and quota can vary. At most one job runs at a time; outputs remain computational evidence.</p>
     <div className="control-label"><label htmlFor="forward-sequence">Exact {FORWARD_WINDOW_LENGTH.toLocaleString()}-base sequence <strong>{sequence.length.toLocaleString()} / {FORWARD_WINDOW_LENGTH.toLocaleString()}</strong></label><span className="control-label-actions"><SequenceFileUpload onParsed={value => { setSequence(value); setJob(null); setSubmitError(null); }} /><button type="button" className="secondary-button compact" onClick={fillTestSequence}><RotateCcw size={13} /> Fill random test sequence</button></span></div>
     <p className="field-hint">The frozen HBB window itself is only pinned by SHA-256 in this repository, not stored as raw text — paste your own exact {FORWARD_WINDOW_LENGTH.toLocaleString()}-base sequence, or use the random filler to exercise the pipeline with a synthetic, non-biological test input.</p>
     <textarea id="forward-sequence" className="generation-textarea" value={sequence} maxLength={FORWARD_WINDOW_LENGTH} spellCheck={false} onChange={event => setSequence(event.target.value.toUpperCase())} />
@@ -744,8 +777,87 @@ function ForwardScoringPanel() {
       <div className="delta-value positive"><span>Mean log-likelihood</span><strong>{job.result.score.toFixed(5)}</strong></div>
       {job.result.runtime_metadata.target_token_log_probabilities && job.result.runtime_metadata.target_token_log_probabilities.length > 1 &&
         <LikelihoodTrack values={job.result.runtime_metadata.target_token_log_probabilities} sequence={submittedSequence} />}
-      <div className="result-warning"><ShieldCheck size={18} /><p><strong>{job.result.scientific_use_allowed ? 'In scope, but still a single real run.' : 'Not scientific evidence.'}</strong> {job.result.scientific_use_allowed ? 'This execution matched the frozen scoring protocol exactly.' : 'This execution did not match the frozen scoring protocol scope.'}</p></div>
+      <div className="result-warning"><ShieldCheck size={18} /><p><strong>{job.result.scientific_use_allowed ? 'In scope, but still a single real run.' : 'Not scientific evidence.'}</strong> {job.result.scientific_use_allowed ? 'This execution matched the frozen scoring protocol exactly.' : 'Successful computation alone does not establish scientific validity.'}</p></div>
       <dl className="digest-list"><div><dt>Execution mode</dt><dd>{job.result.execution_mode}</dd></div><div><dt>Scored tokens</dt><dd>{job.result.runtime_metadata.scored_token_count ?? '—'}</dd></div><div><dt>Output artifact</dt><dd>{shortDigest(job.result.output_artifact_digest ?? '')}</dd></div></dl>
+    </div>}
+  </section>;
+}
+
+function AttributionPanel() {
+  const [sequence, setSequence] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [job, setJob] = useState<Evo2AttributionJob | null>(null);
+  const lengthError = sequence.length > 0 && sequence.length !== FORWARD_WINDOW_LENGTH;
+  const baseError = /[^ACGTacgt]/.test(sequence);
+
+  useEffect(() => {
+    if (!job || TERMINAL_JOB_STATUSES.has(job.status)) return;
+    const timer = setInterval(() => {
+      fetch(`${API_ROOT}/nvidia/evo2/attribute/${job.job_id}`)
+        .then(response => response.json())
+        .then((next: Evo2AttributionJob) => setJob(next))
+        .catch(() => undefined);
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [job]);
+
+  const submit = async () => {
+    setSubmitting(true); setSubmitError(null); setJob(null);
+    try {
+      const response = await fetch(`${API_ROOT}/nvidia/evo2/attribute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sequence: sequence.toUpperCase() }),
+      });
+      const body = await response.json();
+      if (!response.ok) {
+        const retryAfter = response.headers.get('Retry-After');
+        const suffix = response.status === 429 && retryAfter ? ` Retry in ${retryAfter}s.` : '';
+        throw new Error(`${body.detail ?? body.message ?? 'Attribution request failed'}${suffix}`);
+      }
+      setJob({ job_id: body.job_id, status: body.status, submitted_at: Date.now() / 1000, completed_at: null, result: null, error: null });
+    } catch (reason) {
+      setSubmitError(reason instanceof Error ? reason.message : 'Attribution request failed');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const running = !!job && !TERMINAL_JOB_STATUSES.has(job.status);
+  const disabled = submitting || sequence.length !== FORWARD_WINDOW_LENGTH || baseError || running;
+
+  return <section className="card forward-panel"><div className="card-heading"><div><p className="kicker">Gradient attribution</p><h2>A ranking signal, not a score</h2></div><LiveCallBadge provider="Hugging Face ZeroGPU" /></div>
+    <p className="forward-warning"><AlertTriangle size={14} /> First-order estimates are a <strong>weak</strong> ranking signal, not a score. Measured against exact rescoring on the real HBB window over 256 sampled substitutions, rank correlation was 0.27 and effect sizes were understated about sevenfold. As a pre-filter that is roughly a 1.8&ndash;3.6&times; enrichment over picking at random, so it misses most damaging positions. Shortlist here, confirm each one with a real forward pass, and do not treat the shortlist as complete.</p>
+    <div className="control-label"><label htmlFor="attribution-sequence">Exact {FORWARD_WINDOW_LENGTH.toLocaleString()}-base sequence <strong>{sequence.length.toLocaleString()} / {FORWARD_WINDOW_LENGTH.toLocaleString()}</strong></label><span className="control-label-actions"><SequenceFileUpload onParsed={value => { setSequence(value); setJob(null); setSubmitError(null); }} /></span></div>
+    <p className="field-hint">Runs one forward pass plus one backward pass on ZeroGPU and returns the positions whose substitutions are estimated to be most damaging. This shares one GPU allocation and one hourly job budget with forward scoring, so only one job of either kind runs at a time.</p>
+    <textarea id="attribution-sequence" className="generation-textarea" value={sequence} maxLength={FORWARD_WINDOW_LENGTH} spellCheck={false} onChange={event => setSequence(event.target.value.toUpperCase())} />
+    {lengthError && <p className="field-error">Sequence must be exactly {FORWARD_WINDOW_LENGTH.toLocaleString()} bases.</p>}
+    {baseError && <p className="field-error">Only A, C, G, T bases are accepted.</p>}
+    <button className="run-button" disabled={disabled} onClick={submit}>{submitting || running ? <Loader2 size={17} className="spin" /> : <Play size={17} />} {running ? 'Running forward and backward…' : 'Submit attribution pass'}</button>
+    {submitError && <div className="gateway-error"><XCircle size={18} /><p>{submitError}</p></div>}
+    {job && <div className="forward-job-status"><span className={`status-chip ${job.status === 'COMPLETED' ? 'positive' : job.status === 'FAILED' || job.status === 'REJECTED_BUSY' ? 'negative' : 'caution'}`}>{humanize(job.status)}</span><code>{job.job_id.slice(0, 12)}</code></div>}
+    {job?.status === 'FAILED' && job.error && <div className="gateway-error"><XCircle size={18} /><p>{job.error}</p></div>}
+    {job?.status === 'REJECTED_BUSY' && <div className="gateway-error"><XCircle size={18} /><p>Another visitor's job was already running. Try again shortly.</p></div>}
+    {job?.status === 'COMPLETED' && job.result && <div className="result-panel">
+      <div className="result-warning"><ShieldCheck size={18} /><p><strong>Not scientific evidence.</strong> Gradient attribution approximates the forward score it is derived from; it is returned only as an ordering over candidate positions.</p></div>
+      <dl className="digest-list">
+        <div><dt>Reference log-likelihood</dt><dd>{job.result.reference_total_log_likelihood.toFixed(3)}</dd></div>
+        <div><dt>Rank correlation vs exact <small>(this run's sanity check)</small></dt><dd>{job.result.agreement_check.spearman_predicted_vs_exact.toFixed(2)} over {job.result.agreement_check.pairs} pairs</dd></div>
+        <div><dt>Sign agreement</dt><dd>{(job.result.agreement_check.sign_agreement * 100).toFixed(0)}%</dd></div>
+        <div><dt>Backward pass</dt><dd>{job.result.backward_seconds.toFixed(1)}s at {(job.result.peak_memory_bytes / 1e9).toFixed(1)} GB peak</dd></div>
+        <div><dt>Output artifact</dt><dd>{shortDigest(job.result.output_artifact_digest)}</dd></div>
+      </dl>
+      <p className="field-hint">The {job.result.ranked_substitutions.length} highest-ranked positions of {job.result.sequence_length.toLocaleString()}. Every per-position estimate is retained in the output artifact above. The correlation shown is this run's own small-sample check and carries roughly &plusmn;0.17 of sampling error at {job.result.agreement_check.pairs} pairs; the characterisation above comes from a larger 256-pair run recorded in the feasibility report.</p>
+      <div className="evidence-table attribution-table">
+        <div className="attribution-row attribution-head"><span>Position</span><span>Ref</span>{BASES.map(base => <span key={base}>{base}</span>)}<span>Worst case</span></div>
+        {job.result.ranked_substitutions.slice(0, 25).map(item => <div key={item.position} className="attribution-row">
+          <span><code>{item.position.toLocaleString()}</code></span>
+          <span><strong>{item.reference}</strong></span>
+          {BASES.map(base => <span key={base}>{base === item.reference ? <em>&mdash;</em> : (item.estimated_deltas[base] ?? 0).toFixed(2)}</span>)}
+          <span><strong>{item.worst_case_delta.toFixed(2)}</strong></span>
+        </div>)}
+      </div>
     </div>}
   </section>;
 }
@@ -845,6 +957,15 @@ function ActivityDock({ workspace }: { workspace: Workspace }) {
 }
 
 export default function App() {
+  const [capabilities, setCapabilities] = useState<Capabilities>({ nvidia: false, forward: false, attribution: false });
+  useEffect(() => {
+    fetch(`${API_ROOT}/api/capabilities`).then(response => {
+      if (!response.ok) throw new Error('Configuration unavailable');
+      return response.json();
+    }).then(body => setCapabilities({
+      nvidia: body.nvidia === true, forward: body.forward === true, attribution: body.attribution === true,
+    })).catch(() => {});
+  }, []);
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<View>('experiment');
@@ -860,14 +981,14 @@ export default function App() {
   const claim = workspace.claims.find(item => item.id === selectedClaim) ?? workspace.claims[0];
   const chooseClaim = (id: string) => { const next = workspace.claims.find(item => item.id === id); setSelectedClaim(id); if (next) { setSelectedPosition(next.start); setSelectedNode(pathForClaim(workspace, next)); } };
   const choosePosition = (position: number) => { setSelectedPosition(position); const region = workspace.claims.find(item => position >= item.start && position < item.end); if (region) setSelectedClaim(region.id); };
-  return <div className="app-shell"><Sidebar view={view} onView={setView} workspace={workspace} /><main className="workspace-main"><Topbar view={view} workspace={workspace} /><div className="science-notice"><ShieldCheck size={17} /><span><strong>Evidence gate.</strong> Results are labeled by execution mode and validation status; computational output is not automatically a biological conclusion.</span><a href="/privacy">Privacy</a></div>
+  return <CapabilityContext.Provider value={capabilities}><div className="app-shell"><Sidebar view={view} onView={setView} workspace={workspace} /><main className="workspace-main"><Topbar view={view} workspace={workspace} /><div className="science-notice"><ShieldCheck size={17} /><span><strong>Evidence gate.</strong> Results are labeled by execution mode and validation status; computational output is not automatically a biological conclusion.</span><a href="/privacy">Privacy</a></div>
     {view === 'experiment' && <ExperimentCanvas />}
     {view === 'investigate' && <Investigation workspace={workspace} claim={claim} onClaim={chooseClaim} selectedPosition={selectedPosition} onPosition={position => { choosePosition(position); setView('sandbox'); }} onView={setView} />}
     {view === 'sandbox' && <Sandbox workspace={workspace} position={selectedPosition} onPosition={choosePosition} />}
-    {view === 'generate' && <><GenerationPlayground /><ForwardScoringPanel /><ProteinStructurePanel /></>}
-    {view === 'antibody' && <AntibodyComplexPanel />}
+    {view === 'generate' && <><CapabilityPanel feature="forward"><ForwardScoringPanel /></CapabilityPanel><CapabilityPanel feature="nvidia"><GenerationPlayground /></CapabilityPanel><CapabilityPanel feature="attribution"><AttributionPanel /></CapabilityPanel><CapabilityPanel feature="nvidia"><ProteinStructurePanel /></CapabilityPanel></>}
+    {view === 'antibody' && <CapabilityPanel feature="nvidia"><AntibodyComplexPanel /></CapabilityPanel>}
     {view === 'colony' && <Colony workspace={workspace} />}
     {view === 'provenance' && <Provenance workspace={workspace} claim={claim} selectedNode={selectedNode} onNode={id => setSelectedNode(id ? new Set([id]) : new Set())} />}
     {view === 'frameworks' && <Frameworks frameworks={frameworks} source={frameworkSource} />}
-    <ActivityDock workspace={workspace} /><footer><span>Concordia Colony · local-first evidence audit</span><span><Box size={13} /> {workspace.execution_mode.replaceAll('_', ' ')}</span><a href="https://github.com/srikarjy/concordia" target="_blank" rel="noreferrer">GitHub repository <ArrowRight size={13} /></a></footer></main></div>;
+    <ActivityDock workspace={workspace} /><footer><span>Concordia Colony · local-first evidence audit</span><span><Box size={13} /> {workspace.execution_mode.replaceAll('_', ' ')}</span><a href="https://github.com/srikarjy/concordia" target="_blank" rel="noreferrer">GitHub repository <ArrowRight size={13} /></a></footer></main></div></CapabilityContext.Provider>;
 }

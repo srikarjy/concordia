@@ -51,11 +51,13 @@ class Runner:
             sequence_hash=self.sequence_hash or sequence.content_hash(),
             score=0.2,
             target=target,
-            scientific_use_allowed=self.mode == "real",
+            # Real execution is not scientific validation. The adapter must
+            # preserve the fail-closed safety flag even for a successful run.
+            scientific_use_allowed=False,
         ).model_dump(mode="json")
 
 
-def test_real_evo2_adapter_requires_matching_eligible_output() -> None:
+def test_real_evo2_adapter_requires_matching_non_authorizing_output() -> None:
     sequence = GenomicSequence(
         sequence_id="chr1:0-4", sequence="ACGT", assembly="GRCh38", region="chr1:0-4", strand="+"
     )

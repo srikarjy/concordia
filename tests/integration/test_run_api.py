@@ -42,6 +42,10 @@ def test_run_event_artifact_and_replay_api(tmp_path) -> None:
         replay = client.post(f"/runs/{run_id}/replay").json()
         assert replay["run"] == persisted
         assert replay["event_count"] == persisted["last_sequence_number"]
+        exported = client.get("/ledger/export")
+        assert exported.status_code == 200
+        assert exported.json()["chain_report"]["breaks"] == []
+        assert len(exported.json()["ledger_root"]) == 64
 
         duplicate = client.post("/runs", json=request_body())
         assert duplicate.json()["spec"]["run_id"] == run_id

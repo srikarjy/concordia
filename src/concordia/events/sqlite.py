@@ -18,6 +18,7 @@ that migration onward; the migration's time is recorded in ``schema_migrations``
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 import sqlite3
 import uuid
@@ -103,6 +104,35 @@ class ChainReport(BaseModel):
     @property
     def intact(self) -> bool:
         return not self.breaks
+
+
+class LedgerExport(BaseModel):
+    """Portable, externally checkable snapshot of ledger integrity."""
+
+    model_config = ConfigDict(frozen=True)
+
+    schema_version: int = 1
+    generated_at: datetime
+    chain_report: ChainReport
+    ledger_root: str
+    artifact_manifest: dict[str, tuple[dict[str, Any], ...]]
+    export_digest: str
+
+
+def _export_digest(payload: dict[str, Any]) -> str:
+    unsigned = dict(payload)
+    unsigned.pop("export_digest", None)
+    normalized = json.loads(canonical_json(unsigned))
+    return request_digest(normalized)
+
+
+def verify_ledger_export(export: LedgerExport | dict[str, Any]) -> bool:
+    """Verify the export envelope without opening the source ledger."""
+    payload = export.model_dump(mode="json") if isinstance(export, LedgerExport) else dict(export)
+    recorded = payload.get("export_digest")
+    if not isinstance(recorded, str) or len(recorded) != 64:
+        return False
+    return hmac.compare_digest(recorded, _export_digest(payload))
 
 
 class SQLiteEventLedger:
@@ -400,6 +430,29 @@ class SQLiteEventLedger:
         if not report.intact:
             raise ValueError("ledger chain is broken; refusing to compute a root")
         return merkle_root([f"{run}:{head}" for run, head in report.heads.items()])
+
+    def export_manifest(
+        self,
+        *,
+        artifact_manifest: dict[str, tuple[dict[str, Any], ...]] | None = None,
+    ) -> LedgerExport:
+        """Create a versioned export suitable for storage outside SQLite."""
+        chain = self.verify_chain()
+        if not chain.intact:
+            raise ValueError("ledger chain is broken; refusing to export")
+        payload: dict[str, Any] = {
+            "schema_version": 1,
+            "generated_at": datetime.now(UTC),
+            "chain_report": chain.model_dump(mode="json"),
+            "ledger_root": self.ledger_root(),
+            "artifact_manifest": {
+                run_id: list(references) for run_id, references in (artifact_manifest or {}).items()
+            },
+        }
+        provisional = LedgerExport.model_validate(payload | {"export_digest": "0" * 64})
+        serialized_payload = provisional.model_dump(mode="json")
+        serialized_payload["export_digest"] = _export_digest(serialized_payload)
+        return LedgerExport.model_validate(serialized_payload)
 
     def ping(self) -> None:
         with self._connect() as connection:

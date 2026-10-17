@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict
 from concordia.events.sqlite import (
     ConcurrencyError,
     IdempotencyConflictError,
+    LedgerExport,
     RunNotFoundError,
 )
 from concordia.runtime.contracts import ArtifactReference, EventPage, ReplayResult, RunRecord
@@ -138,6 +139,10 @@ def create_app(
     @app.get("/runs/{run_id}/artifacts", response_model=list[ArtifactReference])
     def get_artifacts(run_id: str) -> tuple[ArtifactReference, ...]:
         return service.artifact_references(run_id)
+
+    @app.get("/ledger/export", response_model=LedgerExport)
+    def export_ledger() -> LedgerExport:
+        return service.export_ledger()
 
     @app.get("/runs/{run_id}/stream")
     async def stream_events(

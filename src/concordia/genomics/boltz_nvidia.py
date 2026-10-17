@@ -27,6 +27,20 @@ SHA256_PATTERN = r"^[0-9a-f]{64}$"
 AMINO_ACID_PATTERN = r"^[ARNDCQEGHILKMFPSTWYV]+$"
 
 
+def _confidence_summary(scores: tuple[float, ...]) -> dict[str, object]:
+    if not scores:
+        return {"status": "unavailable", "residue_count": 0, "scientific_use_allowed": False}
+    low = [index + 1 for index, score in enumerate(scores) if score < 0.5]
+    return {
+        "status": "reported",
+        "residue_count": len(scores),
+        "mean": sum(scores) / len(scores),
+        "min": min(scores),
+        "low_confidence_positions_lt_0_5": low,
+        "scientific_use_allowed": False,
+    }
+
+
 class NvidiaHostedBoltzResult(BaseModel):
     """Validated single-chain output that is never scientific evidence."""
 
@@ -41,6 +55,7 @@ class NvidiaHostedBoltzResult(BaseModel):
     structure_text: str = Field(min_length=1)
     structure_format: str = Field(min_length=1)
     confidence_scores: tuple[float, ...] = Field(default_factory=tuple)
+    confidence_summary: dict[str, object] = Field(default_factory=dict)
     elapsed_seconds: float = Field(ge=0)
     request_artifact_digest: str = Field(pattern=SHA256_PATTERN)
     response_artifact_digest: str = Field(pattern=SHA256_PATTERN)
@@ -235,6 +250,7 @@ class NvidiaHostedBoltzRunner:
             structure_text=structure_text,
             structure_format=structure_format,
             confidence_scores=confidence_scores,
+            confidence_summary=_confidence_summary(confidence_scores),
             elapsed_seconds=submitted["elapsed_seconds"],
             request_artifact_digest=submitted["request_digest"],
             response_artifact_digest=submitted["response_digest"],
@@ -243,12 +259,12 @@ class NvidiaHostedBoltzRunner:
                 "validated protein structure.",
                 "The MSA sent is a one-sequence self-reference, not a real multiple "
                 "sequence alignment, which measurably reduces Boltz-2 accuracy.",
-                "Per-residue confidence has not been inspected or thresholded here.",
+                "Per-residue confidence is reported as a model diagnostic, not "
+                "experimental validation.",
                 "The input protein is not biologically verified to be encoded by any "
                 "real organism's genome.",
             ),
         )
-
     def predict_complex(
         self, request: BoltzComplexRequest
     ) -> NvidiaHostedBoltzComplexResult:

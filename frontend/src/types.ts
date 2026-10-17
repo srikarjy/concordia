@@ -54,6 +54,27 @@ export interface Evo2ForwardJob {
   job_id: string; status: string; submitted_at: number; completed_at: number | null;
   result: Evo2ForwardScore | null; error: string | null;
 }
+export interface RankedSubstitution {
+  position: number; reference: string;
+  estimated_deltas: Record<string, number>; worst_case_delta: number;
+}
+export interface Evo2Attribution {
+  model_id: string; target: string; attribution_method: string;
+  sequence_hash: string; sequence_length: number;
+  reference_total_log_likelihood: number;
+  ranked_substitutions: RankedSubstitution[];
+  agreement_check: {
+    pairs: number; spearman_predicted_vs_exact: number;
+    sign_agreement: number; top_quartile_recall: number;
+  };
+  backward_seconds: number; peak_memory_bytes: number; elapsed_seconds: number;
+  input_artifact_digest: string; output_artifact_digest: string;
+  scientific_use_allowed: false; limitations: string[];
+}
+export interface Evo2AttributionJob {
+  job_id: string; status: string; submitted_at: number; completed_at: number | null;
+  result: Evo2Attribution | null; error: string | null;
+}
 export interface ExperimentNode {
   node_id: string; experiment_id: string; kind: string; operation: string; label: string;
   branch: string; parent_ids: string[]; artifact_digest: string;

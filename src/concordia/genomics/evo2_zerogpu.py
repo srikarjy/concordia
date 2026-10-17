@@ -7,7 +7,7 @@ succeeds) may simply be wrong. This adapter never takes the worker's word for
 scientific eligibility — it independently checks checkpoint identity, exact
 window length, and scored-token count against the frozen
 ``Evo2ScoringSemantics`` contract before ever setting
-``scientific_use_allowed=True``, and it fails closed on every ambiguous case.
+``scientific_use_allowed=False``, and it fails closed on every ambiguous case.
 """
 
 from __future__ import annotations
@@ -91,6 +91,7 @@ class ZeroGpuEvo2ForwardRunner:
         transport: httpx.BaseTransport | None = None,
         hf_token: str | None = None,
     ):
+        self._hf_token = hf_token
         self._auth = {"Authorization": f"Bearer {hf_token}"} if hf_token else {}
         self.artifacts = artifacts
         self.space_url = space_url.rstrip("/")
@@ -98,6 +99,37 @@ class ZeroGpuEvo2ForwardRunner:
         self.timeout_seconds = timeout_seconds
         self.poll_interval_seconds = poll_interval_seconds
         self._transport = transport
+
+    def _score_with_gradio_client(self, sequence: GenomicSequence) -> dict[str, Any]:
+        """Use Gradio's official queue client for a real remote worker.
+
+        ZeroGPU Spaces require the queue/session negotiation performed by
+        ``gradio_client``. The simplified ``/gradio_api/call`` route can be
+        rejected with an inflated duration even when the same authenticated
+        request succeeds through the official client.
+        """
+
+        try:
+            from gradio_client import Client
+
+            client = Client(self.space_url, hf_token=self._hf_token, verbose=False)
+            try:
+                result = client.predict(
+                    sequence.sequence,
+                    api_name=f"/{self.api_name}",
+                )
+            finally:
+                client.close()
+        except Exception as error:  # noqa: BLE001 - preserve provider boundary
+            raise Evo2ForwardExecutionError(
+                f"ZeroGPU worker request failed through gradio_client: "
+                f"{type(error).__name__}: {str(error)[:500]}"
+            ) from error
+        if not isinstance(result, dict):
+            raise Evo2ForwardExecutionError(
+                "ZeroGPU worker result through gradio_client was not a JSON object"
+            )
+        return result
 
     def preflight(self, sequence: GenomicSequence) -> None:
         """Reject an off-window sequence before any quota slot is spent."""
@@ -125,27 +157,31 @@ class ZeroGpuEvo2ForwardRunner:
             }
         )
         started = time.monotonic()
-        with httpx.Client(
-            timeout=self.timeout_seconds, transport=self._transport, headers=self._auth
-        ) as client:
-            submit_response = client.post(
-                f"{self.space_url}/gradio_api/call/{self.api_name}", json=request_payload
-            )
-            if submit_response.is_error:
-                raise Evo2ForwardExecutionError(
-                    f"ZeroGPU worker submit failed: HTTP {submit_response.status_code}"
+        if self._transport is None:
+            worker_record = self._score_with_gradio_client(sequence)
+        else:
+            with httpx.Client(
+                timeout=self.timeout_seconds, transport=self._transport, headers=self._auth
+            ) as client:
+                submit_response = client.post(
+                    f"{self.space_url}/gradio_api/call/{self.api_name}",
+                    json=request_payload,
                 )
-            event_id = parse_gradio_call_event_id(submit_response)
-            poll_response = client.get(
-                f"{self.space_url}/gradio_api/call/{self.api_name}/{event_id}",
-                headers={"Accept": "text/event-stream"},
-            )
-            if poll_response.is_error:
-                raise Evo2ForwardExecutionError(
-                    f"ZeroGPU worker poll failed: HTTP {poll_response.status_code}"
+                if submit_response.is_error:
+                    raise Evo2ForwardExecutionError(
+                        f"ZeroGPU worker submit failed: HTTP {submit_response.status_code}"
+                    )
+                event_id = parse_gradio_call_event_id(submit_response)
+                poll_response = client.get(
+                    f"{self.space_url}/gradio_api/call/{self.api_name}/{event_id}",
+                    headers={"Accept": "text/event-stream"},
                 )
+                if poll_response.is_error:
+                    raise Evo2ForwardExecutionError(
+                        f"ZeroGPU worker poll failed: HTTP {poll_response.status_code}"
+                    )
+            worker_record = parse_gradio_sse_result(poll_response.text)
         elapsed_seconds = time.monotonic() - started
-        worker_record = parse_gradio_sse_result(poll_response.text)
         if not isinstance(worker_record, dict):
             raise Evo2ForwardExecutionError("ZeroGPU worker result was not a JSON object")
         response_digest = self.artifacts.put_json(worker_record)
@@ -178,7 +214,9 @@ class ZeroGpuEvo2ForwardRunner:
             "sequence_hash": sequence.content_hash(),
             "score": float(worker_record.get("mean_log_likelihood", 0.0)),
             "target": target,
-            "scientific_use_allowed": in_scope,
+            # A valid forward pass is computational evidence only. Scientific
+            # eligibility requires the separate study and validation gates.
+            "scientific_use_allowed": False,
             "input_artifact_digest": request_digest,
             "output_artifact_digest": response_digest,
             "runtime_metadata": {

@@ -51,6 +51,9 @@ class RealEvo2Scorer:
             raise ValueError("Evo2 output sequence hash does not match the input sequence")
         if result.execution_mode not in {"real", "recorded_real"}:
             raise ValueError("real Evo2 adapter refuses fixture or synthetic execution modes")
-        if not result.scientific_use_allowed:
-            raise ValueError("Evo2 output is not eligible for scientific use")
+        # A real forward pass is execution evidence, not scientific validation.
+        # Keep this boundary fail-closed: no Evo2 adapter result may authorize
+        # scientific use without the separate study and validation gates.
+        if result.scientific_use_allowed:
+            raise ValueError("Evo2 adapter cannot authorize scientific use")
         return result

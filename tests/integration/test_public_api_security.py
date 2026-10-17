@@ -109,6 +109,13 @@ def test_unreachable_database_url_falls_back_to_sqlite() -> None:
     assert _reachable_database_url("postgresql://u:p@127.0.0.1:1/db") is None
 
 
+def test_required_postgres_mode_fails_closed() -> None:
+    from concordia.api.workspace import _reachable_database_url
+
+    with pytest.raises(RuntimeError, match="REQUIRE_POSTGRES"):
+        _reachable_database_url("postgresql://u:p@127.0.0.1:1/db", required=True)
+
+
 def test_oversized_and_unsized_bodies_are_rejected_before_parsing(tmp_path, monkeypatch):
     client = _client(tmp_path, monkeypatch)
     big = client.post(
@@ -183,6 +190,28 @@ def test_structure_claim_verification_is_open_and_spends_nothing(tmp_path, monke
     )
     assert clashing.json()["status"] == "CONTRADICTED"
     assert "16 interface clashes" in clashing.json()["physical_findings"]
+
+    baseline = client.post(
+        "/v1/structure-claims/baseline",
+        json={
+            "cases": [
+                {
+                    "case_id": "positive",
+                    "measurements": plausible,
+                    "reference_supported": True,
+                },
+                {
+                    "case_id": "negative",
+                    "measurements": {**plausible, "clash_count": 16},
+                    "reference_supported": False,
+                },
+            ]
+        },
+    )
+    assert baseline.status_code == 200
+    assert baseline.json()["baseline_id"] == "geometry-only-null"
+    assert baseline.json()["scientific_use_allowed"] is False
+    assert baseline.json()["metrics"]["balanced_accuracy"] == 1.0
 
 
 def test_structure_claim_verification_rejects_overlapping_chains(tmp_path, monkeypatch):

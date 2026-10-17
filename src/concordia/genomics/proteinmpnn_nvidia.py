@@ -48,6 +48,7 @@ class ProteinMpnnRequest(BaseModel):
     ca_only: bool = False
     use_soluble_model: bool = False
     random_seed: int | None = Field(default=None, ge=0)
+    fixed_positions_jsonl: str | None = Field(default=None, max_length=100_000)
 
     @field_validator("design_chains")
     @classmethod
@@ -149,6 +150,8 @@ class NvidiaHostedProteinMpnnRunner:
             body["input_pdb_chains"] = list(request.design_chains)
         if request.random_seed is not None:
             body["random_seed"] = request.random_seed
+        if request.fixed_positions_jsonl is not None:
+            body["fixed_positions_jsonl"] = request.fixed_positions_jsonl
         canonical = json.dumps(body, sort_keys=True, separators=(",", ":")).encode()
         input_hash = hashlib.sha256(canonical).hexdigest()
         request_digest = self.artifacts.put_json(
@@ -165,6 +168,7 @@ class NvidiaHostedProteinMpnnRunner:
                     "ca_only": request.ca_only,
                     "use_soluble_model": request.use_soluble_model,
                     "random_seed": request.random_seed,
+                    "fixed_positions_jsonl": request.fixed_positions_jsonl,
                 },
                 "input_retained": False,
                 "scientific_use_allowed": False,

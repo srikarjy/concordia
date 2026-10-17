@@ -81,7 +81,7 @@ def test_successful_in_scope_forward_pass_is_accepted_by_real_scorer(tmp_path: P
     result = scorer.score(sequence())
 
     assert result.execution_mode == "real"
-    assert result.scientific_use_allowed is True
+    assert result.scientific_use_allowed is False
     assert result.model_id == CHECKPOINT
     assert artifacts.get_bytes(result.input_artifact_digest)
     assert artifacts.get_bytes(result.output_artifact_digest)

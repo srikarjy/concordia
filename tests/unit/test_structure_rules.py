@@ -15,6 +15,10 @@ from concordia.verification.cross import (
     StructureScope,
     verify_claim,
 )
+from concordia.verification.structure_baseline import (
+    StructureBaselineCase,
+    run_structure_baseline,
+)
 from concordia.verification.structure_rules import (
     StructureMeasurements,
     agreement,
@@ -184,3 +188,44 @@ def test_same_model_samples_do_not_count_as_independent_support(tmp_path):
 def test_second_model_disagreement_contradicts_a_plausible_pose(tmp_path):
     measured = CLEAN.model_copy(update={"second_model_interface_agreement": 0.05})
     assert _claim(tmp_path, measured).status == "CONTRADICTED"
+
+
+def test_geometry_only_baseline_is_independent_and_non_scientific():
+    report = run_structure_baseline(
+        (
+            StructureBaselineCase(
+                case_id="plausible-reference-positive",
+                measurements=CLEAN,
+                reference_supported=True,
+            ),
+            StructureBaselineCase(
+                case_id="clashing-reference-negative",
+                measurements=CLEAN.model_copy(update={"clash_count": 16}),
+                reference_supported=False,
+            ),
+        )
+    )
+    assert report.metrics.accuracy == 1.0
+    assert report.metrics.balanced_accuracy == 1.0
+    assert report.scientific_use_allowed is False
+    assert report.prospective_claim_allowed is False
+    assert len(report.benchmark_digest) == 64
+
+
+def test_geometry_only_baseline_ignores_reference_measurement():
+    report = run_structure_baseline(
+        (
+            StructureBaselineCase(
+                case_id="positive",
+                measurements=CLEAN.model_copy(update={"reference_dockq": 0.01}),
+                reference_supported=True,
+            ),
+            StructureBaselineCase(
+                case_id="negative",
+                measurements=CLEAN.model_copy(update={"clash_count": 16, "reference_dockq": 0.99}),
+                reference_supported=False,
+            ),
+        )
+    )
+    assert report.metrics.true_positive == 1
+    assert report.metrics.true_negative == 1

@@ -8,17 +8,24 @@ linearization, so it is accurate only where the true effect is small — exactly
 the opposite of the variants anyone cares about.
 
 Measured on the real HBB window against exact rescoring
-(``reports/evo2-backward-feasibility.json``): Spearman 0.50 over 24 pairs, and
-the known c.-78A>G variant estimated at -1.7 against an exact -21.0, an
-underestimate of roughly twelvefold. The site still ranked 84th of 8,192, so
-the estimates order candidates usefully while badly misstating their size.
+(``reports/evo2-backward-feasibility.json``), over 256 sampled substitutions:
+Spearman 0.27, sign agreement 0.56, and effect magnitudes understated about
+sevenfold. The signal is real (p is about 1e-5) but weak. As a pre-filter for
+the most damaging substitutions it gives roughly a 1.8-3.6x enrichment over
+random at equal budget, which means it also misses most of them.
 
-The only defensible use is therefore as a **ranking signal**: shortlist
-positions here, then confirm each one with an exact forward rescore.
-``Evo2AttributionResult`` is pinned to ``scientific_use_allowed=False`` so it
-can never be mistaken for the forward score it approximates, and this adapter
-returns a bounded ranked shortlist rather than the full tensor, which stays in
-the content-addressed store under ``output_artifact_digest``.
+Treat an earlier figure of "Spearman 0.50" as retracted: it came from a
+24-pair sample, and the 24 pairs are a seeded subset of these 256, so the
+larger sample is strictly better evidence. Twenty-four pairs cannot resolve
+this quantity -- the sampling error alone is about +/-0.2.
+
+The only defensible use is therefore as a weak **ranking signal**: shortlist
+positions here, then confirm each one with an exact forward rescore, and do
+not assume the shortlist is complete. ``Evo2AttributionResult`` is pinned to
+``scientific_use_allowed=False`` so it can never be mistaken for the forward
+score it approximates, and this adapter returns a bounded ranked shortlist
+rather than the full tensor, which stays in the content-addressed store under
+``output_artifact_digest``.
 """
 
 from __future__ import annotations
@@ -42,12 +49,16 @@ from concordia.storage.content import ContentAddressedStore
 SHA256_PATTERN = r"^[0-9a-f]{64}$"
 
 ATTRIBUTION_LIMITATIONS: tuple[str, ...] = (
-    "First-order gradient estimates are a ranking signal, not a score; confirm "
+    "First-order gradient estimates are a weak ranking signal, not a score; confirm "
     "any shortlisted position with an exact forward rescore before using it.",
-    "Measured against exact rescoring on the real HBB window: Spearman 0.50 over "
-    "24 pairs, sign agreement 0.625, top-quartile recall 0.5.",
-    "Large effects are badly underestimated. The known HBB c.-78A>G variant was "
-    "estimated at -1.7 against an exact -21.0, while still ranking 84th of 8,192.",
+    "Measured against exact rescoring on the real HBB window over 256 sampled "
+    "substitutions: Spearman 0.27, sign agreement 0.56. Real but weak.",
+    "The shortlist is not complete. At equal budget this enriches for the most "
+    "damaging substitutions by about 1.8-3.6x over random, so it still misses most.",
+    "Effect magnitudes are understated about sevenfold, because a first-order "
+    "estimate is a local linearization and large effects are not local.",
+    "The per-job agreement check below is a sanity check on a small sample, not a "
+    "measurement; at 128 pairs its sampling error is about +/-0.17.",
     "Executed on unverified worker code; see deploy/hf-evo2-worker/app.py for the "
     "current verification status.",
 )
@@ -114,13 +125,17 @@ class ZeroGpuEvo2AttributionRunner:
         space_url: str,
         scoring: Evo2ScoringSemantics,
         shortlist_size: int = 50,
-        check_pairs: int = 24,
+        # 24 pairs, the first default here, produced a Spearman of 0.50 against a
+        # true value near 0.27 - its sampling error is wider than the quantity.
+        # 128 completes inside the worker's GPU budget and is not misleading.
+        check_pairs: int = 128,
         timeout_seconds: float = 600.0,
         transport: httpx.BaseTransport | None = None,
         hf_token: str | None = None,
     ):
         if shortlist_size < 1:
             raise ValueError("shortlist_size must be at least 1")
+        self._hf_token = hf_token
         self._auth = {"Authorization": f"Bearer {hf_token}"} if hf_token else {}
         self.artifacts = artifacts
         self.space_url = space_url.rstrip("/")
@@ -156,28 +171,42 @@ class ZeroGpuEvo2AttributionRunner:
             }
         )
         started = time.monotonic()
-        with httpx.Client(
-            timeout=self.timeout_seconds, transport=self._transport, headers=self._auth
-        ) as client:
-            submit_response = client.post(
-                f"{self.space_url}/gradio_api/call/{self.api_name}",
-                json={"data": [sequence.sequence, self.check_pairs]},
-            )
-            if submit_response.is_error:
-                raise Evo2AttributionError(
-                    f"ZeroGPU worker submit failed: HTTP {submit_response.status_code}"
+        if self._transport is None:
+            from gradio_client import Client
+
+            try:
+                client = Client(self.space_url, hf_token=self._hf_token, verbose=False)
+                try:
+                    record = client.predict(
+                        sequence.sequence, self.check_pairs, api_name=f"/{self.api_name}"
+                    )
+                finally:
+                    client.close()
+            except Exception as error:
+                raise Evo2AttributionError(f"ZeroGPU attribution failed: {error}") from error
+        else:
+            with httpx.Client(
+                timeout=self.timeout_seconds, transport=self._transport, headers=self._auth
+            ) as client:
+                submit_response = client.post(
+                    f"{self.space_url}/gradio_api/call/{self.api_name}",
+                    json={"data": [sequence.sequence, self.check_pairs]},
                 )
-            event_id = parse_gradio_call_event_id(submit_response)
-            poll_response = client.get(
-                f"{self.space_url}/gradio_api/call/{self.api_name}/{event_id}",
-                headers={"Accept": "text/event-stream"},
-            )
-            if poll_response.is_error:
-                raise Evo2AttributionError(
-                    f"ZeroGPU worker poll failed: HTTP {poll_response.status_code}"
+                if submit_response.is_error:
+                    raise Evo2AttributionError(
+                        f"ZeroGPU worker submit failed: HTTP {submit_response.status_code}"
+                    )
+                event_id = parse_gradio_call_event_id(submit_response)
+                poll_response = client.get(
+                    f"{self.space_url}/gradio_api/call/{self.api_name}/{event_id}",
+                    headers={"Accept": "text/event-stream"},
                 )
+                if poll_response.is_error:
+                    raise Evo2AttributionError(
+                        f"ZeroGPU worker poll failed: HTTP {poll_response.status_code}"
+                    )
+            record = parse_gradio_sse_result(poll_response.text)
         elapsed_seconds = time.monotonic() - started
-        record = parse_gradio_sse_result(poll_response.text)
         if not isinstance(record, dict):
             raise Evo2AttributionError("ZeroGPU worker result was not a JSON object")
         response_digest = self.artifacts.put_json(record)

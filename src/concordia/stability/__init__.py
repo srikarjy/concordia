@@ -28,6 +28,12 @@ from concordia.stability.nl_schema import (
     render_numeric_recommendation,
     validate_extraction_response,
 )
+from concordia.stability.request import (
+    MutationSpec,
+    TypedStabilityRequest,
+    candidates_for_request,
+    run_typed_request,
+)
 from concordia.stability.structure_aware import (
     PIPPackLocalAdapter,
     StructureMutation,
@@ -35,12 +41,6 @@ from concordia.stability.structure_aware import (
     from_thermompnn,
     proline_phi_rejection,
     should_refold,
-)
-from concordia.stability.request import (
-    MutationSpec,
-    TypedStabilityRequest,
-    candidates_for_request,
-    run_typed_request,
 )
 
 __all__ = [

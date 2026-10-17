@@ -28,7 +28,7 @@ def unwrap_logits(outputs: Any) -> Any:
     only the first level leaves a tuple or a 3-D array, which the scorer rejects.
     """
 
-    while isinstance(outputs, (tuple, list)):
+    while isinstance(outputs, tuple | list):
         if not outputs:
             raise ValueError("model returned no logits")
         outputs = outputs[0]

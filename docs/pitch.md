@@ -52,9 +52,10 @@ Concordia answers those mechanically and keeps the receipt.
   recovered at 74% precision. This is a known, old structure that is likely in the model's
   training data, so it shows the pipeline works, not that the model generalizes. See
   `reports/boltz2-3hfm-reference-reproduction.json`.
-- **Not yet real:** there is **no novel or validated scientific finding** in this repository. Evo 2 forward
-  scoring is not wired. RFantibody is not integrated. All fixture output is
-  labeled `scientific_use_allowed=false`.
+- **Not yet real:** there is **no novel or validated scientific finding** in this repository. Evo 2
+  generation and a strict forward-worker boundary are integrated, but no real forward score has
+  passed the frozen study protocol. RFdiffusion and ProteinMPNN are integrated as hosted campaign
+  adapters; RFantibody is not integrated. All fixture output is labeled `scientific_use_allowed=false`.
 - **Why that is a feature:** the system refuses to overclaim, which is exactly what a diligence
   reviewer wants from the layer that sits under model outputs.
 

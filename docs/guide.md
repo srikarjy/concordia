@@ -22,7 +22,9 @@ Concordia makes the answer a first-class object:
    bounded variants that cannot see each other. Deterministic fitness selects survivors.
 
 The honest status: the machinery is built and tested; no real scientific finding exists yet.
-Evo 2 forward scoring and RFantibody/ProteinMPNN are not wired. See "Known limits".
+Hosted Evo 2 generation, isolated forward-worker contracts, RFdiffusion, ProteinMPNN,
+and Boltz campaign adapters are wired, but no real Evo 2 forward score or expressed/assayed
+binder result is claimed. RFantibody is not integrated. See "Known limits".
 
 ## Who uses what
 
@@ -45,7 +47,9 @@ cd frontend && npm ci && npm run build && cd ..
 ```
 
 CLI features checked in the audit: `list-tools`, `doctor`, `genomic-demo`, `colony-demo`,
-`benchmark` (local suites), `ingest-project`, `qwen-colony-demo`.
+`benchmark` (local suites), `ingest-project`, `qwen-colony-demo`, and the no-inference
+`bionemo-preflight`. The optional direct GGUF scientist backend is available with
+`uv sync --extra llama` and remains local-only.
 
 ## What was tested and how it held up
 
