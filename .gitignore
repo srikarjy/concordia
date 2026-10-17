@@ -51,3 +51,5 @@ reports/*.json
 .claude/
 
 # Prompts, configs, manifests, evidence metadata, and reports stay trackable
+.vercel
+.env*
