@@ -36,6 +36,12 @@ from concordia.stability.structure_aware import (
     proline_phi_rejection,
     should_refold,
 )
+from concordia.stability.request import (
+    MutationSpec,
+    TypedStabilityRequest,
+    candidates_for_request,
+    run_typed_request,
+)
 
 __all__ = [
     "INTERNAL_STABILITY_DDG_CONVENTION",
@@ -66,4 +72,8 @@ __all__ = [
     "from_thermompnn",
     "proline_phi_rejection",
     "should_refold",
+    "MutationSpec",
+    "TypedStabilityRequest",
+    "candidates_for_request",
+    "run_typed_request",
 ]

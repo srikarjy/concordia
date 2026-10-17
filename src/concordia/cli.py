@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import time
 from pathlib import Path
 
@@ -62,11 +63,12 @@ def build_parser() -> argparse.ArgumentParser:
     workspace_api.add_argument("--frontend", type=Path, default=Path("frontend/dist"))
     workspace_api.add_argument("--port", type=int, default=7860)
     ledger = subparsers.add_parser(
-        "ledger", help="check the event ledger's hash chain or print its root"
+        "ledger", help="export or check the event ledger's hash chain"
     )
-    ledger.add_argument("action", choices=("verify", "root"))
+    ledger.add_argument("action", choices=("verify", "root", "export"))
     ledger.add_argument("--state-root", type=Path, default=Path(".concordia"))
     ledger.add_argument("--run-id")
+    ledger.add_argument("--output", type=Path)
     worker = subparsers.add_parser("run-worker", help="run the durable local worker")
     worker.add_argument("--state-root", type=Path, default=Path(".concordia"))
     worker.add_argument("--owner")
@@ -167,6 +169,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
     nvidia_smoke.add_argument("--num-tokens", type=int, default=8)
     nvidia_smoke.add_argument("--seed", type=int, default=1729)
+    bionemo = subparsers.add_parser(
+        "bionemo-preflight",
+        help="check an authenticated BioNeMo deployment without running inference",
+    )
+    bionemo.add_argument("--endpoint", required=True)
+    bionemo.add_argument(
+        "--service", choices=("framework", "inference"), default="framework"
+    )
+    bionemo.add_argument("--timeout", type=float, default=30.0)
     benchmark = subparsers.add_parser(
         "benchmark",
         help="run reproducible throughput, replay, claim, and Boltz benchmarks",
@@ -182,6 +193,18 @@ def build_parser() -> argparse.ArgumentParser:
     benchmark.add_argument(
         "--real", action="store_true", help="run the hosted Boltz latency suite"
     )
+    stability = subparsers.add_parser(
+        "measured-stability",
+        help="run the typed frozen 1IGV measured-stability workflow",
+    )
+    stability.add_argument("--domain", default="1IGV")
+    stability.add_argument(
+        "--mutations",
+        help="comma-separated candidates; use ':' within one item for a multi-mutant",
+    )
+    stability.add_argument("--state-root", type=Path, default=Path(".concordia/typed-stability"))
+    stability.add_argument("--candidate-id", action="append", dest="candidate_ids")
+    stability.add_argument("--limit", type=int, default=32)
     return parser
 
 
@@ -236,6 +259,24 @@ def main() -> None:
         print(json.dumps({"report": str(write_demo_report(args.output))}, indent=2))
     elif args.command == "doctor":
         print(json.dumps(check_local_runtime(args.config), indent=2))
+    elif args.command == "bionemo-preflight":
+        from concordia.campaigns.connectors import (
+            HttpBioNeMoInferenceRunner,
+            HttpBioNeMoTrainingRunner,
+        )
+
+        api_key = os.environ.get("CONCORDIA_BIONEMO_API_KEY")
+        if not api_key:
+            raise SystemExit("CONCORDIA_BIONEMO_API_KEY is required")
+        runner = (
+            HttpBioNeMoTrainingRunner
+            if args.service == "framework"
+            else HttpBioNeMoInferenceRunner
+        )(args.endpoint, api_key, timeout_seconds=args.timeout)
+        preflight_report = runner.preflight()
+        print(json.dumps(preflight_report.model_dump(mode="json"), indent=2))
+        if not preflight_report.ready:
+            raise SystemExit(1)
     elif args.command == "genomic-demo":
         print(json.dumps(run_genomic_fixture_demo(args.output), indent=2))
     elif args.command == "serve-api":
@@ -256,10 +297,19 @@ def main() -> None:
         )
     elif args.command == "ledger":
         from concordia.events.sqlite import SQLiteEventLedger
+        from concordia.runtime.service import RunService
 
         event_ledger = SQLiteEventLedger(args.state_root / "events.sqlite3")
         if args.action == "root":
             print(event_ledger.ledger_root())
+        elif args.action == "export":
+            exported = RunService.local(args.state_root).export_ledger()
+            serialized = json.dumps(exported.model_dump(mode="json"), indent=2, sort_keys=True)
+            if args.output:
+                args.output.parent.mkdir(parents=True, exist_ok=True)
+                args.output.write_text(serialized + "\n", encoding="utf-8")
+            else:
+                print(serialized)
         else:
             chain = event_ledger.verify_chain(args.run_id)
             print(json.dumps(chain.model_dump(mode="json") | {"intact": chain.intact}, indent=2))
@@ -419,6 +469,46 @@ def main() -> None:
             output=args.output,
         )
         print(report.model_dump_json(indent=2))
+    elif args.command == "measured-stability":
+        if args.mutations is not None:
+            from concordia.stability.request import TypedStabilityRequest, run_typed_request
+
+            request = TypedStabilityRequest.from_cli(args.domain, args.mutations)
+            print(
+                json.dumps(
+                    run_typed_request(request, state_root=args.state_root),
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+            return
+        from concordia.stability.measured import (
+            MeasuredCandidate,
+            MeasuredStabilityEngine,
+        )
+
+        engine = MeasuredStabilityEngine()
+        candidate_ids = args.candidate_ids or sorted(engine.rows)[: args.limit]
+        candidates = []
+        for variant_id in candidate_ids:
+            row = engine.rows.get(variant_id)
+            if row is not None:
+                candidates.append(
+                    MeasuredCandidate(row.variant_id, row.position, row.mutant, row.mutation_count)
+                )
+                continue
+            import re
+
+            match = re.search(r"[A-Z](\d+)([A-Z])", variant_id)
+            if match is None or ":" not in variant_id:
+                raise SystemExit(
+                    f"cannot parse external measured-stability candidate: {variant_id}"
+                )
+            candidates.append(
+                MeasuredCandidate(variant_id, int(match.group(1)), match.group(2), 2)
+            )
+        measured_report = engine.rank(candidates)
+        print(json.dumps(measured_report, indent=2, sort_keys=True))
 
 
 if __name__ == "__main__":
