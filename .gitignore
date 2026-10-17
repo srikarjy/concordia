@@ -12,6 +12,7 @@ htmlcov/
 .concordia/
 build/
 dist/
+frontend/dist-stability/
 node_modules/
 *.tsbuildinfo
 playwright-report/
