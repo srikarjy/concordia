@@ -23,6 +23,22 @@ def test_capabilities_report_configuration_without_secrets(
     assert "test-secret" not in response.text
 
 
+def test_connector_health_uses_state_shape_without_internal_urls(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    monkeypatch.delenv("OLLAMA_HOST", raising=False)
+    client = TestClient(create_workspace_app(tmp_path, "frontend/dist"))
+    payload = client.get("/api/connectors/health").json()
+    for connector in payload["connectors"].values():
+        assert set(connector) >= {"configured", "state", "reachable_at", "last_success"}
+        assert connector["state"] in {
+            "healthy", "rate_limited", "unavailable", "unconfigured", "untested"
+        }
+        assert "endpoint" not in connector
+        assert "model" not in connector
+
+
 def test_saved_workspace_api_exposes_only_fixture_artifacts(tmp_path: Path) -> None:
     client = TestClient(create_workspace_app(tmp_path, "frontend/dist"))
     workspace = client.get("/api/workspace")

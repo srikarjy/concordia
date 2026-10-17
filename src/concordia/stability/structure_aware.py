@@ -151,11 +151,10 @@ class PIPPackLocalAdapter:
         import hydra
         import lightning
         import torch
-        from model.resampling import resample_loop
-        from utils.train_utils import load_checkpoint
-
         from data.protein import from_pdb_file
         from data.top2018_dataset import transform_structure
+        from model.resampling import resample_loop
+        from utils.train_utils import load_checkpoint
 
         del from_pdb_file, resample_loop, transform_structure
         with open(self.weights / "pippack_model_1_config.pickle", "rb") as handle:
@@ -181,10 +180,9 @@ class PIPPackLocalAdapter:
 
         sys.path.insert(0, str(self.repository))
         import torch
-        from inference import pdbs_from_prediction, replace_protein_sequence, sample_epoch
-
         from data.protein import from_pdb_file
         from data.top2018_dataset import collate_fn, transform_structure
+        from inference import pdbs_from_prediction, replace_protein_sequence, sample_epoch
 
         model, config = self._load()
         protein = vars(from_pdb_file(str(input_pdb), mse_to_met=True))

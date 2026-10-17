@@ -819,8 +819,9 @@ def create_workspace_app(
     @app.get("/api/capabilities")
     def capabilities() -> dict[str, object]:
         """Report configuration only; never expose credentials or claim live health."""
+        nvidia_configured = nvidia_api_key(secret_root) is not None
         return {
-            "nvidia": bool(os.environ.get("NVIDIA_API_KEY", "").strip()),
+            "nvidia": nvidia_configured,
             "forward": forward_queue is not None,
             "attribution": attribution_queue is not None,
         }
@@ -944,8 +945,6 @@ def create_workspace_app(
                         probe=ollama_probe,
                         tested=ollama_configured,
                     ),
-                    "endpoint": ollama_url,
-                    "model": os.environ.get("OLLAMA_MODEL", "qwen3:1.7b"),
                     "cloud_disabled": os.environ.get("OLLAMA_NO_CLOUD", "") == "1",
                 },
                 "bionemo_training": {
