@@ -37,7 +37,7 @@ function MolstarViewer({ report, selected }: { report: Report; selected: number 
     void (async () => {
       if (!target.current) return;
       const plugin = await createPluginUI({ target: target.current, render: renderReact18, spec: DefaultPluginUISpec() });
-      const pdb = await fetch('/data/1IGV.pdb').then((response) => response.text());
+      const pdb = await fetch('/data/structure/1IGV.pdb').then((response) => response.text());
       const data = await plugin.builders.data.rawData({ data: pdb, label: '1IGV AlphaFold model' });
       const trajectory = await plugin.builders.structure.parseTrajectory(data, 'pdb');
       const preset = await plugin.builders.structure.hierarchy.applyPreset(trajectory, 'default');
