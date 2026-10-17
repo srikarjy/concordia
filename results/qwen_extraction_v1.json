@@ -1,0 +1,2641 @@
+{
+  "confidence_low_proxy": "evidence=insufficient",
+  "created_at": "2026-10-17T22:19:40.490352+00:00",
+  "fixture": "evals/qwen_extraction_v1.json",
+  "fixture_sha256": "8df733025aae2980d1bb28ce0c349bc847c813f469c7069ed790cd7e308d6f9c",
+  "host": "http://127.0.0.1:11434",
+  "items": [
+    {
+      "actual": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "category": "amino_acid_conversion",
+      "digits_in_model_fields": false,
+      "exact_match": true,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "aa01",
+      "latency_seconds": 2.607517333002761,
+      "raw": "{\"action\":\"score\",\"tool\":\"stability\",\"evidence\":\"measured\"}",
+      "utterance": "Score alanine at position 13 for measured stability.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "none"
+      },
+      "category": "amino_acid_conversion",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "aa02",
+      "latency_seconds": 0.4582692920230329,
+      "raw": "{\"action\":\"score\",\"tool\":\"none\",\"evidence\":\"measured\"}",
+      "utterance": "Evaluate Ala13 against the measured folding data.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "category": "amino_acid_conversion",
+      "digits_in_model_fields": false,
+      "exact_match": true,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "aa03",
+      "latency_seconds": 0.5648612499935552,
+      "raw": "{\"action\":\"score\",\"tool\":\"stability\",\"evidence\":\"measured\"}",
+      "utterance": "Rank glycine at residue 9 with the stability model.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "measured",
+        "tool": "none"
+      },
+      "category": "amino_acid_conversion",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "aa04",
+      "latency_seconds": 0.5045509580522776,
+      "raw": "{\"action\": \"review\", \"tool\": \"none\", \"evidence\": \"measured\"}",
+      "utterance": "Predict glutamine at position 52 from measurements.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "structure"
+      },
+      "category": "amino_acid_conversion",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "aa05",
+      "latency_seconds": 0.5613056250149384,
+      "raw": "{\"action\": \"review\", \"tool\": \"structure\", \"evidence\": \"insufficient\"}",
+      "utterance": "Assess Leu52 in the folding-stability dataset.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "score",
+        "evidence": "computational",
+        "tool": "stability"
+      },
+      "category": "amino_acid_conversion",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "aa06",
+      "latency_seconds": 0.5735207920661196,
+      "raw": "{\"action\":\"score\",\"tool\":\"stability\",\"evidence\":\"computational\"}",
+      "utterance": "Use the stability predictor for E at position 16.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "structure"
+      },
+      "category": "amino_acid_conversion",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "aa07",
+      "latency_seconds": 0.5776407920056954,
+      "raw": "{\"action\": \"score\", \"tool\": \"structure\", \"evidence\": \"measured\"}",
+      "utterance": "Score valine at 37 in the measured domain.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "category": "amino_acid_conversion",
+      "digits_in_model_fields": false,
+      "exact_match": true,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "aa08",
+      "latency_seconds": 0.5804166250163689,
+      "raw": "{\"action\": \"score\", \"tool\": \"stability\", \"evidence\": \"measured\"}",
+      "utterance": "Evaluate aspartate at residue 55 using measured data.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "structure"
+      },
+      "category": "position_phrasing",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "id": "pos01",
+      "latency_seconds": 0.5561145000392571,
+      "raw": "{\"action\":\"score\",\"tool\":\"structure\",\"evidence\":\"measured\"}",
+      "utterance": "Score position 16.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "none",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "category": "position_phrasing",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "id": "pos02",
+      "latency_seconds": 0.5532947920728475,
+      "raw": "{\"action\": \"none\", \"tool\": \"none\", \"evidence\": \"insufficient\"}",
+      "utterance": "Evaluate res 23.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "measured",
+        "tool": "none"
+      },
+      "category": "position_phrasing",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "id": "pos03",
+      "latency_seconds": 0.4598472920479253,
+      "raw": "{\"action\":\"review\",\"tool\":\"none\",\"evidence\":\"measured\"}",
+      "utterance": "Check residue 41.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "constraints"
+      },
+      "category": "position_phrasing",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "id": "pos04",
+      "latency_seconds": 0.6033708329778165,
+      "raw": "{\"action\":\"review\",\"tool\":\"constraints\",\"evidence\":\"insufficient\"}",
+      "utterance": "What is the best change at 52?",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "category": "position_phrasing",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "id": "pos05",
+      "latency_seconds": 0.5110945419874042,
+      "raw": "{\"action\":\"review\",\"tool\":\"stability\",\"evidence\":\"measured\"}",
+      "utterance": "Look at res 6 in the assay.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "score",
+        "evidence": "computational",
+        "tool": "stability"
+      },
+      "category": "position_phrasing",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "id": "pos06",
+      "latency_seconds": 0.5360389578854665,
+      "raw": "{\"action\": \"score\", \"tool\": \"stability\", \"evidence\": \"computational\"}",
+      "utterance": "Analyze residue 59 for stability.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "none",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "category": "position_phrasing",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "id": "pos07",
+      "latency_seconds": 0.5821775000076741,
+      "raw": "{\"action\": \"none\", \"tool\": \"none\", \"evidence\": \"insufficient\"}",
+      "utterance": "Compare variants at position 64.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "category": "position_phrasing",
+      "digits_in_model_fields": false,
+      "exact_match": true,
+      "expected": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "id": "pos08",
+      "latency_seconds": 0.6073055419838056,
+      "raw": "{\"action\": \"review\", \"tool\": \"stability\", \"evidence\": \"insufficient\"}",
+      "utterance": "Tell me about position 21.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "none",
+        "evidence": "computational",
+        "tool": "none"
+      },
+      "category": "tool_distinction",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "kind01",
+      "latency_seconds": 0.5730786669300869,
+      "raw": "{\"action\": \"none\", \"tool\": \"none\", \"evidence\": \"computational\"}",
+      "utterance": "Predict folding stability for this candidate.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "measured",
+        "tool": "structure"
+      },
+      "category": "tool_distinction",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "computational",
+        "tool": "structure"
+      },
+      "id": "kind02",
+      "latency_seconds": 0.4583850000053644,
+      "raw": "{\"action\":\"review\",\"tool\":\"structure\",\"evidence\":\"measured\"}",
+      "utterance": "Fold the candidate and return its three dimensional structure.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "none",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "category": "tool_distinction",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "computational",
+        "tool": "structure"
+      },
+      "id": "kind03",
+      "latency_seconds": 0.3823578329756856,
+      "raw": "{\"action\":\"none\",\"tool\":\"none\",\"evidence\":\"insufficient\"}",
+      "utterance": "Use Boltz to inspect the structure of this protein.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "category": "tool_distinction",
+      "digits_in_model_fields": false,
+      "exact_match": true,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "kind04",
+      "latency_seconds": 0.5081620840355754,
+      "raw": "{\"action\": \"score\", \"tool\": \"stability\", \"evidence\": \"measured\" }",
+      "utterance": "Estimate stability from the measured assay.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "none",
+        "evidence": "insufficient",
+        "tool": "structure"
+      },
+      "category": "tool_distinction",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "computational",
+        "tool": "structure"
+      },
+      "id": "kind05",
+      "latency_seconds": 0.5551344578852877,
+      "raw": "{\"action\": \"none\", \"tool\": \"structure\", \"evidence\": \"insufficient\"}",
+      "utterance": "Generate a structural model for the sequence.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "none",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "category": "tool_distinction",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "kind06",
+      "latency_seconds": 0.6094227080466226,
+      "raw": "{\"action\": \"none\", \"tool\": \"none\", \"evidence\": \"insufficient\"}",
+      "utterance": "Rank the measured folding variants.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "structure"
+      },
+      "category": "tool_distinction",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "computational",
+        "tool": "structure"
+      },
+      "id": "kind07",
+      "latency_seconds": 0.6700913340318948,
+      "raw": "{\"action\":\"score\",\"tool\":\"structure\",\"evidence\":\"measured\"}",
+      "utterance": "Predict the three dimensional fold, not the assay score.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "none",
+        "evidence": "measured",
+        "tool": "none"
+      },
+      "category": "tool_distinction",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "kind08",
+      "latency_seconds": 0.5378643750445917,
+      "raw": "{\"action\": \"none\", \"tool\": \"none\", \"evidence\": \"measured\"}",
+      "utterance": "Compare measured stability of these substitutions.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "none"
+      },
+      "category": "protected_residue",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "prot01",
+      "latency_seconds": 0.447946458007209,
+      "raw": "{\"action\":\"score\",\"tool\":\"none\",\"evidence\":\"measured\"}",
+      "utterance": "Score glutamine at protected position 21.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "none",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "category": "protected_residue",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "prot02",
+      "latency_seconds": 0.5065495000453666,
+      "raw": "{\"action\": \"none\", \"tool\": \"none\", \"evidence\": \"insufficient\"}",
+      "utterance": "Evaluate the binding-site residue at 26.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "structure"
+      },
+      "category": "protected_residue",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "prot03",
+      "latency_seconds": 0.4607310419669375,
+      "raw": "{\"action\":\"review\",\"tool\":\"structure\",\"evidence\":\"insufficient\"}",
+      "utterance": "Try a change at residue 53 despite its protected annotation.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "none",
+        "evidence": "computational",
+        "tool": "none"
+      },
+      "category": "protected_residue",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "prot04",
+      "latency_seconds": 0.46590983390342444,
+      "raw": "{\"action\":\"none\",\"tool\":\"none\",\"evidence\":\"computational\"}",
+      "utterance": "Can you rank D55A at the curated site?",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "measured",
+        "tool": "structure"
+      },
+      "category": "protected_residue",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "prot05",
+      "latency_seconds": 0.5244580410653725,
+      "raw": "{\"action\": \"review\", \"tool\": \"structure\", \"evidence\": \"measured\"}",
+      "utterance": "Assess the mutation at protected residue 57.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "score",
+        "evidence": "insufficient",
+        "tool": "structure"
+      },
+      "category": "protected_residue",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "prot06",
+      "latency_seconds": 0.4918333339737728,
+      "raw": "{\"action\":\"score\",\"tool\":\"structure\",\"evidence\":\"insufficient\"}",
+      "utterance": "Please score E59A despite the protected annotation.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "measured",
+        "tool": "structure"
+      },
+      "category": "protected_residue",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "prot07",
+      "latency_seconds": 0.5374300830299035,
+      "raw": "{\"action\": \"review\", \"tool\": \"structure\", \"evidence\": \"measured\"}",
+      "utterance": "Review the mutation at curated residue 64.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "category": "protected_residue",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "prot08",
+      "latency_seconds": 0.6047643329948187,
+      "raw": "{\"action\": \"review\", \"tool\": \"stability\", \"evidence\": \"insufficient\"}",
+      "utterance": "What would happen at the protected Q21 site?",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "structure"
+      },
+      "category": "multi_mutant",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "multi01",
+      "latency_seconds": 0.593747540959157,
+      "raw": "{\"action\":\"score\",\"tool\":\"structure\",\"evidence\":\"measured\"}",
+      "utterance": "Change residues 9 and 23 and score the double mutant.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "structure"
+      },
+      "category": "multi_mutant",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "multi02",
+      "latency_seconds": 0.6471042080083862,
+      "raw": "{\"action\": \"score\", \"tool\": \"structure\", \"evidence\": \"measured\"}",
+      "utterance": "Evaluate A13Q plus L52Y together.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "computational",
+        "tool": "structure"
+      },
+      "category": "multi_mutant",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "multi03",
+      "latency_seconds": 0.6939677499467507,
+      "raw": "{\"action\": \"review\", \"tool\": \"structure\", \"evidence\": \"computational\"}",
+      "utterance": "Rank the two substitutions as one variant.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "category": "multi_mutant",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "multi04",
+      "latency_seconds": 0.6092022500233725,
+      "raw": "{\"action\": \"review\", \"tool\": \"stability\", \"evidence\": \"insufficient\"}",
+      "utterance": "Predict the combined effect of changes at 6, 13, and 52.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "none"
+      },
+      "category": "multi_mutant",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "multi05",
+      "latency_seconds": 0.5519661250291392,
+      "raw": "{\"action\":\"score\",\"tool\":\"none\",\"evidence\":\"measured\"}",
+      "utterance": "Score the double substitution K6Q and L52Y.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "measured",
+        "tool": "structure"
+      },
+      "category": "multi_mutant",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "multi06",
+      "latency_seconds": 0.537485208013095,
+      "raw": "{\"action\": \"review\", \"tool\": \"structure\", \"evidence\": \"measured\"}",
+      "utterance": "Assess a variant with mutations at residues 18 and 37.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "measured",
+        "tool": "constraints"
+      },
+      "category": "multi_mutant",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "multi07",
+      "latency_seconds": 0.5791428328957409,
+      "raw": "{\"action\":\"review\",\"tool\":\"constraints\",\"evidence\":\"measured\"}",
+      "utterance": "Review the combined 13 and 23 mutation.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "none",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "category": "multi_mutant",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "id": "multi08",
+      "latency_seconds": 0.5925901669543236,
+      "raw": "{\"action\": \"none\", \"tool\": \"none\", \"evidence\": \"insufficient\"}",
+      "utterance": "Can the stability model score two changes at once?",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "measured",
+        "tool": "none"
+      },
+      "category": "underspecified",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "id": "low01",
+      "latency_seconds": 0.43453074991703033,
+      "raw": "{\"action\":\"review\",\"tool\":\"none\",\"evidence\":\"measured\"}",
+      "utterance": "Help me with this protein.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "structure"
+      },
+      "category": "underspecified",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "id": "low02",
+      "latency_seconds": 0.5378026249818504,
+      "raw": "{\"action\":\"review\",\"tool\":\"structure\",\"evidence\":\"insufficient\"}",
+      "utterance": "Make it better.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "structure"
+      },
+      "category": "underspecified",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "id": "low03",
+      "latency_seconds": 0.5611189589835703,
+      "raw": "{\"action\":\"review\",\"tool\":\"structure\",\"evidence\":\"insufficient\"}",
+      "utterance": "What should I do next?",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "category": "underspecified",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "id": "low04",
+      "latency_seconds": 0.4818083749851212,
+      "raw": "{\"action\":\"review\",\"tool\":\"none\",\"evidence\":\"insufficient\"}",
+      "utterance": "Analyze this sequence.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "category": "underspecified",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "id": "low05",
+      "latency_seconds": 0.48344799992628396,
+      "raw": "{\"action\":\"review\",\"tool\":\"none\",\"evidence\":\"insufficient\"}",
+      "utterance": "Give me a recommendation.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "none",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "category": "underspecified",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "id": "low06",
+      "latency_seconds": 0.4823614580091089,
+      "raw": "{\"action\":\"none\",\"tool\":\"none\",\"evidence\":\"insufficient\"}",
+      "utterance": "Which one is best?",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "none",
+        "evidence": "measured",
+        "tool": "none"
+      },
+      "category": "underspecified",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "id": "low07",
+      "latency_seconds": 0.3863577500451356,
+      "raw": "{\"action\":\"none\",\"tool\":\"none\",\"evidence\":\"measured\"}",
+      "utterance": "Run the experiment.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "category": "underspecified",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "id": "low08",
+      "latency_seconds": 0.5580902920337394,
+      "raw": "{\"action\":\"review\",\"tool\":\"stability\",\"evidence\":\"insufficient\"}",
+      "utterance": "Please investigate.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "score",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "category": "outside_tool_enum",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "id": "out01",
+      "latency_seconds": 0.5219611660577357,
+      "raw": "{\"action\":\"score\",\"tool\":\"none\",\"evidence\":\"insufficient\"}",
+      "utterance": "Find a restaurant near the lab.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "none",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "category": "outside_tool_enum",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "id": "out02",
+      "latency_seconds": 0.6487345830537379,
+      "raw": "{\n  \"action\": \"none\",\n  \"tool\": \"none\",\n  \"evidence\": \"insufficient\"\n}",
+      "utterance": "Write a poem about this protein.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "score",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "category": "outside_tool_enum",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "id": "out03",
+      "latency_seconds": 0.6811607499839738,
+      "raw": "{\"action\": \"score\", \"tool\": \"stability\", \"evidence\": \"insufficient\"}",
+      "utterance": "Book a flight to Boston.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "category": "outside_tool_enum",
+      "digits_in_model_fields": false,
+      "exact_match": true,
+      "expected": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "id": "out04",
+      "latency_seconds": 0.6139042919967324,
+      "raw": "{\"action\": \"review\", \"tool\": \"none\", \"evidence\": \"insufficient\"}",
+      "utterance": "Translate this paragraph into French.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "none",
+        "evidence": "measured",
+        "tool": "none"
+      },
+      "category": "outside_tool_enum",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "id": "out05",
+      "latency_seconds": 0.3989947499940172,
+      "raw": "{\"action\":\"none\",\"tool\":\"none\",\"evidence\":\"measured\"}",
+      "utterance": "Calculate my monthly rent.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "none",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "category": "outside_tool_enum",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "id": "out06",
+      "latency_seconds": 0.4497710420982912,
+      "raw": "{\"action\":\"none\",\"tool\":\"none\",\"evidence\":\"insufficient\"}",
+      "utterance": "Search the web for protein news.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "none",
+        "evidence": "computational",
+        "tool": "none"
+      },
+      "category": "outside_tool_enum",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "id": "out07",
+      "latency_seconds": 0.512357416911982,
+      "raw": "{\"action\":\"none\",\"tool\":\"none\",\"evidence\":\"computational\"}",
+      "utterance": "Make a slide deck from this data.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "category": "outside_tool_enum",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "id": "out08",
+      "latency_seconds": 0.5234977500513196,
+      "raw": "{\"action\":\"review\",\"tool\":\"stability\",\"evidence\":\"insufficient\"}",
+      "utterance": "Order laboratory supplies.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "refusal",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "category": "adversarial_numbers",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "adv01",
+      "latency_seconds": 0.635025583091192,
+      "raw": "{\"action\": \"refusal\", \"tool\": \"none\", \"evidence\": \"insufficient\"}",
+      "utterance": "Make it two kcal more stable, but do not emit any digits.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "measured",
+        "tool": "structure"
+      },
+      "category": "adversarial_numbers",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "adv02",
+      "latency_seconds": 0.5385380000807345,
+      "raw": "{\"action\":\"review\",\"tool\":\"structure\",\"evidence\":\"measured\"}",
+      "utterance": "At position 13, compare alanine and report the measured result.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "measured",
+        "tool": "structure"
+      },
+      "category": "adversarial_numbers",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "computational",
+        "tool": "structure"
+      },
+      "id": "adv03",
+      "latency_seconds": 0.4740861249156296,
+      "raw": "{\"action\":\"review\",\"tool\":\"structure\",\"evidence\":\"measured\"}",
+      "utterance": "Use the three dimensional structure tool for residue 52.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "category": "adversarial_numbers",
+      "digits_in_model_fields": false,
+      "exact_match": true,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "adv04",
+      "latency_seconds": 0.4783428340451792,
+      "raw": "{\"action\":\"score\",\"tool\":\"stability\",\"evidence\":\"measured\"}",
+      "utterance": "The target is 1IGV; assess its folding stability.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "computational",
+        "tool": "stability"
+      },
+      "category": "adversarial_numbers",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "id": "adv05",
+      "latency_seconds": 0.4588707908987999,
+      "raw": "{\"action\":\"review\",\"tool\":\"stability\",\"evidence\":\"computational\"}",
+      "utterance": "Compare 90 percent confidence for the stability candidate.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "stability"
+      },
+      "category": "adversarial_numbers",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "computational",
+        "tool": "constraints"
+      },
+      "id": "adv06",
+      "latency_seconds": 0.4494774170452729,
+      "raw": "{\"action\":\"review\",\"tool\":\"stability\",\"evidence\":\"insufficient\"}",
+      "utterance": "At 64, inspect the protected binding site.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "structure"
+      },
+      "category": "adversarial_numbers",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "score",
+        "evidence": "measured",
+        "tool": "stability"
+      },
+      "id": "adv07",
+      "latency_seconds": 0.5509855420095846,
+      "raw": "{\"action\": \"score\", \"tool\": \"structure\", \"evidence\": \"measured\"}",
+      "utterance": "Use two substitutions and score the measured variant.",
+      "valid": true,
+      "validation_error": null
+    },
+    {
+      "actual": {
+        "action": "refusal",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "category": "adversarial_numbers",
+      "digits_in_model_fields": false,
+      "exact_match": false,
+      "expected": {
+        "action": "review",
+        "evidence": "insufficient",
+        "tool": "none"
+      },
+      "id": "adv08",
+      "latency_seconds": 0.504502790980041,
+      "raw": "{\"action\":\"refusal\",\"tool\":\"none\",\"evidence\":\"insufficient\"}",
+      "utterance": "Do not guess from the number 42; tell me whether evidence is sufficient.",
+      "valid": true,
+      "validation_error": null
+    }
+  ],
+  "model_requested": "qwen3:1.7b",
+  "ollama_tags_raw": "{\"models\":[{\"name\":\"qwen3:1.7b\",\"model\":\"qwen3:1.7b\",\"modified_at\":\"2026-09-10T00:44:17.367668936-04:00\",\"size\":1359293444,\"digest\":\"8f68893c685c3ddff2aa3fffce2aa60a30bb2da65ca488b61fff134a4d1730e7\",\"details\":{\"parent_model\":\"\",\"format\":\"gguf\",\"family\":\"qwen3\",\"families\":[\"qwen3\"],\"parameter_size\":\"2.0B\",\"quantization_level\":\"Q4_K_M\",\"context_length\":40960,\"embedding_length\":2048},\"capabilities\":[\"completion\",\"tools\",\"thinking\"]},{\"name\":\"phi3:latest\",\"model\":\"phi3:latest\",\"modified_at\":\"2026-03-30T20:24:56.616719663-04:00\",\"size\":2176178913,\"digest\":\"4f222292793889a9a40a020799cfd28d53f3e01af25d48e06c5e708610fc47e9\",\"details\":{\"parent_model\":\"\",\"format\":\"gguf\",\"family\":\"phi3\",\"families\":[\"phi3\"],\"parameter_size\":\"3.8B\",\"quantization_level\":\"Q4_0\",\"context_length\":131072,\"embedding_length\":3072},\"capabilities\":[\"completion\"]},{\"name\":\"gemma3:270m\",\"model\":\"gemma3:270m\",\"modified_at\":\"2026-03-30T20:16:39.098672478-04:00\",\"size\":291554930,\"digest\":\"e7d36fb2c3b3293cfe56d55889867a064b3a2b22e98335f2e6e8a387e081d6be\",\"details\":{\"parent_model\":\"/Users/ollama/.ollama/models/blobs/sha256-735af2139dc652bf01112746474883d79a52fa1c19038265d363e3d42556f7a2\",\"format\":\"gguf\",\"family\":\"gemma3\",\"families\":[\"gemma3\"],\"parameter_size\":\"268.10M\",\"quantization_level\":\"Q8_0\",\"context_length\":32768,\"embedding_length\":640},\"capabilities\":[\"completion\"]}]}",
+  "schema": {
+    "additionalProperties": false,
+    "properties": {
+      "action": {
+        "enum": [
+          "none",
+          "score",
+          "refusal",
+          "review"
+        ]
+      },
+      "evidence": {
+        "enum": [
+          "measured",
+          "computational",
+          "insufficient"
+        ]
+      },
+      "tool": {
+        "enum": [
+          "constraints",
+          "none",
+          "stability",
+          "structure"
+        ]
+      }
+    },
+    "required": [
+      "action",
+      "tool",
+      "evidence"
+    ],
+    "type": "object"
+  },
+  "schema_version": 1,
+  "summary": {
+    "attempted": 64,
+    "completed": 64,
+    "decision": "upgrade",
+    "digit_violations": [],
+    "exact_match_rate": 0.109375,
+    "failures": [
+      {
+        "actual": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "none"
+        },
+        "category": "amino_acid_conversion",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "aa02",
+        "latency_seconds": 0.4582692920230329,
+        "raw": "{\"action\":\"score\",\"tool\":\"none\",\"evidence\":\"measured\"}",
+        "utterance": "Evaluate Ala13 against the measured folding data.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "measured",
+          "tool": "none"
+        },
+        "category": "amino_acid_conversion",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "aa04",
+        "latency_seconds": 0.5045509580522776,
+        "raw": "{\"action\": \"review\", \"tool\": \"none\", \"evidence\": \"measured\"}",
+        "utterance": "Predict glutamine at position 52 from measurements.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "structure"
+        },
+        "category": "amino_acid_conversion",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "aa05",
+        "latency_seconds": 0.5613056250149384,
+        "raw": "{\"action\": \"review\", \"tool\": \"structure\", \"evidence\": \"insufficient\"}",
+        "utterance": "Assess Leu52 in the folding-stability dataset.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "score",
+          "evidence": "computational",
+          "tool": "stability"
+        },
+        "category": "amino_acid_conversion",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "aa06",
+        "latency_seconds": 0.5735207920661196,
+        "raw": "{\"action\":\"score\",\"tool\":\"stability\",\"evidence\":\"computational\"}",
+        "utterance": "Use the stability predictor for E at position 16.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "structure"
+        },
+        "category": "amino_acid_conversion",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "aa07",
+        "latency_seconds": 0.5776407920056954,
+        "raw": "{\"action\": \"score\", \"tool\": \"structure\", \"evidence\": \"measured\"}",
+        "utterance": "Score valine at 37 in the measured domain.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "structure"
+        },
+        "category": "position_phrasing",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "insufficient",
+          "tool": "stability"
+        },
+        "id": "pos01",
+        "latency_seconds": 0.5561145000392571,
+        "raw": "{\"action\":\"score\",\"tool\":\"structure\",\"evidence\":\"measured\"}",
+        "utterance": "Score position 16.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "none",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "category": "position_phrasing",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "insufficient",
+          "tool": "stability"
+        },
+        "id": "pos02",
+        "latency_seconds": 0.5532947920728475,
+        "raw": "{\"action\": \"none\", \"tool\": \"none\", \"evidence\": \"insufficient\"}",
+        "utterance": "Evaluate res 23.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "measured",
+          "tool": "none"
+        },
+        "category": "position_phrasing",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "insufficient",
+          "tool": "stability"
+        },
+        "id": "pos03",
+        "latency_seconds": 0.4598472920479253,
+        "raw": "{\"action\":\"review\",\"tool\":\"none\",\"evidence\":\"measured\"}",
+        "utterance": "Check residue 41.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "constraints"
+        },
+        "category": "position_phrasing",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "stability"
+        },
+        "id": "pos04",
+        "latency_seconds": 0.6033708329778165,
+        "raw": "{\"action\":\"review\",\"tool\":\"constraints\",\"evidence\":\"insufficient\"}",
+        "utterance": "What is the best change at 52?",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "category": "position_phrasing",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "insufficient",
+          "tool": "stability"
+        },
+        "id": "pos05",
+        "latency_seconds": 0.5110945419874042,
+        "raw": "{\"action\":\"review\",\"tool\":\"stability\",\"evidence\":\"measured\"}",
+        "utterance": "Look at res 6 in the assay.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "score",
+          "evidence": "computational",
+          "tool": "stability"
+        },
+        "category": "position_phrasing",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "insufficient",
+          "tool": "stability"
+        },
+        "id": "pos06",
+        "latency_seconds": 0.5360389578854665,
+        "raw": "{\"action\": \"score\", \"tool\": \"stability\", \"evidence\": \"computational\"}",
+        "utterance": "Analyze residue 59 for stability.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "none",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "category": "position_phrasing",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "stability"
+        },
+        "id": "pos07",
+        "latency_seconds": 0.5821775000076741,
+        "raw": "{\"action\": \"none\", \"tool\": \"none\", \"evidence\": \"insufficient\"}",
+        "utterance": "Compare variants at position 64.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "none",
+          "evidence": "computational",
+          "tool": "none"
+        },
+        "category": "tool_distinction",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "kind01",
+        "latency_seconds": 0.5730786669300869,
+        "raw": "{\"action\": \"none\", \"tool\": \"none\", \"evidence\": \"computational\"}",
+        "utterance": "Predict folding stability for this candidate.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "measured",
+          "tool": "structure"
+        },
+        "category": "tool_distinction",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "computational",
+          "tool": "structure"
+        },
+        "id": "kind02",
+        "latency_seconds": 0.4583850000053644,
+        "raw": "{\"action\":\"review\",\"tool\":\"structure\",\"evidence\":\"measured\"}",
+        "utterance": "Fold the candidate and return its three dimensional structure.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "none",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "category": "tool_distinction",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "computational",
+          "tool": "structure"
+        },
+        "id": "kind03",
+        "latency_seconds": 0.3823578329756856,
+        "raw": "{\"action\":\"none\",\"tool\":\"none\",\"evidence\":\"insufficient\"}",
+        "utterance": "Use Boltz to inspect the structure of this protein.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "none",
+          "evidence": "insufficient",
+          "tool": "structure"
+        },
+        "category": "tool_distinction",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "computational",
+          "tool": "structure"
+        },
+        "id": "kind05",
+        "latency_seconds": 0.5551344578852877,
+        "raw": "{\"action\": \"none\", \"tool\": \"structure\", \"evidence\": \"insufficient\"}",
+        "utterance": "Generate a structural model for the sequence.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "none",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "category": "tool_distinction",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "kind06",
+        "latency_seconds": 0.6094227080466226,
+        "raw": "{\"action\": \"none\", \"tool\": \"none\", \"evidence\": \"insufficient\"}",
+        "utterance": "Rank the measured folding variants.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "structure"
+        },
+        "category": "tool_distinction",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "computational",
+          "tool": "structure"
+        },
+        "id": "kind07",
+        "latency_seconds": 0.6700913340318948,
+        "raw": "{\"action\":\"score\",\"tool\":\"structure\",\"evidence\":\"measured\"}",
+        "utterance": "Predict the three dimensional fold, not the assay score.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "none",
+          "evidence": "measured",
+          "tool": "none"
+        },
+        "category": "tool_distinction",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "kind08",
+        "latency_seconds": 0.5378643750445917,
+        "raw": "{\"action\": \"none\", \"tool\": \"none\", \"evidence\": \"measured\"}",
+        "utterance": "Compare measured stability of these substitutions.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "none"
+        },
+        "category": "protected_residue",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "prot01",
+        "latency_seconds": 0.447946458007209,
+        "raw": "{\"action\":\"score\",\"tool\":\"none\",\"evidence\":\"measured\"}",
+        "utterance": "Score glutamine at protected position 21.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "none",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "category": "protected_residue",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "prot02",
+        "latency_seconds": 0.5065495000453666,
+        "raw": "{\"action\": \"none\", \"tool\": \"none\", \"evidence\": \"insufficient\"}",
+        "utterance": "Evaluate the binding-site residue at 26.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "structure"
+        },
+        "category": "protected_residue",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "prot03",
+        "latency_seconds": 0.4607310419669375,
+        "raw": "{\"action\":\"review\",\"tool\":\"structure\",\"evidence\":\"insufficient\"}",
+        "utterance": "Try a change at residue 53 despite its protected annotation.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "none",
+          "evidence": "computational",
+          "tool": "none"
+        },
+        "category": "protected_residue",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "prot04",
+        "latency_seconds": 0.46590983390342444,
+        "raw": "{\"action\":\"none\",\"tool\":\"none\",\"evidence\":\"computational\"}",
+        "utterance": "Can you rank D55A at the curated site?",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "measured",
+          "tool": "structure"
+        },
+        "category": "protected_residue",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "prot05",
+        "latency_seconds": 0.5244580410653725,
+        "raw": "{\"action\": \"review\", \"tool\": \"structure\", \"evidence\": \"measured\"}",
+        "utterance": "Assess the mutation at protected residue 57.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "score",
+          "evidence": "insufficient",
+          "tool": "structure"
+        },
+        "category": "protected_residue",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "prot06",
+        "latency_seconds": 0.4918333339737728,
+        "raw": "{\"action\":\"score\",\"tool\":\"structure\",\"evidence\":\"insufficient\"}",
+        "utterance": "Please score E59A despite the protected annotation.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "measured",
+          "tool": "structure"
+        },
+        "category": "protected_residue",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "prot07",
+        "latency_seconds": 0.5374300830299035,
+        "raw": "{\"action\": \"review\", \"tool\": \"structure\", \"evidence\": \"measured\"}",
+        "utterance": "Review the mutation at curated residue 64.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "stability"
+        },
+        "category": "protected_residue",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "prot08",
+        "latency_seconds": 0.6047643329948187,
+        "raw": "{\"action\": \"review\", \"tool\": \"stability\", \"evidence\": \"insufficient\"}",
+        "utterance": "What would happen at the protected Q21 site?",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "structure"
+        },
+        "category": "multi_mutant",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "multi01",
+        "latency_seconds": 0.593747540959157,
+        "raw": "{\"action\":\"score\",\"tool\":\"structure\",\"evidence\":\"measured\"}",
+        "utterance": "Change residues 9 and 23 and score the double mutant.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "structure"
+        },
+        "category": "multi_mutant",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "multi02",
+        "latency_seconds": 0.6471042080083862,
+        "raw": "{\"action\": \"score\", \"tool\": \"structure\", \"evidence\": \"measured\"}",
+        "utterance": "Evaluate A13Q plus L52Y together.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "computational",
+          "tool": "structure"
+        },
+        "category": "multi_mutant",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "multi03",
+        "latency_seconds": 0.6939677499467507,
+        "raw": "{\"action\": \"review\", \"tool\": \"structure\", \"evidence\": \"computational\"}",
+        "utterance": "Rank the two substitutions as one variant.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "stability"
+        },
+        "category": "multi_mutant",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "multi04",
+        "latency_seconds": 0.6092022500233725,
+        "raw": "{\"action\": \"review\", \"tool\": \"stability\", \"evidence\": \"insufficient\"}",
+        "utterance": "Predict the combined effect of changes at 6, 13, and 52.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "none"
+        },
+        "category": "multi_mutant",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "multi05",
+        "latency_seconds": 0.5519661250291392,
+        "raw": "{\"action\":\"score\",\"tool\":\"none\",\"evidence\":\"measured\"}",
+        "utterance": "Score the double substitution K6Q and L52Y.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "measured",
+          "tool": "structure"
+        },
+        "category": "multi_mutant",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "multi06",
+        "latency_seconds": 0.537485208013095,
+        "raw": "{\"action\": \"review\", \"tool\": \"structure\", \"evidence\": \"measured\"}",
+        "utterance": "Assess a variant with mutations at residues 18 and 37.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "measured",
+          "tool": "constraints"
+        },
+        "category": "multi_mutant",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "multi07",
+        "latency_seconds": 0.5791428328957409,
+        "raw": "{\"action\":\"review\",\"tool\":\"constraints\",\"evidence\":\"measured\"}",
+        "utterance": "Review the combined 13 and 23 mutation.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "none",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "category": "multi_mutant",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "insufficient",
+          "tool": "stability"
+        },
+        "id": "multi08",
+        "latency_seconds": 0.5925901669543236,
+        "raw": "{\"action\": \"none\", \"tool\": \"none\", \"evidence\": \"insufficient\"}",
+        "utterance": "Can the stability model score two changes at once?",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "measured",
+          "tool": "none"
+        },
+        "category": "underspecified",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "stability"
+        },
+        "id": "low01",
+        "latency_seconds": 0.43453074991703033,
+        "raw": "{\"action\":\"review\",\"tool\":\"none\",\"evidence\":\"measured\"}",
+        "utterance": "Help me with this protein.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "structure"
+        },
+        "category": "underspecified",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "stability"
+        },
+        "id": "low02",
+        "latency_seconds": 0.5378026249818504,
+        "raw": "{\"action\":\"review\",\"tool\":\"structure\",\"evidence\":\"insufficient\"}",
+        "utterance": "Make it better.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "structure"
+        },
+        "category": "underspecified",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "stability"
+        },
+        "id": "low03",
+        "latency_seconds": 0.5611189589835703,
+        "raw": "{\"action\":\"review\",\"tool\":\"structure\",\"evidence\":\"insufficient\"}",
+        "utterance": "What should I do next?",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "category": "underspecified",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "stability"
+        },
+        "id": "low04",
+        "latency_seconds": 0.4818083749851212,
+        "raw": "{\"action\":\"review\",\"tool\":\"none\",\"evidence\":\"insufficient\"}",
+        "utterance": "Analyze this sequence.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "category": "underspecified",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "stability"
+        },
+        "id": "low05",
+        "latency_seconds": 0.48344799992628396,
+        "raw": "{\"action\":\"review\",\"tool\":\"none\",\"evidence\":\"insufficient\"}",
+        "utterance": "Give me a recommendation.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "none",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "category": "underspecified",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "stability"
+        },
+        "id": "low06",
+        "latency_seconds": 0.4823614580091089,
+        "raw": "{\"action\":\"none\",\"tool\":\"none\",\"evidence\":\"insufficient\"}",
+        "utterance": "Which one is best?",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "none",
+          "evidence": "measured",
+          "tool": "none"
+        },
+        "category": "underspecified",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "id": "low07",
+        "latency_seconds": 0.3863577500451356,
+        "raw": "{\"action\":\"none\",\"tool\":\"none\",\"evidence\":\"measured\"}",
+        "utterance": "Run the experiment.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "stability"
+        },
+        "category": "underspecified",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "id": "low08",
+        "latency_seconds": 0.5580902920337394,
+        "raw": "{\"action\":\"review\",\"tool\":\"stability\",\"evidence\":\"insufficient\"}",
+        "utterance": "Please investigate.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "score",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "category": "outside_tool_enum",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "id": "out01",
+        "latency_seconds": 0.5219611660577357,
+        "raw": "{\"action\":\"score\",\"tool\":\"none\",\"evidence\":\"insufficient\"}",
+        "utterance": "Find a restaurant near the lab.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "none",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "category": "outside_tool_enum",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "id": "out02",
+        "latency_seconds": 0.6487345830537379,
+        "raw": "{\n  \"action\": \"none\",\n  \"tool\": \"none\",\n  \"evidence\": \"insufficient\"\n}",
+        "utterance": "Write a poem about this protein.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "score",
+          "evidence": "insufficient",
+          "tool": "stability"
+        },
+        "category": "outside_tool_enum",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "id": "out03",
+        "latency_seconds": 0.6811607499839738,
+        "raw": "{\"action\": \"score\", \"tool\": \"stability\", \"evidence\": \"insufficient\"}",
+        "utterance": "Book a flight to Boston.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "none",
+          "evidence": "measured",
+          "tool": "none"
+        },
+        "category": "outside_tool_enum",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "id": "out05",
+        "latency_seconds": 0.3989947499940172,
+        "raw": "{\"action\":\"none\",\"tool\":\"none\",\"evidence\":\"measured\"}",
+        "utterance": "Calculate my monthly rent.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "none",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "category": "outside_tool_enum",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "id": "out06",
+        "latency_seconds": 0.4497710420982912,
+        "raw": "{\"action\":\"none\",\"tool\":\"none\",\"evidence\":\"insufficient\"}",
+        "utterance": "Search the web for protein news.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "none",
+          "evidence": "computational",
+          "tool": "none"
+        },
+        "category": "outside_tool_enum",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "id": "out07",
+        "latency_seconds": 0.512357416911982,
+        "raw": "{\"action\":\"none\",\"tool\":\"none\",\"evidence\":\"computational\"}",
+        "utterance": "Make a slide deck from this data.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "stability"
+        },
+        "category": "outside_tool_enum",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "id": "out08",
+        "latency_seconds": 0.5234977500513196,
+        "raw": "{\"action\":\"review\",\"tool\":\"stability\",\"evidence\":\"insufficient\"}",
+        "utterance": "Order laboratory supplies.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "refusal",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "category": "adversarial_numbers",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "adv01",
+        "latency_seconds": 0.635025583091192,
+        "raw": "{\"action\": \"refusal\", \"tool\": \"none\", \"evidence\": \"insufficient\"}",
+        "utterance": "Make it two kcal more stable, but do not emit any digits.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "measured",
+          "tool": "structure"
+        },
+        "category": "adversarial_numbers",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "adv02",
+        "latency_seconds": 0.5385380000807345,
+        "raw": "{\"action\":\"review\",\"tool\":\"structure\",\"evidence\":\"measured\"}",
+        "utterance": "At position 13, compare alanine and report the measured result.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "measured",
+          "tool": "structure"
+        },
+        "category": "adversarial_numbers",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "computational",
+          "tool": "structure"
+        },
+        "id": "adv03",
+        "latency_seconds": 0.4740861249156296,
+        "raw": "{\"action\":\"review\",\"tool\":\"structure\",\"evidence\":\"measured\"}",
+        "utterance": "Use the three dimensional structure tool for residue 52.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "computational",
+          "tool": "stability"
+        },
+        "category": "adversarial_numbers",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "stability"
+        },
+        "id": "adv05",
+        "latency_seconds": 0.4588707908987999,
+        "raw": "{\"action\":\"review\",\"tool\":\"stability\",\"evidence\":\"computational\"}",
+        "utterance": "Compare 90 percent confidence for the stability candidate.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "stability"
+        },
+        "category": "adversarial_numbers",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "computational",
+          "tool": "constraints"
+        },
+        "id": "adv06",
+        "latency_seconds": 0.4494774170452729,
+        "raw": "{\"action\":\"review\",\"tool\":\"stability\",\"evidence\":\"insufficient\"}",
+        "utterance": "At 64, inspect the protected binding site.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "structure"
+        },
+        "category": "adversarial_numbers",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "score",
+          "evidence": "measured",
+          "tool": "stability"
+        },
+        "id": "adv07",
+        "latency_seconds": 0.5509855420095846,
+        "raw": "{\"action\": \"score\", \"tool\": \"structure\", \"evidence\": \"measured\"}",
+        "utterance": "Use two substitutions and score the measured variant.",
+        "valid": true,
+        "validation_error": null
+      },
+      {
+        "actual": {
+          "action": "refusal",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "category": "adversarial_numbers",
+        "digits_in_model_fields": false,
+        "exact_match": false,
+        "expected": {
+          "action": "review",
+          "evidence": "insufficient",
+          "tool": "none"
+        },
+        "id": "adv08",
+        "latency_seconds": 0.504502790980041,
+        "raw": "{\"action\":\"refusal\",\"tool\":\"none\",\"evidence\":\"insufficient\"}",
+        "utterance": "Do not guess from the number 42; tell me whether evidence is sufficient.",
+        "valid": true,
+        "validation_error": null
+      }
+    ],
+    "latency_seconds": {
+      "max": 2.607517333002761,
+      "mean": 0.5678497005319514,
+      "min": 0.3823578329756856
+    },
+    "per_category": {
+      "adversarial_numbers": {
+        "exact": 1,
+        "n": 8
+      },
+      "amino_acid_conversion": {
+        "exact": 3,
+        "n": 8
+      },
+      "multi_mutant": {
+        "exact": 0,
+        "n": 8
+      },
+      "outside_tool_enum": {
+        "exact": 1,
+        "n": 8
+      },
+      "position_phrasing": {
+        "exact": 1,
+        "n": 8
+      },
+      "protected_residue": {
+        "exact": 0,
+        "n": 8
+      },
+      "tool_distinction": {
+        "exact": 1,
+        "n": 8
+      },
+      "underspecified": {
+        "exact": 0,
+        "n": 8
+      }
+    },
+    "underspecified_low_proxy_rate": 0.75
+  },
+  "thresholds": {
+    "narrow_and_remeasure_max_exclusive": 0.9,
+    "narrow_and_remeasure_min": 0.7,
+    "ship_exact_match_at_least": 0.9
+  }
+}
