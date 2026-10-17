@@ -1,41 +1,39 @@
-"""NVIDIA-hosted ESMFold protein structure prediction.
+"""NVIDIA-hosted OpenFold2 protein structure prediction.
 
-Confirmed live against NVIDIA's published OpenAPI schema for this NIM
-(``https://build.nvidia.com/nvidia/esmfold``) on 2026-10-02: the endpoint
-accepts ``{"sequence": "<amino acids>"}`` and returns ``{"pdbs": [...]}``.
-NVIDIA's own product page carries a deprecation notice dated 2026-08-24 —
-already past as of this writing — but the endpoint still returns 401 for an
-invalid key rather than 410 Gone, meaning it is live for now. It could stop
-working without further notice; this module fails closed rather than
-assuming availability, and every result is explicitly non-scientific
-regardless of structure quality.
+OpenFold2 is NVIDIA's PyTorch reimplementation of AlphaFold2 (monomer). It is the
+hosted replacement for the retired ESMFold and AlphaFold2 endpoints. Requests keep the
+exact request and response bytes as artifacts and never retain the sequence.
+Every result is explicitly non-scientific regardless of structure quality.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import re
 import time
-from typing import Literal
+from typing import Any, Literal
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
 from concordia.storage.content import ContentAddressedStore
 
+_log = logging.getLogger(__name__)
+
 SHA256_PATTERN = r"^[0-9a-f]{64}$"
 AMINO_ACID_PATTERN = r"^[ARNDCQEGHILKMFPSTWYV]+$"
 
 
-class NvidiaHostedEsmFoldResult(BaseModel):
+class NvidiaHostedOpenFold2Result(BaseModel):
     """Validated structure-prediction output that is never scientific evidence."""
 
     model_config = ConfigDict(extra="forbid", frozen=True, allow_inf_nan=False)
 
     schema_version: Literal[1] = 1
-    model_id: Literal["nvidia/esmfold"] = "nvidia/esmfold"
+    model_id: Literal["openfold/openfold2"] = "openfold/openfold2"
     execution_mode: Literal["real_hosted_structure_prediction"] = (
         "real_hosted_structure_prediction"
     )
@@ -48,12 +46,32 @@ class NvidiaHostedEsmFoldResult(BaseModel):
     limitations: tuple[str, ...] = Field(min_length=1)
 
 
-class NvidiaHostedEsmFoldRunner:
-    """Call NVIDIA's hosted ESMFold NIM and preserve exact request/response bytes."""
+def _extract_pdb(payload: Any) -> str | None:
+    """Pull the top-ranked PDB text out of the documented response shapes."""
+    if not isinstance(payload, dict):
+        return None
+    ranked = payload.get("structures_in_ranked_order")
+    if isinstance(ranked, list) and ranked:
+        first = ranked[0]
+        if isinstance(first, dict) and isinstance(first.get("structure"), str):
+            return str(first["structure"])
+        if isinstance(first, str):
+            return first
+    pdbs = payload.get("pdbs")
+    if isinstance(pdbs, list) and pdbs and isinstance(pdbs[0], str):
+        return pdbs[0]
+    return None
 
-    model_id = "nvidia/esmfold"
-    endpoint = "https://health.api.nvidia.com/v1/biology/nvidia/esmfold"
-    max_sequence_length = 1024
+
+class NvidiaHostedOpenFold2Runner:
+    """Call NVIDIA's hosted OpenFold2 NIM and preserve exact request/response bytes."""
+
+    model_id = "openfold/openfold2"
+    endpoint = (
+        "https://health.api.nvidia.com/v1/biology/openfold/openfold2/"
+        "predict-structure-from-msa-and-template"
+    )
+    max_sequence_length = 1000
     max_response_bytes = 16 * 1024 * 1024
 
     def __init__(
@@ -61,7 +79,7 @@ class NvidiaHostedEsmFoldRunner:
         artifacts: ContentAddressedStore,
         *,
         api_key: str | None = None,
-        timeout_seconds: float = 120.0,
+        timeout_seconds: float = 300.0,
         transport: httpx.BaseTransport | None = None,
     ):
         self.artifacts = artifacts
@@ -69,9 +87,7 @@ class NvidiaHostedEsmFoldRunner:
         self.timeout_seconds = timeout_seconds
         self._transport = transport
 
-    def predict(self, sequence: str) -> NvidiaHostedEsmFoldResult:
-        if not self._api_key:
-            raise RuntimeError("NVIDIA_API_KEY is required for hosted ESMFold prediction")
+    def _normalize_sequence(self, sequence: str) -> str:
         normalized = sequence.strip().upper()
         if not normalized or len(normalized) > self.max_sequence_length:
             raise ValueError(
@@ -81,9 +97,20 @@ class NvidiaHostedEsmFoldRunner:
         if not re.fullmatch(AMINO_ACID_PATTERN, normalized):
             invalid = sorted(set(normalized) - set("ARNDCQEGHILKMFPSTWYV"))
             raise ValueError(
-                f"sequence contains characters outside the 20 standard amino acids: "
+                "sequence contains characters outside the 20 standard amino acids: "
                 f"{''.join(invalid)}"
             )
+        return normalized
+
+    def preflight(self, sequence: str) -> None:
+        """Reject requests that can never succeed, so a gateway spends no quota on them."""
+        if not self._api_key:
+            raise RuntimeError("NVIDIA_API_KEY is required for hosted OpenFold2 prediction")
+        self._normalize_sequence(sequence)
+
+    def predict(self, sequence: str) -> NvidiaHostedOpenFold2Result:
+        self.preflight(sequence)
+        normalized = self._normalize_sequence(sequence)
         request_payload = {"sequence": normalized}
         input_hash = hashlib.sha256(normalized.encode("ascii")).hexdigest()
         request_digest = self.artifacts.put_json(
@@ -93,7 +120,7 @@ class NvidiaHostedEsmFoldRunner:
                 "endpoint": self.endpoint,
                 "input_sequence_hash": input_hash,
                 "input_sequence_length": len(normalized),
-                "request_parameters": {"sequence_type": "protein"},
+                "request_parameters": {"msa": "none", "templates": "none"},
                 "input_retained": False,
                 "scientific_use_allowed": False,
             }
@@ -110,27 +137,26 @@ class NvidiaHostedEsmFoldRunner:
             )
         elapsed_seconds = time.monotonic() - started
         if len(response.content) > self.max_response_bytes:
-            raise RuntimeError("NVIDIA ESMFold response exceeded the configured limit")
+            raise RuntimeError("NVIDIA OpenFold2 response exceeded the configured limit")
         response_digest = self.artifacts.put_bytes(response.content)
         if response.status_code == 410:
-            raise RuntimeError(
-                "NVIDIA ESMFold has been retired (HTTP 410); this hosted NIM is no "
-                "longer available"
-            )
+            raise RuntimeError("NVIDIA OpenFold2 has been retired (HTTP 410)")
         if response.is_error:
-            detail = response.text[:1_000].replace("\n", " ")
-            raise RuntimeError(f"NVIDIA ESMFold HTTP {response.status_code}: {detail}")
+            # Upstream detail goes to the server log, not to the (public) caller.
+            _log.warning(
+                "NVIDIA OpenFold2 HTTP %s: %s",
+                response.status_code,
+                response.text[:1_000].replace("\n", " "),
+            )
+            raise RuntimeError(f"NVIDIA OpenFold2 HTTP {response.status_code}")
         try:
             payload = response.json()
         except json.JSONDecodeError as error:
-            raise RuntimeError("NVIDIA ESMFold response was not JSON") from error
-        pdbs = payload.get("pdbs")
-        if not isinstance(pdbs, list) or not pdbs or not isinstance(pdbs[0], str):
-            raise RuntimeError("NVIDIA ESMFold response contained no PDB structure")
-        pdb_text = pdbs[0]
-        if "ATOM" not in pdb_text:
-            raise RuntimeError("NVIDIA ESMFold response did not look like PDB text")
-        return NvidiaHostedEsmFoldResult(
+            raise RuntimeError("NVIDIA OpenFold2 response was not JSON") from error
+        pdb_text = _extract_pdb(payload)
+        if pdb_text is None or "ATOM" not in pdb_text:
+            raise RuntimeError("NVIDIA OpenFold2 response contained no PDB structure")
+        return NvidiaHostedOpenFold2Result(
             input_sequence_hash=input_hash,
             pdb_text=pdb_text,
             elapsed_seconds=elapsed_seconds,
@@ -139,9 +165,9 @@ class NvidiaHostedEsmFoldRunner:
             limitations=(
                 "Hosted structure prediction is a software integration check, not a "
                 "validated protein structure.",
-                "ESMFold confidence (pLDDT) has not been inspected or thresholded here.",
-                "This NIM carries an NVIDIA-published deprecation notice (2026-08-24) "
-                "and may stop responding at any time.",
+                "No multiple sequence alignment or templates were supplied, so accuracy "
+                "is lower than a full AlphaFold2-style run.",
+                "Per-residue confidence (pLDDT) has not been inspected or thresholded here.",
                 "The input protein is not biologically verified to be encoded by any "
                 "real organism's genome.",
             ),

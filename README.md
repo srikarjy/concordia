@@ -7,323 +7,164 @@ sdk: docker
 app_port: 7860
 ---
 
-# Concordia Colony
+# Concordia
 
-Concordia Colony is an AI-native molecular experimentation sandbox where scientists can generate,
-modify, simulate, and compare DNA and proteins through controlled biological-model workflows, with
-every experiment captured as a reproducible provenance graph.
+**Concordia is an audit layer for AI-generated biology: it records which model, input and checkpoint produced a structure or sequence claim, tests the claim against independent evidence, and makes the whole analysis replayable.**
 
-The interactive experiment canvas now provides the shared foundation: typed DNA, protein,
-structure, model-run, measurement, and evidence objects; immutable branches; content-addressed
-payloads; deterministic comparison; candidate selection; replayable manifests; and capability-
-scoped access. Existing Evo2 and Boltz integrations remain explicitly separated from experiment
-writes until each operation can record its run and output without partial lineage.
+[Live workspace](https://srikarjy025-concordia-colony.hf.space) · [Technical overview](docs/technical-overview.md) · [Guide: usage, debugging, security](docs/guide.md) · [For biotech teams](docs/pitch.md)
 
-One seed scientist creates a bounded colony of isolated workflow variants. Each descendant inherits a versioned digital genome, uses approved computational biology tools inside a sandbox, and produces structured claims. Deterministic infrastructure verifies evidence paths, calculates fitness, selects surviving workflows, and records the complete lineage.
-
-> **Current status:** the repository contains a working molecular evidence baseline, genomic evidence contracts, durable local orchestration, provenance-aware project ingestion, a local CellForge-compatible boundary, qualified local and free-hosted seed runtimes, bounded colony evolution, independent evidence verification, and a built interactive workspace. The local demonstration needs neither an external CellForge service nor Evo2 hardware. A two-variant HBB pilot protocol is frozen. NVIDIA hosted access has been validated for generation only, while hosted forward scoring fails closed. A separate ZeroGPU worker now verifies the pinned Evo2 runtime and complete checkpoint without loading the model. No real Evo2 score or genomic finding is claimed.
+![Concordia workspace: trace a claim, follow provenance, compare variants, branch designs, predict a complex, see what is real](docs/workspace.png)
 
 ## Problem
 
-Genomic foundation models can assign scores or attribution signals to DNA sequences, but an attribution map does not establish that a highlighted region is causal, stable, or biologically meaningful. Researchers need to know:
+A structure model reports 0.84 confidence on an antibody–antigen complex. The antigen is 42 Å from where the crystal puts it, and none of the crystal's interface contacts are reproduced. That is row 9OAO of the benchmark below, not a hypothetical, and it is not the worst one. A team that trusts that score can spend months of wet-lab work on the wrong candidate. Confidence is not evidence. Teams need to know which model, input and settings produced a result, whether independent evidence supports it, and whether someone else can replay it. Today that record lives in notebooks.
 
-- which input, model, checkpoint, and method produced an explanation;
-- whether the explanation agrees with controlled sequence perturbations;
-- whether it remains stable across windows, references, and repeated runs;
-- whether independent biological or model evidence supports it;
-- which scientific claims depend on which evidence;
-- and whether the full analysis can be inspected and replayed.
+Recording lineage is a solved problem (W3C PROV, MLflow, DVC). What Concordia adds is the check: a claim gets a status from deterministic rules over independent evidence, and the rules say `UNVERIFIABLE` when the evidence is not there.
 
-Concordia Colony turns those questions into an auditable computational workflow.
+## Approach
 
-## Product
-
-A researcher supplies a genomic region, variant, declared task, model configuration, and optional project files. Concordia builds an evidence graph, executes approved verification tools, and returns model artifacts, counterfactual results, structured claims, supporting and contradictory evidence, verification metrics, workflow lineage, and a reproducible manifest.
-
-The output is a testable, evidence-traceable hypothesis or audit result—not a declaration of biological truth.
-
-Real-study admission is gated by a frozen `StudyProtocol`. The protocol records licensing, cohort criteria, model target, genomic coordinates, evidence families, hypotheses, and uncertainty analysis before outcomes are imported. Fixture, synthetic, and ineligible model outputs are rejected by the gate.
-
-## System Overview
+- **Everything is an artifact.** Inputs, outputs and requests are stored by SHA-256, and a one-byte change is refused.
+- **Experiments are a graph.** DNA, protein, structure and model-run nodes sit on immutable branches with a deterministic replay manifest.
+- **Claims are checked by rules, not another LLM.** A claim needs independent evidence families and a passing counterfactual, or it is reported as `UNVERIFIABLE`.
 
 ```mermaid
 flowchart LR
-    I[DNA, variants, papers, project files] --> G[Evidence graph]
-    G --> S[Seed scientist]
-    S --> C[Bounded colony]
-    C --> F[Local CellForge-compatible executor]
-    F --> T[Evo2 and verification tools]
-    T --> G
-    G --> V[Deterministic backtracking and fitness]
-    V --> C
-    V --> R[Interactive report]
+    U[Researcher or agent] --> W[Workspace and API]
+    W --> L[(Append-only ledger)]
+    W --> T[Registered tools]
+    T --> M[Boltz-2, Evo 2, local models]
+    T --> A[(Content-addressed artifacts)]
+    A --> G[Evidence graph]
+    L --> G
+    G --> V[Rule-based verifier]
+    V --> R[Claims with status and replay manifest]
 ```
 
-The implemented local adapter owns process-isolated execution of trusted, registered tools. Its contracts are designed so an external CellForge runtime can replace it later. Concordia owns run orchestration, digital genomes, evidence lineage, structured claims, deterministic verification, colony selection, and reporting.
+## Results
 
-## Digital Evolution
+### Small benchmark: nine complexes, no baseline model
 
-The colony is a controlled search over scientific workflows rather than a group discussion.
+> **Read this before the table.** Nine complexes are too few to estimate a success rate, and there is no second model to compare against, so this is a demonstration of the method and not a measurement of Boltz-2. The one confound that could be removed has been: the table was produced at reduced settings (20 sampling steps, 1 recycling step, 1 sample), and [a rerun at the hosted NIM defaults](reports/boltz2-antibody-benchmark-nim-defaults.json) — 50 sampling steps, 3 recycling steps, 5 samples — reproduces it, with the same 2 of 9 acceptable or better and the same CAPRI classes. An AlphaFold 3 baseline, submitted by hand, is still missing.
 
-| Biological concept | Concordia representation |
-| --- | --- |
-| Genome | Versioned prompt, workflow, tool policy, attribution settings, and budgets |
-| Mutation | One recorded change to a permitted genome field |
-| Organism | One isolated workflow execution |
-| Phenotype | Tool trace, artifacts, claims, and verification results |
-| Environment | Frozen biological task and evidence |
-| Fitness | Deterministic evidence, stability, reproducibility, and resource metrics |
-| Selection | Recorded survivor selection from declared metric components |
-| Extinction | A terminal lineage that failed validation, policy, or selection |
+**Boltz-2 antibody–antigen complexes released after the training cutoff (2023-06-01), scored against the experimental structure.** Selection was a seeded random draw from 94 eligible complexes, and the success rule was fixed before any result: antigen within 5 Å in the antibody frame and at least 50% of crystal contacts recovered. Failures are included.
 
-Descendants cannot communicate, inspect competing answers, edit policy, rewrite fitness rules, or create unrestricted tools. The orchestrator controls reproduction. The evaluator does not use another language model to judge scientific truth.
+<!-- BENCH:START -->
+| PDB | Released | Model confidence | Antibody RMSD | Antigen alone | Antigen in antibody frame | Crystal contacts recovered | DockQ (CAPRI class) | Pre-registered rule |
+|---|---|---|---|---|---|---|---|---|
+| 8TUZ | 2024-08 | 0.81 | 1.3 Å | 13.5 Å | 18.5 Å | 70% | 0.28 (acceptable) | failure |
+| 8VTD | 2025-07 | 0.90 | 1.1 Å | 0.9 Å | 14.1 Å | 3% | 0.11 (incorrect) | failure |
+| 8XK6 | 2024-07 | 0.80 | 0.8 Å | 1.5 Å | 33.1 Å | 0% | 0.01 (incorrect) | failure |
+| 9LY5 | 2026-03 | 0.78 | 4.2 Å | 1.3 Å | 48.5 Å | 7% | 0.03 (incorrect) | failure |
+| 9NPH | 2025-08 | 0.77 | 6.7 Å | 4.0 Å | 22.5 Å | 0% | 0.05 (incorrect) | failure |
+| 9NPI | 2025-08 | 0.77 | 5.0 Å | 5.6 Å | 27.1 Å | 2% | 0.04 (incorrect) | failure |
+| 9OAO | 2025-06 | 0.84 | 3.2 Å | 1.1 Å | 42.4 Å | 0% | 0.01 (incorrect) | failure |
+| 9SSM | 2026-02 | 0.82 | 1.1 Å | 0.9 Å | 26.2 Å | 0% | 0.08 (incorrect) | failure |
+| 9VHZ | 2025-10 | 0.86 | 3.8 Å | 1.0 Å | 9.5 Å | 79% | 0.72 (medium) | failure |
+| 3HFM (reference) | 1989, pre-cutoff | 0.94 | 1.4 Å | 0.8 Å | 2.1 Å | 81% | 0.81 (high) | reference |
 
-## Evidence Graph and Backtracking
+**0 of 9 post-cutoff complexes met the pre-registered rule; 2 of 9 are acceptable or better by DockQ.**
+<!-- BENCH:END -->
 
-Concordia connects a scientific graph to a provenance graph. Scientific nodes include sequences, variants, assays, models, predictions, attributions, motifs, annotations, papers, and claims. Provenance nodes include source files, source spans, parser runs, tool executions, artifacts, prompts, model turns, digital genomes, colony members, mutations, verification checks, and fitness records.
+*What this shows.* By the pre-registered rule none of the 9 passed. By DockQ, the field's standard interface metric, 2 of 9 are correct: 9VHZ is medium quality (0.72) and 8TUZ is acceptable (0.28). The custom rule rejected both because it measures the whole antigen, so a large antigen rotated about a correct interface fails it. The rule is kept because it was fixed in advance; DockQ was added afterwards and is labeled that way in the report. Model confidence does not separate the correct predictions from the wrong ones in this set: the two correct models scored 0.81 and 0.86, while the most confident model (8VTD, 0.90) is incorrect. That gap is what an independent check is for. The reference row is a 1989 structure that is likely in the training data, so it shows the pipeline works and not that the model generalizes. Selection file, method and scripts: [`data/benchmarks/boltz2-post-cutoff-antibody-selection.json`](data/benchmarks/boltz2-post-cutoff-antibody-selection.json), [`reports/boltz2-post-cutoff-antibody-benchmark.json`](reports/boltz2-post-cutoff-antibody-benchmark.json), [`scripts/benchmark_antibody_complexes.py`](scripts/benchmark_antibody_complexes.py), [`scripts/antibody_dockq.py`](scripts/antibody_dockq.py).
 
-Every accepted assertion records its source, version, generating activity, input hashes, output hash, and validation state. A claim can be followed through the system:
+**The verifier on the same nine, with the crystal held out.** Each prediction becomes a structure claim. The verifier sees only what is measurable without the experimental structure — interface geometry, agreement across the model's own five samples, and a counterfactual re-prediction with every residue of the predicted paratope mutated to alanine. DockQ is then used as the label, never as evidence.
 
-```text
-Claim
-  → evidence assertion
-  → source span or artifact
-  → attribution region
-  → sequence locus
-  → counterfactual mutation
-  → model score delta
-  → model checkpoint and input
-```
+| | Result |
+|---|---|
+| Wrong poses supported (false pass) | **0 of 7** |
+| Wrong poses contradicted | 1 of 7 (9SSM) |
+| Correct poses supported | 0 of 2 — both capped at `PARTIALLY_SUPPORTED` |
 
-Fixture-backed paths remain visible but cannot receive scientific support status.
+**No pose reached `SUPPORTED`, including the correct ones.** That ceiling is the rule pack working as designed, not a bug: `SUPPORTED` requires two independent evidence families, and one model's own output can supply at most one, however many samples it draws. Reaching it needs a second engine, which is the missing AlphaFold 3 baseline. Reported this way the verifier has 0 false passes and 2 false fails.
 
-### Project ingestion
+The one pose it contradicted is the one where the counterfactual failed: for 9SSM, 52% of the interface survived alanine-mutating the entire predicted paratope, so the pose was not using the interface it claimed. Its DockQ is 0.054. That verdict was reached without the crystal.
 
-The `ingest-project` command deterministically parses supported repository files and stores the resulting evidence graph as a content-addressed artifact. Implemented parsers cover Markdown headings, Python class and function definitions, YAML, JSON, CSV metadata rows, experiment manifests, XAI records, and paper metadata.
+Two things in this run are worth more than the counts. Self-reported confidence does not separate correct from wrong anywhere in the set — the range is 0.78 to 0.90, and the two correct poses sit inside it, at 0.82 and 0.87. Agreement across a model's own samples does: 0.64 and 0.89 for the two correct poses, against 0.00 to 0.17 for all seven wrong ones. On nine complexes that is a hypothesis worth testing at scale, not a result, and the rule pack deliberately treats same-model agreement as too weak to carry a claim by itself.
 
-Every extracted entity records its repository-relative path, source digest, parser version, exact line and character span, extraction method, confidence, and validation status. Accepted assertions and rejected candidates both remain in the graph. Changed files create append-only `wasRevisionOf` chains; unchanged re-ingestion produces the same graph identity.
+An honest oddity: 9OAO's paratope-ablated control scored DockQ 0.753 against the crystal while the unmutated prediction scored 0.014. Mutating the binding site produced a better pose than the real sequence, which is a caveat on trusting any single prediction from this model.
 
-## Cross-Verification
+Report: [`reports/verifier-on-boltz-benchmark.json`](reports/verifier-on-boltz-benchmark.json); rules: [`src/concordia/verification/structure_rules.py`](src/concordia/verification/structure_rules.py); callable over HTTP at `POST /v1/structure-claims/verify`, which spends nothing and stores nothing.
 
-The deterministic verifier now checks independent evidence families, artifact integrity across every provenance branch, counterfactual requirements, contradictions, and exact model/assay scope. See [verification contracts](docs/verification.md) and [Evo 2 reading and future scope](docs/evo2-reading.md).
+**Software validation.** The Python and browser test suites run in CI (`make test`). Local throughput is about 3,300 graph operations per second, and exact ledger replay matched on 10 of 10 repetitions. The claim-verifier benchmark scores 50 of 50, but those cases are self-generated, so it checks the plumbing and not real-world accuracy. A local `qwen3:1.7b` seed passed the structured-output qualification protocol, while `phi3:latest` and `gemma3:270m` did not.
 
-Evidence is grouped by method family so several related attribution algorithms are not mistaken for independent confirmation. Planned families include:
+## What is implemented
 
-1. Counterfactual evidence from controlled in-silico mutagenesis.
-2. Gradient or attribution evidence for a declared model output.
-3. Biological annotations such as motifs, accessibility, binding, or conservation.
-4. Cross-model evidence from a compatible independently trained model.
-5. Literature evidence preserved with exact source provenance.
+- Durable run API with an append-only ledger, worker leases, idempotent creation, event streaming and replay.
+- Experiment graph with branches, comparison, candidate selection and capability-token access.
+- Rule-based claim verifier with five statuses and fixture rejection.
+- Hosted Boltz-2 complex prediction, OpenFold2 monomer prediction and Evo 2 generation, each recorded with request and response artifacts.
+- React workspace with a WebGL provenance graph, a browser-local sequence sandbox and a colony view.
+- De novo binder design through hosted RFdiffusion and ProteinMPNN, re-folded with Boltz-2 and checked by the structure verifier, which has no reference structure to fall back on ([`scripts/design_binder.py`](scripts/design_binder.py)).
 
-Agreement increases confidence only within the declared model and assay scope. It does not establish biological causality. Verification statuses are `SUPPORTED`, `PARTIALLY_SUPPORTED`, `CONTRADICTED`, `UNVERIFIABLE`, and `MISSING_EVIDENCE`.
+### Experimental modules
 
-## Backend Direction
+These packages are research side paths. They are tested, but they are not part of the audit, verify and replay core, and nothing in the results above depends on them: `colonies/` (workflow variants selected by deterministic fitness), `scientist/` (local LLM scientist and its qualification protocol), `virtual_cell/`, `predictors/`, `explanations/` and `interventions/` (the earlier Tox21 Random Forest and TreeSHAP pipeline).
 
-The target is a modular monolith with isolated workers:
-
-- FastAPI control plane with typed OpenAPI contracts;
-- idempotent commands and explicit run state transitions;
-- append-only SQLite event ledger;
-- worker leases, cancellation, bounded retries, and crash recovery;
-- DuckDB and Parquet evidence-graph projections;
-- SHA-256 content-addressed artifact storage;
-- versioned tool registry and policy engine;
-- local CellForge-compatible execution adapter;
-- Server-Sent Events for live progress;
-- deterministic fitness, lineage, and replay services;
-- structured logs and local resource accounting.
-
-Cloud schedulers and object stores may be added as replaceable adapters. They are not required for local development or the portfolio demonstration.
-
-### Implemented durable backend
-
-The local backend persists genomic fixture runs in an append-only SQLite ledger and schedules them for isolated local workers. It provides explicit validated states, monotonic per-run event sequences, optimistic append checks, idempotent creation, event replay, restart recovery, content-addressed artifact references, cursor-based event pagination, structured API errors, typed OpenAPI contracts, expiring worker leases, heartbeats, stale-lease recovery, bounded infrastructure retries, cancellation, and reconnectable Server-Sent Events.
-
-The working path is:
-
-```text
-create run → persist genomic input → schedule durable job → claim worker lease
-→ execute fixture scoring
-→ persist score, mutational scan, evidence graph, and verification artifacts
-→ reconstruct the completed run from events
-```
-
-The fixture scorer remains software-only, and every artifact produced by this path has `scientific_use_allowed=false`. Only explicitly classified infrastructure failures are retried; validation, artifact, model, policy, and scientific-tool failures are preserved without automatic reruns.
-
-### Implemented scientific tool boundary
-
-Concordia includes immutable execution contracts, a versioned registry, deny-by-default policies, per-tool resource budgets, and a local child-process adapter. The initial registered tools are `sequence.validate`, `variant.normalize`, `artifact.verify`, `graph.query`, `lineage.backtrack`, `evidence.verify`, and `xai.mutational_scan`. Requests cannot name arbitrary shell commands or Python code. Network access is denied, repository paths are allowlisted and checked against traversal and symlink escape, timeouts terminate child processes, and bounded partial logs survive failures.
-
-Every integrated tool call records its exact request and result in the event ledger, stores its result in content-addressed storage, and emits a small provenance graph joining the tool run to the artifact. This local boundary executes trusted in-process handlers in a separate process; it is not a hardened container or a substitute for an external CellForge deployment when hostile code must run. All current genomic tool outputs are fixture-backed or deterministic software checks and remain ineligible for scientific conclusions. See [the execution-boundary documentation](docs/cellforge.md).
-
-### Local seed scientist and qualification
-
-The genomic seed runtime now accepts four typed turns, preserves prompts and raw responses, validates evidence references, and routes bounded tool requests through the local executor. Each session starts with fresh messages. Model-proposed claims have no verification-status field; deterministic infrastructure retains that responsibility. Ollama remains the local default. An optional OpenRouter adapter accepts only `openrouter/free` or explicit `:free` models, records the resolved model identity, and never acts as the scientific verifier.
-
-`concordia qualify-scientist --model MODEL --repetitions 2` runs installed Ollama candidates against a frozen software fixture and stores separate validity, tool-use, reference, stability, latency, token, and memory measurements. Set `OLLAMA_NO_CLOUD=1`. Completed executions can be replayed without inference. See [the runtime and qualification guide](docs/seed-scientist.md).
-
-Phase 5 is complete for the local software fixture. After preserving failed `phi3:latest` and `gemma3:270m` attempts, `qwen3:1.7b` passed the versioned two-repetition protocol and is pinned by checkpoint digest. Both accepted repetitions produced valid JSON, successful graph requests, schema-valid scoped claims, correct evidence references, and identical final responses. These qualification measurements establish protocol compatibility only; they are not genomic findings or evidence of biological judgment.
-
-### Bounded colony evolution
-
-Phase 6 implements immutable versioned digital genomes, eight allowlisted single-field mutation operators, complete mutation records, a generation barrier, bounded sequential or local concurrent execution, cancellation, restart recovery, member-budget and stagnation stops, extinction records, and deterministic survivor selection. Each worker receives only its own genome, isolation identity, and the same frozen task artifact; peer claims and outputs are absent from the worker contract.
-
-Fitness retains all declared scientific-quality, reliability, penalty, runtime, token, and compute components. The documented `weighted-fitness-v1` calculation and identifier tie-break make selection reproducible from saved member-output artifacts. The deterministic executor remains available for replay. A measured local-scientist executor now runs one fresh Ollama session per member and derives fitness only from saved protocol measurements. A three-member `qwen3:1.7b` software run completed with valid schemas, references, and tool calls; its scientific components remained zero because the task was a fixture. See [the colony documentation](docs/colonies.md).
-
-## Interactive Workspace
-
-The React and TypeScript workspace opens as a guided genomic mission-control view rather than a marketing page. Four focused workspaces provide:
-
-- an investigation flow from claim selection to deterministic decision and provenance;
-- a browser-local sequence sandbox that replays one of 144 persisted fixture substitutions without transmitting DNA or invoking a model;
-- a generation scrubber, descendant selection, component-level fitness display, and inspectable extinction reasons;
-- an interactive WebGL provenance graph with keyboard-accessible node controls and immutable artifact inspection;
-- a collapsible saved-event timeline; and
-- responsive layouts, keyboard focus states, and reduced-motion support.
-
-Every view is rendered from saved artifacts. The sandbox validates the user interaction and provenance workflow only: its fixture scores have `scientific_use_allowed=false` and are neither Evo2 predictions nor biological effects.
-
-## Current Implementation
-
-### Molecular evidence baseline
-
-The original track demonstrates the evidence-intervention pattern with real Tox21 NR-AhR data:
-
-- RDKit validation, canonicalization, and duplicate handling;
-- deterministic scaffold-aware splitting;
-- Morgan fingerprints and Random Forest prediction;
-- validated TreeSHAP artifacts and content-hashed evidence packets;
-- withheld, shuffled, and deterministic corruption transforms;
-- structured scientist claims and deterministic comparison rules.
-
-This track remains a molecular proof of the framework. Its results must not be combined with genomic results.
-
-### Genomic evidence vertical slice
-
-The zero-cost genomic slice implements:
-
-- validated DNA and variant contracts;
-- reference-allele and coordinate checks;
-- an Evo2-compatible scoring boundary;
-- an explicitly labeled recorded-fixture scorer;
-- deterministic position-level in-silico mutagenesis;
-- content-addressed artifact storage;
-- validated evidence-graph nodes and edges;
-- shortest-path claim backtracking;
-- and rejection of fixture-backed paths as scientific evidence.
-
-The recorded fixture validates software behavior only. It is not an Evo2 result.
-
-### Real-study and virtual-cell boundaries
-
-The frozen HBB promoter pilot files under `configs/studies/` pin two ClinVar variants, exact GRCh38 coordinates, 8,192-base Ensembl window hashes, cohort rules, data-use terms, checkpoint, scoring target, evidence families, hypothesis, and uncertainty policy before any Evo2 outcome is inspected. NVIDIA's free hosted Evo2 surface currently documents generation, not the `/forward` tensors required by that protocol. Concordia therefore offers a non-scientific hosted-generation smoke test and fails closed for hosted forward scoring. A measured synthetic-input call passed the generation contract; its exact artifact identities and limitations are preserved in [`reports/nvidia-evo2-hosted-smoke.json`](reports/nvidia-evo2-hosted-smoke.json). The separate ZeroGPU worker now passes a no-input runtime qualification with pinned Python, PyTorch, Evo2, Vortex, and FlashAttention versions and a verified 13.77 GB checkpoint. It has not deserialized the checkpoint, loaded the model, or scored HBB. The preserved qualification history is in [`reports/evo2-zerogpu-runtime-qualification.json`](reports/evo2-zerogpu-runtime-qualification.json). Credentials are read only from `NVIDIA_API_KEY`.
-
-Arc State is a separate single-cell perturbation domain. Concordia has a persist-first virtual-cell sandbox contract, bounded CELLxGENE ingestion, and a separately selected K562 release from `arcinstitute/ST-HVG-Replogle`. The selected checkpoint and matched 188,590-cell by 2,000-gene H5AD are pinned by revision, byte size, digest, and schema. The user accepted the applicable terms for non-commercial use on 10 September 2026; the historical source-code verification record remains `NOT_ACCEPTED` because it did not record that later release decision. Verification never deserializes the checkpoint or helper files, and no State prediction has been run. See [the State boundary](docs/state-sandbox.md).
-
-## Local Quickstart
+## Reproduce
 
 ```bash
-uv sync --extra dev --extra xai --extra scientist --extra virtual-cell
-.venv/bin/pytest
-.venv/bin/ruff check src tests
-.venv/bin/concordia genomic-demo
-.venv/bin/concordia ingest-project
-.venv/bin/concordia list-tools
-.venv/bin/concordia colony-demo
-.venv/bin/concordia qwen-colony-demo
-.venv/bin/concordia cellxgene-state-demo
-.venv/bin/concordia verify-state-release --root .concordia/external/state-k562
-.venv/bin/concordia verify-evo2-source --checkout .concordia/external/evo2-source
-NVIDIA_API_KEY=... .venv/bin/concordia nvidia-evo2-smoke --sequence ACGTACGT
-.venv/bin/concordia serve-workspace
-.venv/bin/mypy src/concordia
-(cd frontend && npm test)
+make demo     # offline, no network, exits 0
+make serve    # interactive workspace at http://127.0.0.1:7860
+make test     # pytest, ruff, mypy, frontend build and browser tests
 ```
 
-Start the local control plane on the loopback interface:
+### Reproduce the measured-stability request path
+
+The language layer is optional. This command runs the frozen 1IGV workflow from
+a typed request, without Ollama or hosted design calls:
 
 ```bash
-.venv/bin/concordia serve-api
+PYTHONPATH=src .venv/bin/python scripts/run_typed_stability_demo.py \
+  --domain 1IGV --mutations A13Q,Q21E,A13Q:K6Q,L52Y \
+  --state-root .concordia/typed-demo
 ```
 
-Run the local worker in another terminal:
+The comma-separated items are candidates; the colon groups a multi-mutant. The
+output contains hard refusals with evidence, soft flags, ranked candidates, the
+production ranker name, the frozen manifest digest, a content-addressed artifact
+digest, and a verified ledger-chain flag. It is one domain and one folding-
+stability property, in-silico only; the intervals are too wide to act on. The
+refusal policy covers hard-protected residues, T2 embedding distance, and
+multi-mutants, while unseen positions and buried-core residues are soft flags.
+The artifact is generated by `scripts/run_typed_stability_demo.py` and is not a
+biological or functional claim. With the default request above, the report
+artifact digest is `dae4e417463b959e68b7ab2f25d4475e46e0be8d63d7af4c9c42bf1e78540b00`;
+the ledger run id is intentionally unique per execution, while its chain is
+verified before the command exits.
+
+### Static measured-stability view
+
+The deployable stability view is static: it reads the committed report at
+`frontend/public/data/stability.json` and the bundled AlphaFold PDB, and never
+runs ThermoMPNN or calls Ollama/NVIDIA. Build it with:
 
 ```bash
-.venv/bin/concordia run-worker
+make build-stability-static
 ```
 
-The interactive saved workspace is served on port 7860 by `serve-workspace` and opens directly into claims, lineage, provenance, sequence/counterfactual tracks, artifacts, and event replay. It is read-only fixture mode. The CPU Docker image and Hugging Face Space upload procedure are documented in [docs/deployment.md](docs/deployment.md).
+The build verifies the content-addressed report digest
+`dae4e417463b959e68b7ab2f25d4475e46e0be8d63d7af4c9c42bf1e78540b00` before
+producing `frontend/dist-stability/`. The page shows ranked candidates,
+evidenced refusals, soft flags, and the Mol* structure view. It is one domain
+(1IGV), one folding-stability property, and in-silico only; intervals are too
+wide to rank with, and no claim is made about folding, stability, expression,
+binding, or function. No live URL is claimed until a deployment is verified.
 
-The public workspace also publishes a curated, GET-only OpenAPI tool contract at
-`/api/tools/openapi.json`. It exposes inspection of saved fixture evidence only;
-run mutation, arbitrary sequences, model inference, and sandbox execution are
-excluded. See [read-only tool integration](docs/tool-integration.md).
+## What I would do next
 
-The integrated scientific frameworks and their execution/evidence boundaries
-are listed at `/api/frameworks` and in [the framework map](docs/frameworks.md).
+1. Add an AlphaFold 3 baseline by hand through AlphaFold Server, about 20 jobs a day. It is the one piece of evidence that would let a correct pose reach `SUPPORTED`, so without it the false-fail rate above is a ceiling imposed by the setup rather than by the rules.
+2. Grow the set to 30-50 complexes from SAbDab under the same seeded selection rule, written down before running. Nine is enough to show the method and not enough to measure anything.
+3. Test the one signal that tracked correctness here — agreement across a model's own samples — on that larger set, where it can be checked rather than noticed.
+4. Persist the hash-chained ledger on the hosted workspace. The chain and `concordia ledger verify` exist; on a Space the counters and events still live in a filesystem that is wiped on restart unless `CONCORDIA_DATABASE_URL` is set, which `/api/tools` now reports.
 
-Then create a durable fixture run:
+## Related work
 
-```bash
-curl -X POST http://127.0.0.1:8000/runs \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "idempotency_key": "demo-run-1",
-    "sequence": {
-      "sequence_id": "fixture:demo",
-      "sequence": "ACGTTGCAACGT",
-      "assembly": "GRCh38",
-      "region": "chr1:0-12",
-      "strand": "+"
-    },
-    "scan_position": 4
-  }'
-```
+[Evo 2](https://github.com/ArcInstitute/evo2) · [Boltz-2](https://doi.org/10.1101/2025.06.14.659707) · [SHAP / TreeSHAP](https://github.com/shap/shap) · [CellForge](https://github.com/ArcInstitute/cellforge) · [W3C PROV](https://www.w3.org/TR/prov-overview/)
 
-`POST /runs` persists and schedules the run; it does not execute scientific work inside the request process. Local state is written beneath `.concordia/` and is ignored by Git. API schemas are available at `http://127.0.0.1:8000/docs`, and live events are available at `GET /runs/{run_id}/stream` with `Last-Event-ID` reconnection.
+## Scientific boundaries
 
-Run the molecular baseline:
-
-```bash
-.venv/bin/concordia download
-.venv/bin/concordia train-baseline
-.venv/bin/concordia explain \
-  --model artifacts/baseline_nr_ahr/model.joblib \
-  --molecules artifacts/baseline_nr_ahr/molecules.csv \
-  --output artifacts/tree_shap
-```
-
-Check the local scientist runtime without downloading a model:
-
-```bash
-OLLAMA_NO_CLOUD=1 .venv/bin/concordia doctor
-```
-
-Generated datasets, models, raw responses, and bulk artifacts stay outside Git. Small manifests, schemas, prompts, documentation, and permitted reports remain version controlled.
-
-## Zero-Cost Constraint
-
-The portfolio version must be developable without paid infrastructure. It uses SQLite, DuckDB, Parquet, the local filesystem, local model runtimes, CellForge, and open-source visualization libraries. GPU-dependent tools must degrade gracefully. Recorded fixtures may validate software interfaces but cannot support scientific conclusions.
-
-Real Evo2 forward inference requires supported NVIDIA hardware and substantial model storage. Candidate ZeroGPU hardware, runtime imports, and checkpoint integrity now pass independently; model loading, kernel execution on Blackwell, numerical qualification, and frozen HBB scoring remain gated.
-
-## Roadmap
-
-1. **Evidence graph vertical slice:** complete for the current software fixture.
-2. **Durable backend:** complete for the local fixture scope; the event ledger, worker leases, recovery, cancellation, replay, artifact APIs, and live events are implemented.
-3. **Project ingestion:** complete for deterministic local text and metadata parsing with immutable provenance graphs and source revision history.
-4. **CellForge tools:** typed sandbox execution and event/graph integration.
-5. **Colony evolution:** digital genomes, controlled mutations, deterministic fitness, selection, and lineage.
-6. **Cross-verification:** independent evidence families, contradictions, and stability checks.
-7. **Scientific validation:** a frozen regulatory-variant task using real model outputs and real biological evidence.
-8. **Interactive presentation:** the lineage, evidence, sequence, comparison, and artifact workspace.
-
-See the [detailed roadmap](docs/ROADMAP.md), [architecture](docs/architecture.md), [experiment design](docs/experiment-design.md), and [reproducibility contract](docs/reproducibility.md).
-
-## Scientific Boundaries
-
-Concordia Colony is not a clinical decision system, a causal-inference engine, or a source of experimental validation. Foundation-model scores, attribution values, method agreement, and literature support are evidence with limitations. They are not substitutes for biological experiments.
+Nothing here is a validated biological finding or a therapeutic claim. Fixture outputs are labeled `scientific_use_allowed=false` and cannot receive scientific support status. Structure predictions are computational hypotheses. RFdiffusion and ProteinMPNN are integrated as hosted calls, but no designed binder here has been expressed or assayed, and a design that passes every reference-free check is still only a hypothesis. RFantibody is not integrated.
 
 ## License
 
-Available under the [MIT License](LICENSE). External datasets, documents, model artifacts, and annotations retain their own licenses.
+MIT. See [LICENSE](LICENSE) and [CITATION.cff](CITATION.cff).

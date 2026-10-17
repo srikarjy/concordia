@@ -76,8 +76,8 @@ These frameworks are intentionally not selected. Their agent and workflow abstra
 
 ## Action items
 
-1. [ ] Implement the provider-neutral scientist interface.
-2. [ ] Add a local-only preflight that verifies Ollama, model digest, and cloud-disabled status.
-3. [ ] Qualify candidate small models on development packets before selecting the MVP model.
-4. [ ] Add a `demo` command with committed, clearly labeled fixture responses that requires no model download.
-5. [ ] Add an optional direct llama.cpp backend after the local Ollama pilot is stable.
+1. [x] Implement the provider-neutral scientist interface.
+2. [x] Add a local-only preflight that verifies Ollama, model digest, and cloud-disabled status.
+3. [x] Qualify candidate small models on development packets before selecting the MVP model.
+4. [x] Add a `demo` command with committed, clearly labeled fixture responses that requires no model download.
+5. [x] Add an optional direct llama.cpp backend after the local Ollama pilot is stable.

@@ -1,8 +1,42 @@
 from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
 
 from concordia.api.workspace import create_workspace_app
+
+
+def test_capabilities_report_configuration_without_secrets(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    monkeypatch.delenv("CONCORDIA_EVO2_FORWARD_SPACE_URL", raising=False)
+    client = TestClient(create_workspace_app(tmp_path, "frontend/dist"))
+    assert client.get("/api/capabilities").json() == {
+        "nvidia": False, "forward": False, "attribution": False,
+    }
+    monkeypatch.setenv("NVIDIA_API_KEY", "test-secret-do-not-expose")
+    monkeypatch.setenv("CONCORDIA_EVO2_FORWARD_SPACE_URL", "https://example.hf.space")
+    configured = TestClient(create_workspace_app(tmp_path / "configured", "frontend/dist"))
+    response = configured.get("/api/capabilities")
+    assert response.json() == {"nvidia": True, "forward": True, "attribution": True}
+    assert "test-secret" not in response.text
+
+
+def test_connector_health_uses_state_shape_without_internal_urls(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    monkeypatch.delenv("OLLAMA_HOST", raising=False)
+    client = TestClient(create_workspace_app(tmp_path, "frontend/dist"))
+    payload = client.get("/api/connectors/health").json()
+    for connector in payload["connectors"].values():
+        assert set(connector) >= {"configured", "state", "reachable_at", "last_success"}
+        assert connector["state"] in {
+            "healthy", "rate_limited", "unavailable", "unconfigured", "untested"
+        }
+        assert "endpoint" not in connector
+        assert "model" not in connector
 
 
 def test_saved_workspace_api_exposes_only_fixture_artifacts(tmp_path: Path) -> None:

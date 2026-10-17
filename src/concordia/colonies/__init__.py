@@ -1,4 +1,7 @@
-"""Bounded scientist-colony orchestration."""
+"""Bounded scientist-colony orchestration.
+
+Experimental: a research side path, not part of the audit, verify and replay core.
+"""
 
 from concordia.colonies.executor import DeterministicFixtureExecutorFactory
 from concordia.colonies.scheduler import ColonyScheduler

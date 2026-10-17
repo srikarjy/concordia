@@ -12,6 +12,10 @@ from concordia.colonies.schema import ColonySpec, MemberStatus
 from concordia.colonies.store import SQLiteColonyLedger
 from concordia.genomes import create_seed_genome
 from concordia.runtime.service import RunService
+from concordia.scientist.adapters import (
+    LocalRuntimeNotReadyError,
+    require_local_scientist_runtime,
+)
 from concordia.scientist.local_qualification import _qualification_task
 from concordia.storage.content import ContentAddressedStore
 
@@ -68,7 +72,17 @@ def run_qwen_colony_demo(
         seed_genome,
         idempotency_key=f"{spec.colony_id}:{task_digest}:{seed}",
     )
+    ledger = SQLiteColonyLedger(colony_root / "colony.sqlite3")
     state = scheduler.run(spec.colony_id)
+    setup_failures = {
+        event.payload["reason"]
+        for event in ledger.events(spec.colony_id)
+        if event.event_type == "MEMBER_FAILED"
+        and event.payload.get("reason") == LocalRuntimeNotReadyError.__name__
+    }
+    if setup_failures:
+        # Re-run the check for its message: the scheduler records only the exception type.
+        require_local_scientist_runtime()
     return {
         "schema_version": 1,
         "colony_id": spec.colony_id,

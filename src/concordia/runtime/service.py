@@ -9,7 +9,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from concordia.events.sqlite import SQLiteEventLedger, request_digest
+from concordia.events.sqlite import LedgerExport, SQLiteEventLedger, request_digest
 from concordia.genomics.evo2 import RecordedFixtureScorer
 from concordia.genomics.ism import MutationEffect, scan_position
 from concordia.genomics.schema import GenomicSequence
@@ -347,6 +347,16 @@ class RunService:
                     ) from error
                 references.append(reference)
         return tuple(references)
+
+    def export_ledger(self) -> LedgerExport:
+        """Export verified ledger lineage and artifact references together."""
+        manifest = {
+            run_id: tuple(
+                reference.model_dump(mode="json") for reference in self.artifact_references(run_id)
+            )
+            for run_id in self.ledger.run_ids()
+        }
+        return self.ledger.export_manifest(artifact_manifest=manifest)
 
     def _reference(
         self, digest: str, *, event_id: str, producing_tool: str

@@ -40,6 +40,30 @@ class Scope(Frozen):
         return self
 
 
+class StructureScope(Frozen):
+    """Scope of a claim about one predicted complex, such as an antibody-antigen pose."""
+
+    kind: Literal["structure"] = "structure"
+    complex_id: str = Field(min_length=1)
+    receptor_chains: tuple[str, ...] = Field(min_length=1)
+    ligand_chains: tuple[str, ...] = Field(min_length=1)
+    model_checkpoint: str = Field(min_length=1)
+    settings_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    assay: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def disjoint(self) -> StructureScope:
+        if set(self.receptor_chains) & set(self.ligand_chains):
+            raise ValueError("receptor and ligand chains must be disjoint")
+        return self
+
+
+ClaimScope = Scope | StructureScope
+STRUCTURE_ONLY_FAMILIES = frozenset(
+    {EvidenceFamily.PHYSICAL_PLAUSIBILITY, EvidenceFamily.STRUCTURAL_REFERENCE}
+)
+
+
 class ProvenanceArtifact(Frozen):
     """Envelope created at ingestion; dependencies include every consumed artifact."""
 
@@ -64,7 +88,7 @@ class EvidenceRecord(Frozen):
     method: str = Field(min_length=1)
     independence_group: str = Field(min_length=1)
     artifact_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
-    scope: Scope
+    scope: ClaimScope
     assessment: Literal["supports", "contradicts", "null", "missing"]
     strength: float = Field(ge=0, le=1)
     critical: bool = False
@@ -77,13 +101,15 @@ class EvidenceRecord(Frozen):
                 raise ValueError("perturbation methods belong to the counterfactual family")
         if self.family != EvidenceFamily.COUNTERFACTUAL and self.counterfactual_passed is not None:
             raise ValueError("counterfactual checks require the counterfactual family")
+        if self.family in STRUCTURE_ONLY_FAMILIES and not isinstance(self.scope, StructureScope):
+            raise ValueError(f"{self.family} evidence requires a structure scope")
         return self
 
 
 class ClaimRequest(Frozen):
     claim_id: str = Field(min_length=1)
     text: str = Field(min_length=1)
-    scope: Scope
+    scope: ClaimScope
     source_sequence: str = Field(pattern=r"^[0-9a-f]{64}$")
     evidence: tuple[EvidenceRecord, ...]
 
@@ -194,6 +220,7 @@ def verify_claim(
     groups: dict[EvidenceFamily, set[str]] = {}
     reasons: set[str] = set()
     counterfactual = False
+    counterfactual_assessed = False
     critical = False
     for evidence in sorted(claim.evidence, key=lambda value: value.evidence_id):
         path, artifacts, errors = check_provenance(
@@ -228,6 +255,8 @@ def verify_claim(
             groups.setdefault(evidence.family, set()).add(evidence.independence_group)
             if evidence.family == EvidenceFamily.COUNTERFACTUAL:
                 counterfactual |= evidence.counterfactual_passed is True
+        if evidence.family == EvidenceFamily.COUNTERFACTUAL:
+            counterfactual_assessed |= evidence.assessment != "missing"
         if evidence.assessment == "missing":
             reasons.add("declared evidence is missing")
 
@@ -262,7 +291,14 @@ def verify_claim(
     else:
         status = SupportStatus.MISSING_EVIDENCE
     if not counterfactual:
-        reasons.add("required counterfactual check is absent or did not pass")
+        # Never run and run-but-failed are different findings. Collapsing them lets a
+        # missing input read as evidence against the claim, which is the one thing a
+        # verifier must not do.
+        reasons.add(
+            "required counterfactual check did not pass"
+            if counterfactual_assessed
+            else "required counterfactual check was never run"
+        )
     if independent < policy.minimum_families:
         reasons.add("insufficient independent supporting evidence families")
     return VerificationResult(

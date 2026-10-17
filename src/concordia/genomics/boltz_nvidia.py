@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import re
 import time
@@ -20,8 +21,24 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from concordia.storage.content import ContentAddressedStore
 
+_log = logging.getLogger(__name__)
+
 SHA256_PATTERN = r"^[0-9a-f]{64}$"
 AMINO_ACID_PATTERN = r"^[ARNDCQEGHILKMFPSTWYV]+$"
+
+
+def _confidence_summary(scores: tuple[float, ...]) -> dict[str, object]:
+    if not scores:
+        return {"status": "unavailable", "residue_count": 0, "scientific_use_allowed": False}
+    low = [index + 1 for index, score in enumerate(scores) if score < 0.5]
+    return {
+        "status": "reported",
+        "residue_count": len(scores),
+        "mean": sum(scores) / len(scores),
+        "min": min(scores),
+        "low_confidence_positions_lt_0_5": low,
+        "scientific_use_allowed": False,
+    }
 
 
 class NvidiaHostedBoltzResult(BaseModel):
@@ -38,6 +55,7 @@ class NvidiaHostedBoltzResult(BaseModel):
     structure_text: str = Field(min_length=1)
     structure_format: str = Field(min_length=1)
     confidence_scores: tuple[float, ...] = Field(default_factory=tuple)
+    confidence_summary: dict[str, object] = Field(default_factory=dict)
     elapsed_seconds: float = Field(ge=0)
     request_artifact_digest: str = Field(pattern=SHA256_PATTERN)
     response_artifact_digest: str = Field(pattern=SHA256_PATTERN)
@@ -113,6 +131,10 @@ class NvidiaHostedBoltzComplexResult(BaseModel):
     structure_text: str = Field(min_length=1)
     structure_format: str = Field(min_length=1)
     confidence_scores: tuple[float, ...] = Field(default_factory=tuple)
+    # Structures after the first when diffusion_samples > 1, in the NIM's order.
+    additional_structures: tuple[str, ...] = Field(default_factory=tuple)
+    # Every numeric per-sample list the NIM returned (for example ipTM), by key.
+    score_lists: dict[str, tuple[float, ...]] = Field(default_factory=dict)
     elapsed_seconds: float = Field(ge=0)
     request_artifact_digest: str = Field(pattern=SHA256_PATTERN)
     response_artifact_digest: str = Field(pattern=SHA256_PATTERN)
@@ -145,15 +167,7 @@ class NvidiaHostedBoltzRunner:
         self.timeout_seconds = timeout_seconds
         self._transport = transport
 
-    def predict(
-        self,
-        sequence: str,
-        *,
-        recycling_steps: int = 1,
-        sampling_steps: int = 20,
-        diffusion_samples: int = 1,
-        step_scale: float = 1.2,
-    ) -> NvidiaHostedBoltzResult:
+    def _normalize_sequence(self, sequence: str) -> str:
         normalized = sequence.strip().upper()
         if not normalized or len(normalized) > self.max_sequence_length:
             raise ValueError(
@@ -166,6 +180,25 @@ class NvidiaHostedBoltzRunner:
                 "sequence contains characters outside the 20 standard amino acids: "
                 + "".join(invalid)
             )
+        return normalized
+
+    def preflight(self, sequence: str | None = None) -> None:
+        """Reject requests that can never succeed, so a gateway spends no quota on them."""
+        if sequence is not None:
+            self._normalize_sequence(sequence)
+        if not self._api_key:
+            raise RuntimeError("NVIDIA_API_KEY is required for hosted Boltz-2 prediction")
+
+    def predict(
+        self,
+        sequence: str,
+        *,
+        recycling_steps: int = 1,
+        sampling_steps: int = 20,
+        diffusion_samples: int = 1,
+        step_scale: float = 1.2,
+    ) -> NvidiaHostedBoltzResult:
+        normalized = self._normalize_sequence(sequence)
         request_payload = {
             "polymers": [
                 {
@@ -217,6 +250,7 @@ class NvidiaHostedBoltzRunner:
             structure_text=structure_text,
             structure_format=structure_format,
             confidence_scores=confidence_scores,
+            confidence_summary=_confidence_summary(confidence_scores),
             elapsed_seconds=submitted["elapsed_seconds"],
             request_artifact_digest=submitted["request_digest"],
             response_artifact_digest=submitted["response_digest"],
@@ -225,12 +259,12 @@ class NvidiaHostedBoltzRunner:
                 "validated protein structure.",
                 "The MSA sent is a one-sequence self-reference, not a real multiple "
                 "sequence alignment, which measurably reduces Boltz-2 accuracy.",
-                "Per-residue confidence has not been inspected or thresholded here.",
+                "Per-residue confidence is reported as a model diagnostic, not "
+                "experimental validation.",
                 "The input protein is not biologically verified to be encoded by any "
                 "real organism's genome.",
             ),
         )
-
     def predict_complex(
         self, request: BoltzComplexRequest
     ) -> NvidiaHostedBoltzComplexResult:
@@ -270,11 +304,14 @@ class NvidiaHostedBoltzRunner:
         structure_text, structure_format, confidence_scores = self._parse_response(
             submitted["payload"]
         )
+        additional, score_lists = self._sample_outputs(submitted["payload"])
         return NvidiaHostedBoltzComplexResult(
             input_payload_hash=input_hash,
             structure_text=structure_text,
             structure_format=structure_format,
             confidence_scores=confidence_scores,
+            additional_structures=additional,
+            score_lists=score_lists,
             elapsed_seconds=submitted["elapsed_seconds"],
             request_artifact_digest=submitted["request_digest"],
             response_artifact_digest=submitted["response_digest"],
@@ -325,8 +362,13 @@ class NvidiaHostedBoltzRunner:
             raise RuntimeError("NVIDIA Boltz-2 response exceeded the configured limit")
         response_digest = self.artifacts.put_bytes(response.content)
         if response.is_error:
-            detail = response.text[:1_000].replace("\n", " ")
-            raise RuntimeError(f"NVIDIA Boltz-2 HTTP {response.status_code}: {detail}")
+            # Upstream detail goes to the server log, not to the (public) caller.
+            _log.warning(
+                "NVIDIA Boltz-2 HTTP %s: %s",
+                response.status_code,
+                response.text[:1_000].replace("\n", " "),
+            )
+            raise RuntimeError(f"NVIDIA Boltz-2 HTTP {response.status_code}")
         try:
             payload = response.json()
         except json.JSONDecodeError as error:
@@ -337,6 +379,28 @@ class NvidiaHostedBoltzRunner:
             "request_digest": request_digest,
             "response_digest": response_digest,
         }
+
+    @staticmethod
+    def _sample_outputs(
+        payload: Any,
+    ) -> tuple[tuple[str, ...], dict[str, tuple[float, ...]]]:
+        """Keep every returned sample and numeric score list, not only the first."""
+
+        structures = payload.get("structures") or []
+        additional = tuple(
+            entry["structure"]
+            for entry in structures[1:]
+            if isinstance(entry, dict) and isinstance(entry.get("structure"), str)
+        )
+        score_lists = {
+            key: tuple(float(v) for v in value)
+            for key, value in payload.items()
+            if key.endswith("_scores")
+            and isinstance(value, list)
+            and value
+            and all(isinstance(v, int | float) and not isinstance(v, bool) for v in value)
+        }
+        return additional, score_lists
 
     @staticmethod
     def _parse_response(payload: Any) -> tuple[str, str, tuple[float, ...]]:

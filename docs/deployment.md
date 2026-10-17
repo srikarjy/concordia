@@ -27,7 +27,7 @@ This result establishes artifact and import compatibility only. Checkpoint deser
 
 ## Interactive endpoints and their environment variables
 
-The deployed workspace is mostly read-only (see above), but exposes five
+The deployed workspace is mostly read-only (see above), but exposes six
 rate-limited, non-tool endpoints that make real outbound calls or execute
 real local code on a visitor's request. Each is controlled by an environment
 variable; omitting it makes that specific endpoint fail closed with a `503`
@@ -35,8 +35,9 @@ rather than silently degrading:
 
 | Variable | Enables | Behavior when unset |
 | --- | --- | --- |
-| `NVIDIA_API_KEY` | `POST /nvidia/evo2/generate`, `/nvidia/boltz/predict`, `/nvidia/esmfold/predict` | `503` |
-| `CONCORDIA_EVO2_FORWARD_SPACE_URL` | `POST /nvidia/evo2/forward` (points at a deployed `deploy/hf-evo2-worker` Space) | `503` |
+| `NVIDIA_API_KEY` | `POST /nvidia/evo2/generate`, `/nvidia/boltz/predict`, `/nvidia/openfold2/predict` | `503` |
+| `CONCORDIA_EVO2_FORWARD_SPACE_URL` | `POST /nvidia/evo2/forward` and `POST /nvidia/evo2/attribute` (points at a deployed `deploy/hf-evo2-worker` Space) | `503` |
+| `CONCORDIA_EVO2_FORWARD_HF_TOKEN` | optional HF token sent to the worker Space; without it ZeroGPU may answer `429` | forward jobs fail with `HTTP 429` |
 | `CONCORDIA_TRUST_PROXY_HEADERS=1` | Honors `X-Forwarded-For` for per-client rate limiting | Falls back to the raw socket address, which is wrong behind a proxy (see below) |
 | `CONCORDIA_DATABASE_URL` | Persists rate limits, response caches, and job history to Postgres instead of local SQLite | Everything still works, but state resets on every redeploy/restart |
 
@@ -52,11 +53,11 @@ shares one rate-limit bucket.
 
 A Space's local filesystem is wiped on every redeploy and restart. Setting
 `CONCORDIA_DATABASE_URL` to a Postgres connection string (a free Supabase
-project works well) makes `evo2_generation_gateway.py`, `esmfold_gateway.py`,
+project works well) makes `evo2_generation_gateway.py`, `structure_gateway.py`,
 `boltz_gateway.py`, `evo2_forward_queue.py`, and the colony-run rate limiter
 all use `genomics/postgres_backend.py` instead of their local SQLite files —
 see each module's docstring. Nothing else changes; this is purely a
-persistence upgrade for the five interactive endpoints above, not the core
+persistence upgrade for the six interactive endpoints above, not the core
 run/colony ledgers, which remain intentionally local per this project's
 zero-cost, local-first design.
 
@@ -93,17 +94,26 @@ Create an empty Docker Space in your own Hugging Face namespace, set `HF_SPACE_I
 
 ```bash
 hf auth login
-hf upload "$HF_SPACE_ID" . \
-  --type space \
-  --include Dockerfile --include README.md --include LICENSE \
-  --include pyproject.toml --include uv.lock --include 'src/**' \
-  --include 'frontend/**' --include 'configs/**' --include 'docs/**' \
-  --include 'reports/**' --include requirements-space.txt \
-  --exclude 'frontend/node_modules/**' --exclude 'frontend/dist/**' \
-  --exclude '.concordia/**' --exclude 'data/raw/**' \
-  --exclude '**/__pycache__/**' \
+# Deploy a commit, not the working tree, so uncommitted edits never ship.
+rm -rf /tmp/concordia-deploy && mkdir /tmp/concordia-deploy
+git archive HEAD | tar -x -C /tmp/concordia-deploy && cd /tmp/concordia-deploy
+hf upload "$HF_SPACE_ID" . --repo-type space \
+  --include Dockerfile README.md LICENSE pyproject.toml uv.lock 'src/**' 'frontend/**' \
+    'configs/**' 'docs/**' 'reports/**' requirements-space.txt \
+    requirements-space.lock.txt \
+  --exclude 'frontend/node_modules/**' 'frontend/dist/**' '.concordia/**' 'data/raw/**' \
+    '**/__pycache__/**' \
   --commit-message "Publish reproducible scientific workspace"
 ```
+
+`requirements-space.lock.txt` is what the image installs, with hashes, so the build
+fails rather than silently resolving different versions. Leave it out of the upload and
+the Space build cannot install anything. Regenerate it with `make space-lock` after
+editing `requirements-space.txt`.
+
+Pass every pattern after a single `--include` and a single `--exclude`. With
+repeated `--include` flags the CLI keeps only the last one, uploads one file, and
+reports that nothing changed.
 
 The Hub CLI requires an authenticated account and network access; this repository cannot infer a namespace or create a public Space without those user-controlled choices. The deployment remains optional and replaceable. A Space running this image is a software demonstration, not a scientific validation environment.
 

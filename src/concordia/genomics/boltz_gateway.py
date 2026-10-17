@@ -1,8 +1,8 @@
 """Rate-limited, cached gateway for interactive hosted Boltz-2 prediction.
 
-Mirrors ``EsmFoldGateway``, with tighter limits: Boltz-2 is a heavier,
+Mirrors ``StructureGateway``, with tighter limits: Boltz-2 is a heavier,
 slower model (recycling/diffusion steps, possible NVCF long-polling up to
-minutes) than ESMFold was, so the shared NVIDIA_API_KEY quota needs more
+minutes) than the older structure models were, so the shared NVIDIA_API_KEY quota needs more
 protection per call.
 
 Defaults to a local SQLite file. Pass ``postgres_dsn`` instead (set by
@@ -42,9 +42,19 @@ class BoltzGateway:
         per_client_limit: int = 3,
         per_client_window_seconds: int = 3_600,
         global_daily_limit: int = 50,
+        max_diffusion_samples: int = 5,
+        max_sampling_steps: int = 50,
+        max_recycling_steps: int = 3,
+        max_request_bytes: int = 1_000_000,
         clock: Clock | None = None,
     ):
         self.runner = runner
+        # The rate limits count calls, not compute, so each public call's compute
+        # is capped too: at most the NIM defaults, five samples, and a bounded body.
+        self.max_diffusion_samples = max_diffusion_samples
+        self.max_sampling_steps = max_sampling_steps
+        self.max_recycling_steps = max_recycling_steps
+        self.max_request_bytes = max_request_bytes
         self.per_client_limit = per_client_limit
         self.per_client_window_seconds = per_client_window_seconds
         self.global_daily_limit = global_daily_limit
@@ -132,6 +142,7 @@ class BoltzGateway:
             cached_json = self._postgres.get_cached(request_key)
             if cached_json:
                 return NvidiaHostedBoltzResult.model_validate_json(cached_json)
+            self.runner.preflight(sequence)
             self._check_and_record_rate_limit(client_id)
             result = self.runner.predict(sequence)
             self._postgres.store(request_key, result.model_dump_json(), self._now())
@@ -143,6 +154,7 @@ class BoltzGateway:
             ).fetchone()
         if row is not None:
             return NvidiaHostedBoltzResult.model_validate_json(row["result_json"])
+        self.runner.preflight(sequence)
         self._check_and_record_rate_limit(client_id)
         result = self.runner.predict(sequence)
         with self._connect() as connection:
@@ -153,17 +165,30 @@ class BoltzGateway:
             )
         return result
 
+    def _check_compute(self, request: BoltzComplexRequest, size: int) -> None:
+        limits = (
+            ("diffusion_samples", request.diffusion_samples, self.max_diffusion_samples),
+            ("sampling_steps", request.sampling_steps, self.max_sampling_steps),
+            ("recycling_steps", request.recycling_steps, self.max_recycling_steps),
+            ("request bytes", size, self.max_request_bytes),
+        )
+        for name, value, limit in limits:
+            if value > limit:
+                raise ValueError(f"{name} {value} exceeds this endpoint's limit of {limit}")
+
     def predict_complex(
         self, *, client_id: str, request: BoltzComplexRequest
     ) -> NvidiaHostedBoltzComplexResult:
         """Rate-limit and cache a structured multi-chain Boltz request."""
 
         canonical = request.model_dump_json(exclude_none=True, by_alias=True)
+        self._check_compute(request, len(canonical.encode("utf-8")))
         request_key = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
         if self._postgres is not None:
             cached_json = self._postgres.get_cached(request_key)
             if cached_json:
                 return NvidiaHostedBoltzComplexResult.model_validate_json(cached_json)
+            self.runner.preflight()
             self._check_and_record_rate_limit(client_id)
             result = self.runner.predict_complex(request)
             self._postgres.store(request_key, result.model_dump_json(), self._now())
@@ -175,6 +200,7 @@ class BoltzGateway:
             ).fetchone()
         if row is not None:
             return NvidiaHostedBoltzComplexResult.model_validate_json(row["result_json"])
+        self.runner.preflight()
         self._check_and_record_rate_limit(client_id)
         result = self.runner.predict_complex(request)
         with self._connect() as connection:

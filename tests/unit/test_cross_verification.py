@@ -172,3 +172,33 @@ def test_perturbation_cannot_be_relabelled_attribution(tmp_path):
     value["family"] = Family.ATTRIBUTION
     with pytest.raises(ValueError, match="counterfactual"):
         EvidenceRecord.model_validate(value)
+
+
+def test_a_counterfactual_never_run_reads_differently_from_one_that_failed(tmp_path):
+    """Missing evidence and evidence against a claim are different findings.
+
+    Three benchmark complexes once came back CONTRADICTED because an upstream GPU
+    fault meant their counterfactual was never computed. One reason string for both
+    cases let a gap in the data read as evidence against the pose.
+    """
+    store, claim, _ = setup_case(tmp_path)
+
+    never_run = verify_claim(claim.model_copy(update={"evidence": claim.evidence[1:]}), store)
+    failed = verify_claim(
+        claim.model_copy(
+            update={
+                "evidence": (
+                    claim.evidence[0].model_copy(
+                        update={"counterfactual_passed": False, "assessment": "contradicts"}
+                    ),
+                    claim.evidence[1],
+                )
+            }
+        ),
+        store,
+    )
+
+    assert "required counterfactual check was never run" in never_run.reasons
+    assert "required counterfactual check did not pass" in failed.reasons
+    assert "did not pass" not in " ".join(never_run.reasons)
+    assert "never run" not in " ".join(failed.reasons)

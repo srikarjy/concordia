@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "campaign": "D3_1IGV_small_contiguous_motif_scaffolding",
+  "status": "pre_registered_before_generation",
+  "predecessors": [
+    "data/manifests/design_d1_1igv_preregistration_v5.json",
+    "data/manifests/design_d2_unconditional_v1.json"
+  ],
+  "created_at": "2026-10-17T22:30:00Z",
+  "created_without_campaign_calls": true,
+  "target": {
+    "pdb_id": "1IGV",
+    "pdb_path": "data/raw/tsuboyama_v2_230420/structures/AlphaFold_model_PDBs/1IGV.pdb",
+    "source_chain": "A",
+    "retained_range": "A53-59",
+    "retained_local_positions": [53, 54, 55, 56, 57, 58, 59],
+    "protected_positions_in_retained_range": [53, 55, 57, 59],
+    "retained_sequence": "DKNGDGE",
+    "protected_letters": "DNDE",
+    "protected_feature": "UniProt BINDING",
+    "uniprot_accession": "P02633",
+    "contig": "A53-59/0 55-65",
+    "contig_interpretation": "Retain source chain A residues 53-59, terminate that retained segment with /0, and generate a new chain of 55-65 residues."
+  },
+  "generation": {
+    "backbone_count": 4,
+    "sequences_per_backbone": 4,
+    "total_pairs": 16,
+    "rfdiffusion_seeds": [5301, 5302, 5303, 5304],
+    "proteinmpnn_seed": 5401,
+    "proteinmpnn_sampling_temperature": 0.1,
+    "proteinmpnn_design_chain_only": true,
+    "boltz_diffusion_samples": 1,
+    "inter_call_delay_seconds": 5,
+    "rate_limit_retry_initial_seconds": 10,
+    "rate_limit_retry_cap_seconds": 120,
+    "rate_limit_max_retries": 8
+  },
+  "success_criterion": {
+    "global_sc_rmsd_angstrom_lt": 2.0,
+    "motif_rmsd_angstrom_lt": 1.0,
+    "minimum_passing_fraction": 0.2,
+    "minimum_passing_pairs": 4,
+    "bar_basis": "Watson et al. define motif-scaffolding in-silico success using global RMSD <2 A, motif RMSD <1 A, and pAE <5. Their benchmark uses 100 designs per problem and reports problem-level rates. A 20% floor is preregistered for this bounded small-contiguous-motif campaign, using the previously recorded 19% multi-target operational precedent as a conservative reference; it is not an experimental-success claim.",
+    "citation": "https://doi.org/10.1038/s41586-023-06415-8"
+  },
+  "measurement": {
+    "global_superposition": "RFdiffusion generated chain to Boltz-2 generated chain over corresponding CA atoms",
+    "motif_superposition": "retained motif CA atoms measured after applying the global generated-chain Kabsch transform",
+    "sequence_recovery_baseline": "generated-chain sequence returned by RFdiffusion backbone extraction",
+    "plddt_ptm_used_as_criterion": false
+  },
+  "scope_statement": "A passing design means only that RFdiffusion, ProteinMPNN, and Boltz-2 were computationally self-consistent at the pre-registered RMSD thresholds. It says nothing about folding, stability, expression, binding, or function.",
+  "route_schema_source": "https://docs.nvidia.com/nim/bionemo/rfdiffusion/2.0.0/endpoints.html"
+}

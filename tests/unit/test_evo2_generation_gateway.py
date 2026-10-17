@@ -22,6 +22,10 @@ class FakeRunner:
     def __init__(self) -> None:
         self.calls = 0
 
+    def preflight(self, **kwargs) -> None:
+        if not 1 <= kwargs.get("num_tokens", 8) <= 1_200:
+            raise ValueError("num_tokens must be between 1 and 1200")
+
     def generate(self, sequence: GenomicSequence, **kwargs) -> NvidiaHostedGenerationResult:
         self.calls += 1
         return NvidiaHostedGenerationResult(
@@ -69,6 +73,22 @@ def test_per_client_rate_limit_is_enforced(tmp_path) -> None:
 
     # A different client is unaffected by another client's usage.
     gateway.generate(client_id="5.6.7.8", sequence=sequence(), num_tokens=1)
+
+
+def test_rejected_parameters_do_not_consume_quota(tmp_path) -> None:
+    runner = FakeRunner()
+    gateway = Evo2GenerationGateway(
+        runner,
+        database_path=tmp_path / "gen.sqlite3",
+        per_client_limit=1,
+        clock=FakeClock(),
+    )
+
+    with pytest.raises(ValueError):
+        gateway.generate(client_id="1.2.3.4", sequence=sequence(), num_tokens=0)
+
+    gateway.generate(client_id="1.2.3.4", sequence=sequence(), num_tokens=4)
+    assert runner.calls == 1
 
 
 def test_global_daily_limit_is_enforced_across_clients(tmp_path) -> None:

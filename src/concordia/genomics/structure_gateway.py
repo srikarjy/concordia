@@ -1,7 +1,7 @@
-"""Rate-limited, cached gateway for interactive hosted ESMFold prediction.
+"""Rate-limited, cached gateway for interactive hosted structure prediction.
 
-Mirrors ``Evo2GenerationGateway``: protects the shared NVIDIA_API_KEY quota
-with a per-client fixed window and a global daily cap, and skips the call
+Used by the OpenFold2 endpoint. Mirrors ``Evo2GenerationGateway``: protects the shared
+NVIDIA_API_KEY quota with a per-client fixed window and a global daily cap, and skips the call
 entirely for a sequence already folded (structure prediction is
 deterministic for a given input).
 
@@ -16,22 +16,29 @@ from __future__ import annotations
 import hashlib
 import sqlite3
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Protocol
 
-from concordia.genomics.esmfold_nvidia import NvidiaHostedEsmFoldResult, NvidiaHostedEsmFoldRunner
 from concordia.genomics.rate_limiting import Clock, RateLimitExceededError, SystemClock
 
 if TYPE_CHECKING:
     from concordia.genomics.postgres_backend import PostgresRateLimitedCache
 
-__all__ = ["EsmFoldGateway", "RateLimitExceededError"]
+__all__ = ["RateLimitExceededError", "StructureGateway"]
 
 
-class EsmFoldGateway:
+class _StructureRunner(Protocol):
+    def preflight(self, sequence: str) -> None: ...
+
+    def predict(self, sequence: str) -> Any: ...
+
+
+class StructureGateway:
     def __init__(
         self,
-        runner: NvidiaHostedEsmFoldRunner,
+        runner: _StructureRunner,
         *,
+        namespace: str,
+        result_model: type[Any],
         database_path: str | Path | None = None,
         postgres_dsn: str | None = None,
         per_client_limit: int = 5,
@@ -40,6 +47,7 @@ class EsmFoldGateway:
         clock: Clock | None = None,
     ):
         self.runner = runner
+        self._result_model = result_model
         self.per_client_limit = per_client_limit
         self.per_client_window_seconds = per_client_window_seconds
         self.global_daily_limit = global_daily_limit
@@ -50,7 +58,7 @@ class EsmFoldGateway:
 
             self._postgres = _PG(
                 dsn=postgres_dsn,
-                namespace="esmfold",
+                namespace=namespace,
                 per_client_limit=per_client_limit,
                 per_client_window_seconds=per_client_window_seconds,
                 global_daily_limit=global_daily_limit,
@@ -81,7 +89,7 @@ class EsmFoldGateway:
                 "created_at REAL NOT NULL)"
             )
             connection.execute(
-                "CREATE INDEX IF NOT EXISTS idx_esmfold_client_requests "
+                "CREATE INDEX IF NOT EXISTS idx_structure_client_requests "
                 "ON client_requests(client_id, requested_at)"
             )
 
@@ -121,12 +129,13 @@ class EsmFoldGateway:
                 (client_id, now),
             )
 
-    def predict(self, *, client_id: str, sequence: str) -> NvidiaHostedEsmFoldResult:
+    def predict(self, *, client_id: str, sequence: str) -> Any:
         request_key = hashlib.sha256(sequence.strip().upper().encode("ascii")).hexdigest()
         if self._postgres is not None:
             cached_json = self._postgres.get_cached(request_key)
             if cached_json:
-                return NvidiaHostedEsmFoldResult.model_validate_json(cached_json)
+                return self._result_model.model_validate_json(cached_json)
+            self.runner.preflight(sequence)
             self._check_and_record_rate_limit(client_id)
             result = self.runner.predict(sequence)
             self._postgres.store(request_key, result.model_dump_json(), self._now())
@@ -137,7 +146,8 @@ class EsmFoldGateway:
                 (request_key,),
             ).fetchone()
         if row is not None:
-            return NvidiaHostedEsmFoldResult.model_validate_json(row["result_json"])
+            return self._result_model.model_validate_json(row["result_json"])
+        self.runner.preflight(sequence)
         self._check_and_record_rate_limit(client_id)
         result = self.runner.predict(sequence)
         with self._connect() as connection:

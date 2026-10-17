@@ -1,0 +1,33 @@
+{
+  "pdb": "data/design/d1_control/1PGB.pdb",
+  "pdb_id": "1PGB",
+  "chain": "A",
+  "native_sequence_length": 56,
+  "proteinmpnn": {
+    "request_artifact_digest": "8d75aabad59952dc6fb7b7960d7091bee548bf1fe423b41a52bfda50af699637",
+    "response_artifact_digest": "f6b01fd52fb1c649d33a12807603f7a19608d7b31a9d7df9873d4189188cdf0c"
+  },
+  "rows": [
+    {
+      "sequence_id": 1,
+      "sequence": "MTYKLILNGKTLKGETTTEAVDAATAEKVFKQYANDNGVDGEWTYDDATKTFTVTE",
+      "sequence_length": 56,
+      "native_sequence_length": 56,
+      "native_ca_atoms": 56,
+      "sc_rmsd_angstrom": 0.39034154708853036,
+      "response_artifact_digest": "96a2c6aab2e021827ee0f1a50ffe57c4a73077f4ccf33d8e34f614ccfbda1625",
+      "elapsed_seconds": 19.863978458102793
+    },
+    {
+      "sequence_id": 2,
+      "sequence": "MTYTLNINGKTVKGTITTEAKNASEAASVFKKYAEDNGINGTWTYDSSTKTFSVTE",
+      "sequence_length": 56,
+      "native_sequence_length": 56,
+      "native_ca_atoms": 56,
+      "sc_rmsd_angstrom": 0.5944347778832683,
+      "response_artifact_digest": "4ea1374389fa90955c2568c529ef5583ed399cd90f813715f6da65091f80ddb3",
+      "elapsed_seconds": 2.124271082924679
+    }
+  ],
+  "interpretation": "under 2 A supports a working computational pipeline; above 5 A makes the pipeline settings or chain handling suspect"
+}

@@ -22,6 +22,10 @@ class FakeScorer:
         self.fail = fail
         self.calls = 0
 
+    def preflight(self, sequence: GenomicSequence) -> None:
+        if len(sequence.sequence) != 8192:
+            raise ValueError("sequence length does not match the frozen scoring window")
+
     def score(self, sequence: GenomicSequence, **kwargs) -> dict:
         self.calls += 1
         if self.delay_seconds:
@@ -81,6 +85,36 @@ def test_concurrent_run_is_rejected_as_busy(tmp_path) -> None:
     assert scorer.calls == 1
 
 
+def test_a_shared_lock_serializes_two_queues_on_one_allocation(tmp_path) -> None:
+    """Two operations against the same ZeroGPU Space must not run concurrently."""
+
+    shared_lock = threading.Lock()
+    slow = FakeScorer(delay_seconds=0.3)
+    other = FakeScorer()
+    common = {
+        "database_path": tmp_path / "jobs.sqlite3",
+        "checkpoint": CHECKPOINT,
+        "target": TARGET,
+        "execution_lock": shared_lock,
+    }
+    forward = Evo2ForwardJobQueue(slow, **common)
+    attribution = Evo2ForwardJobQueue(other, **common)
+
+    first_job = forward.submit(client_id="1.1.1.1", sequence=sequence())
+    second_job = attribution.submit(client_id="2.2.2.2", sequence=sequence())
+
+    thread = threading.Thread(target=forward.run, args=(first_job, sequence()))
+    thread.start()
+    time.sleep(0.05)
+    with pytest.raises(QueueBusyError):
+        attribution.run(second_job, sequence())
+    thread.join()
+
+    assert forward.get(first_job)["status"] == "COMPLETED"
+    assert attribution.get(second_job)["status"] == "REJECTED_BUSY"
+    assert other.calls == 0
+
+
 def test_per_client_submit_rate_limit_is_enforced(tmp_path) -> None:
     scorer = FakeScorer()
     queue = Evo2ForwardJobQueue(
@@ -96,3 +130,20 @@ def test_per_client_submit_rate_limit_is_enforced(tmp_path) -> None:
 
     # A different client is unaffected.
     queue.submit(client_id="5.6.7.8", sequence=sequence())
+
+
+def test_off_window_sequence_does_not_consume_quota(tmp_path) -> None:
+    scorer = FakeScorer()
+    queue = Evo2ForwardJobQueue(
+        scorer,
+        database_path=tmp_path / "jobs.sqlite3",
+        checkpoint=CHECKPOINT,
+        target=TARGET,
+        per_client_limit=1,
+    )
+    off_window = GenomicSequence(sequence_id="test:short", sequence="ACGT" * 10, strand="+")
+    with pytest.raises(ValueError):
+        queue.submit(client_id="1.2.3.4", sequence=off_window)
+
+    # The rejected submission must not have spent the client's only slot.
+    queue.submit(client_id="1.2.3.4", sequence=sequence())

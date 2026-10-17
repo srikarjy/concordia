@@ -12,6 +12,7 @@ htmlcov/
 .concordia/
 build/
 dist/
+frontend/dist-stability/
 node_modules/
 *.tsbuildinfo
 playwright-report/
@@ -42,5 +43,11 @@ data/evidence/payloads/
 experiments/outputs/
 mlruns/
 wandb/
+
+# Local design runs and derived result bundles; source manifests remain trackable.
+data/design/
+results/*.json
+reports/*.json
+.claude/
 
 # Prompts, configs, manifests, evidence metadata, and reports stay trackable

@@ -22,7 +22,9 @@ Concordia makes the answer a first-class object:
    bounded variants that cannot see each other. Deterministic fitness selects survivors.
 
 The honest status: the machinery is built and tested; no real scientific finding exists yet.
-Evo 2 forward scoring and RFantibody/ProteinMPNN are not wired. See "Known limits".
+Hosted Evo 2 generation, isolated forward-worker contracts, RFdiffusion, ProteinMPNN,
+and Boltz campaign adapters are wired, but no real Evo 2 forward score or expressed/assayed
+binder result is claimed. RFantibody is not integrated. See "Known limits".
 
 ## Who uses what
 
@@ -39,13 +41,15 @@ Evo 2 forward scoring and RFantibody/ProteinMPNN are not wired. See "Known limit
 ## Run it
 
 ```bash
-uv sync --extra dev --extra virtual-cell --extra postgres
+uv sync --extra dev --extra virtual-cell --extra postgres --extra scientist --extra xai
 cd frontend && npm ci && npm run build && cd ..
 .venv/bin/concordia serve-workspace --state-root .concordia/workspace --frontend frontend/dist --port 7860
 ```
 
 CLI features checked in the audit: `list-tools`, `doctor`, `genomic-demo`, `colony-demo`,
-`benchmark` (local suites), `ingest-project`, `qwen-colony-demo`.
+`benchmark` (local suites), `ingest-project`, `qwen-colony-demo`, and the no-inference
+`bionemo-preflight`. The optional direct GGUF scientist backend is available with
+`uv sync --extra llama` and remains local-only.
 
 ## What was tested and how it held up
 
@@ -82,10 +86,14 @@ versions are commit-pinned.
 
 - **Claim benchmark is self-labeled.** 50 generated cases score accuracy 1.0 and macro-F1 1.0.
   This shows the plumbing works, not that the verifier is accurate on real claims.
-- **Local Qwen colony.** In an audit run, all three members had `schema_valid_response_rate = 0.0`
-  and a survivor was still selected. Fixed: members with no valid response now go extinct
-  (`NO_VALID_RESPONSE`), and a generation with no viable member ends the colony as `EXTINCT`. The
-  1.7B model still needs a better prompt or a larger model to produce valid claims.
+- **Local Qwen colony.** A 2026-10-12 re-run with `OLLAMA_NO_CLOUD=1` and the `scientist` extra
+  installed completed end to end: three members, all schema-valid and citation-valid, one
+  survivor, about 20 s and 4.7k tokens per member. The earlier audit's
+  `schema_valid_response_rate = 0.0` was most likely the same setup failure that run reproduced
+  (no `ollama` package, so no model call was ever made), not a limit of the 1.7B model. Members
+  with no valid response go extinct (`NO_VALID_RESPONSE`), and `qualify-scientist` and
+  `qwen-colony-demo` now stop with a clear error if the prerequisites are missing. One run of
+  three members is not a measurement of how often the model produces valid claims.
 - **Space was stale.** The live Space predates the framework catalog and antibody work.
 - **Supabase persistence unexercised.** The three Concordia tables exist with RLS on and 0 rows.
 
@@ -100,7 +108,9 @@ versions are commit-pinned.
 | Playwright server fails to start | the web server must use the project venv (`../.venv/bin/python`) |
 | State resets after redeploy | set `CONCORDIA_DATABASE_URL` so state persists in Postgres |
 | Space shows old UI or 404 on a new route | redeploy; the Space was last built 2 Oct |
-| `qwen` runs fail | `concordia doctor` shows Ollama, model and checkpoint digest |
+| `qwen` runs fail or every member is extinct | `concordia doctor` shows Ollama, model, checkpoint digest, the `ollama` Python package and `OLLAMA_NO_CLOUD`; run `uv sync --extra scientist` and set `OLLAMA_NO_CLOUD=1` |
+| `Install the optional xai dependency first` | `concordia explain` needs `uv sync --extra xai` |
+| Invalid sequences used up the Boltz or OpenFold2 quota | fixed: inputs and the API key are checked before a quota slot is taken |
 
 ## What makes it portfolio- and research-grade next
 

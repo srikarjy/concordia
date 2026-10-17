@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "campaign": "D1_1IGV_P02633_motif_scaffolding",
+  "status": "pre_registered_before_generation",
+  "target": {
+    "pdb_id": "1IGV",
+    "pdb_path": "data/raw/tsuboyama_v2_230420/structures/AlphaFold_model_PDBs/1IGV.pdb",
+    "chain": "A",
+    "length": 74,
+    "motif_local_positions": [21, 26, 53, 55, 57, 59, 64],
+    "motif_uniprot_positions": [26, 31, 58, 60, 62, 64, 69],
+    "uniprot_accession": "P02633",
+    "protected_feature": "UniProt BINDING",
+    "contig": "5-15/A21/4-8/A26/25-35/A53/1-3/A55/1-3/A57/1-3/A59/4-8/A64/50-70",
+    "contig_interpretation": "Variable scaffold segments flank and connect the seven preserved input-PDB motif residues; the motif residues are copied from chain A and the terminal 50-70 segment is the generated scaffold extension."
+  },
+  "generation": {
+    "backbone_count": 8,
+    "sequences_per_backbone": 8,
+    "total_sequence_backbone_pairs": 64,
+    "rfdiffusion_seeds": [4101, 4102, 4103, 4104, 4105, 4106, 4107, 4108],
+    "proteinmpnn_seed": 4201,
+    "proteinmpnn_sampling_temperature": 0.1,
+    "proteinmpnn_fixed_positions_jsonl": "{\"input\":{\"A\":[[[21],\"Q\"],[[26],\"E\"],[[53],\"D\"],[[55],\"N\"],[[57],\"D\"],[[59],\"E\"],[[64],\"E\"]]}}",
+    "boltz_diffusion_samples": 1
+  },
+  "success_criterion": {
+    "global_sc_rmsd_angstrom_lt": 2.0,
+    "motif_rmsd_angstrom_lt": 1.0,
+    "minimum_passing_fraction": 0.2,
+    "minimum_passing_pairs": 13,
+    "unit_of_fraction": "sequence_backbone_pair",
+    "bar_basis": "Watson et al. Nature 620 (2023) defines in-silico motif-scaffolding success using AF2-to-design RMSD <2 A, motif RMSD <1 A and pAE <5; the paper evaluates 100 designs per problem and reports problem-level performance rather than a directly transferable per-pair rate. For this bounded 64-pair smoke campaign, 20% is pre-registered as a conservative operational floor, close to the 19% experimental binder success rate reported across five targets, and is not a claim of experimental equivalence.",
+    "citation": "https://doi.org/10.1038/s41586-023-06415-8"
+  },
+  "scope_statement": "A passing design means only that the RFdiffusion backbone, ProteinMPNN sequence, and Boltz-2 refold were computationally self-consistent at the pre-registered RMSD thresholds. It does not show folding, stability, expression, binding, function, or biological success. pLDDT, pTM, and scRMSD are not biological-property evidence.",
+  "created_without_hosted_calls": true
+}

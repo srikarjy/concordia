@@ -15,7 +15,8 @@
       "L": 214,
       "Y": 129
     },
-    "sequence_source": "RCSB PDB FASTA for 3HFM"
+    "sequence_source": "RCSB PDB FASTA for 3HFM",
+    "released": "1989-07-12"
   },
   "prediction": {
     "model_id": "mit/boltz2",
@@ -38,7 +39,14 @@
     "interface_pairs_pred": 35,
     "interface_precision": 0.743,
     "interface_recall": 0.812,
-    "method": "CA-only, residue-aligned; interface pair = antibody-antigen CA-CA distance < 8 A; scoring script: scripts/score_complex_against_crystal.py"
+    "method": "CA-only, residue-aligned; interface pair = antibody-antigen CA-CA distance < 8 A; scoring script: scripts/score_complex_against_crystal.py",
+    "dockq_antibody_vs_antigen": {
+      "dockq": 0.809,
+      "fnat": 0.814,
+      "irmsd": 1.04,
+      "lrmsd": 2.15,
+      "capri_class": "high"
+    }
   },
   "limitations": [
     "3HFM is an old, public structure and is very likely in Boltz-2's training data, so close agreement is expected and does not show generalization to unseen antibodies.",

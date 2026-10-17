@@ -1,0 +1,214 @@
+{
+  "rule_pack": "structure-rules-v1",
+  "label": "DockQ >= 0.23 against the experimental structure (CAPRI acceptable)",
+  "held_out": "The experimental structure is never given to the verifier.",
+  "passing_statuses": [
+    "SUPPORTED"
+  ],
+  "results": [
+    {
+      "pdb_id": "8TUZ",
+      "label_correct": true,
+      "dockq": 0.355,
+      "self_reported_confidence": 0.818581223487854,
+      "measurements": {
+        "schema_version": 1,
+        "clash_count": 5,
+        "variable_domain_fraction": 1.0,
+        "buried_surface_area": 1638.0,
+        "sample_interface_agreement": 0.64,
+        "perturbed_paratope_interface_agreement": 0.0,
+        "reference_dockq": 0.355,
+        "self_reported_confidence": 0.818581223487854
+      },
+      "physical_findings": [],
+      "status": "PARTIALLY_SUPPORTED",
+      "reasons": [
+        "insufficient independent supporting evidence families"
+      ]
+    },
+    {
+      "pdb_id": "8VTD",
+      "label_correct": false,
+      "dockq": 0.089,
+      "self_reported_confidence": 0.9016023874282837,
+      "measurements": {
+        "schema_version": 1,
+        "clash_count": 2,
+        "variable_domain_fraction": 1.0,
+        "buried_surface_area": 1947.2,
+        "sample_interface_agreement": 0.039,
+        "perturbed_paratope_interface_agreement": 0.0,
+        "reference_dockq": 0.089,
+        "self_reported_confidence": 0.9016023874282837
+      },
+      "physical_findings": [],
+      "status": "PARTIALLY_SUPPORTED",
+      "reasons": [
+        "insufficient independent supporting evidence families"
+      ]
+    },
+    {
+      "pdb_id": "8XK6",
+      "label_correct": false,
+      "dockq": 0.01,
+      "self_reported_confidence": 0.7979757785797119,
+      "measurements": {
+        "schema_version": 1,
+        "clash_count": 4,
+        "variable_domain_fraction": 0.773,
+        "buried_surface_area": 2274.4,
+        "sample_interface_agreement": 0.058,
+        "perturbed_paratope_interface_agreement": 0.014,
+        "reference_dockq": 0.01,
+        "self_reported_confidence": 0.7979757785797119
+      },
+      "physical_findings": [
+        "only 77% of antibody contacts are in the variable domain"
+      ],
+      "status": "PARTIALLY_SUPPORTED",
+      "reasons": [
+        "insufficient independent supporting evidence families"
+      ]
+    },
+    {
+      "pdb_id": "9LY5",
+      "label_correct": false,
+      "dockq": 0.007,
+      "self_reported_confidence": 0.778721034526825,
+      "measurements": {
+        "schema_version": 1,
+        "clash_count": 1,
+        "variable_domain_fraction": 1.0,
+        "buried_surface_area": 1132.6,
+        "sample_interface_agreement": 0.0,
+        "perturbed_paratope_interface_agreement": 0.0,
+        "reference_dockq": 0.007,
+        "self_reported_confidence": 0.778721034526825
+      },
+      "physical_findings": [],
+      "status": "PARTIALLY_SUPPORTED",
+      "reasons": [
+        "insufficient independent supporting evidence families"
+      ]
+    },
+    {
+      "pdb_id": "9NPH",
+      "label_correct": false,
+      "dockq": 0.077,
+      "self_reported_confidence": 0.8024660348892212,
+      "measurements": {
+        "schema_version": 1,
+        "clash_count": 1,
+        "variable_domain_fraction": 1.0,
+        "buried_surface_area": 1644.0,
+        "sample_interface_agreement": 0.0,
+        "perturbed_paratope_interface_agreement": 0.0,
+        "reference_dockq": 0.077,
+        "self_reported_confidence": 0.8024660348892212
+      },
+      "physical_findings": [],
+      "status": "PARTIALLY_SUPPORTED",
+      "reasons": [
+        "insufficient independent supporting evidence families"
+      ]
+    },
+    {
+      "pdb_id": "9NPI",
+      "label_correct": false,
+      "dockq": 0.106,
+      "self_reported_confidence": 0.7772405743598938,
+      "measurements": {
+        "schema_version": 1,
+        "clash_count": 6,
+        "variable_domain_fraction": 1.0,
+        "buried_surface_area": 2223.2,
+        "sample_interface_agreement": 0.016,
+        "perturbed_paratope_interface_agreement": 0.016,
+        "reference_dockq": 0.106,
+        "self_reported_confidence": 0.7772405743598938
+      },
+      "physical_findings": [],
+      "status": "PARTIALLY_SUPPORTED",
+      "reasons": [
+        "insufficient independent supporting evidence families"
+      ]
+    },
+    {
+      "pdb_id": "9OAO",
+      "label_correct": false,
+      "dockq": 0.014,
+      "self_reported_confidence": 0.8386886715888977,
+      "measurements": {
+        "schema_version": 1,
+        "clash_count": 3,
+        "variable_domain_fraction": 1.0,
+        "buried_surface_area": 1615.4,
+        "sample_interface_agreement": 0.17,
+        "perturbed_paratope_interface_agreement": 0.0,
+        "reference_dockq": 0.014,
+        "self_reported_confidence": 0.8386886715888977
+      },
+      "physical_findings": [],
+      "status": "PARTIALLY_SUPPORTED",
+      "reasons": [
+        "insufficient independent supporting evidence families"
+      ]
+    },
+    {
+      "pdb_id": "9SSM",
+      "label_correct": false,
+      "dockq": 0.054,
+      "self_reported_confidence": 0.8381097912788391,
+      "measurements": {
+        "schema_version": 1,
+        "clash_count": 1,
+        "variable_domain_fraction": 1.0,
+        "buried_surface_area": 1571.2,
+        "sample_interface_agreement": 0.0,
+        "perturbed_paratope_interface_agreement": 0.522,
+        "reference_dockq": 0.054,
+        "self_reported_confidence": 0.8381097912788391
+      },
+      "physical_findings": [],
+      "status": "CONTRADICTED",
+      "reasons": [
+        "insufficient independent supporting evidence families",
+        "required counterfactual check did not pass"
+      ]
+    },
+    {
+      "pdb_id": "9VHZ",
+      "label_correct": true,
+      "dockq": 0.695,
+      "self_reported_confidence": 0.8711466789245605,
+      "measurements": {
+        "schema_version": 1,
+        "clash_count": 4,
+        "variable_domain_fraction": 1.0,
+        "buried_surface_area": 1613.6,
+        "sample_interface_agreement": 0.894,
+        "perturbed_paratope_interface_agreement": 0.021,
+        "reference_dockq": 0.695,
+        "self_reported_confidence": 0.8711466789245605
+      },
+      "physical_findings": [],
+      "status": "PARTIALLY_SUPPORTED",
+      "reasons": [
+        "insufficient independent supporting evidence families"
+      ]
+    }
+  ],
+  "summary": {
+    "n": 9,
+    "correct_poses": 2,
+    "incorrect_poses": 7,
+    "false_pass": 0,
+    "false_fail": 2,
+    "contradicted": 1,
+    "statuses": {
+      "CONTRADICTED": 1,
+      "PARTIALLY_SUPPORTED": 8
+    }
+  }
+}

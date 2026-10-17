@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "campaign": "D2_unconditional_70_residue_monomer_design",
+  "status": "pre_registered_before_generation",
+  "created_at": "2026-10-17T21:59:38Z",
+  "created_without_campaign_calls": true,
+  "generation": {
+    "mode": "unconditional_monomer",
+    "input_pdb": null,
+    "contigs": "70-70",
+    "contig_interpretation": "Generate one unconditional protein chain of exactly 70 residues; no source PDB, retained chain, motif, or hotspot is supplied.",
+    "backbone_count": 4,
+    "sequences_per_backbone": 4,
+    "total_pairs": 16,
+    "rfdiffusion_seeds": [5101, 5102, 5103, 5104],
+    "proteinmpnn_seed": 5201,
+    "proteinmpnn_sampling_temperature": 0.1,
+    "boltz_diffusion_samples": 1,
+    "inter_call_delay_seconds": 5,
+    "rate_limit_retry_initial_seconds": 10,
+    "rate_limit_retry_cap_seconds": 120,
+    "rate_limit_max_retries": 8
+  },
+  "success_criterion": {
+    "global_sc_rmsd_angstrom_lt": 2.0,
+    "motif_rmsd": null,
+    "minimum_passing_fraction": 0.5,
+    "minimum_passing_pairs": 8,
+    "unit_of_fraction": "sequence_backbone_pair",
+    "bar_basis": "Published RFdiffusion work defines in-silico success using a high-confidence prediction and global RMSD below 2 A. Independent benchmarking reports over 95% designability for moderately sized unconditional RFdiffusion backbones; this bounded run pre-registers a conservative 50% pair-level operational floor rather than claiming that benchmark performance transfers to this hosted route.",
+    "sources": [
+      "https://doi.org/10.1038/s41586-023-06415-8",
+      "https://doi.org/10.48550/arXiv.2405.01447"
+    ]
+  },
+  "scope_statement": "A passing design means only that RFdiffusion, ProteinMPNN, and Boltz-2 were computationally self-consistent at the pre-registered global RMSD threshold. It does not show folding, stability, expression, binding, function, or biological success. pLDDT, pTM, and scRMSD are not biological-property evidence.",
+  "provenance": {
+    "rfdiffusion_route": "/v1/biology/ipd/rfdiffusion/generate",
+    "proteinmpnn_route": "/v1/biology/ipd/proteinmpnn/predict",
+    "boltz_route": "/v1/biology/mit/boltz2/predict"
+  }
+}

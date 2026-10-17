@@ -159,4 +159,93 @@ def test_sqlite_uses_wal_and_schema_migration(tmp_path) -> None:
         journal_mode = connection.execute("PRAGMA journal_mode").fetchone()[0]
         migrations = connection.execute("SELECT version FROM schema_migrations").fetchall()
     assert journal_mode == "wal"
-    assert [row[0] for row in migrations] == [1]
+    assert [row[0] for row in migrations] == [1, 3]
+
+
+def _ledger_with_run(tmp_path):
+    ledger = SQLiteEventLedger(tmp_path / "ledger.sqlite3")
+    ledger.create_run(
+        run_id="run-1", idempotency_key="k1", command_digest="d", payload={"a": 1}, event_id="e1"
+    )
+    ledger.append("run-1", "STEP", {"b": 2}, expected_sequence=1, event_id="e2")
+    ledger.append("run-1", "STEP", {"c": 3}, expected_sequence=2, event_id="e3")
+    ledger.create_run(
+        run_id="run-2", idempotency_key="k2", command_digest="d", payload={}, event_id="e4"
+    )
+    return ledger
+
+
+def test_hash_chain_is_intact_and_root_is_stable(tmp_path) -> None:
+    ledger = _ledger_with_run(tmp_path)
+    report = ledger.verify_chain()
+    assert report.intact
+    assert (report.runs_checked, report.events_checked) == (2, 4)
+    root = ledger.ledger_root()
+    assert root == ledger.ledger_root()
+    ledger.append("run-2", "STEP", {}, expected_sequence=1, event_id="e5")
+    assert ledger.ledger_root() != root
+
+
+def test_ledger_export_contains_root_chain_and_verifiable_artifacts(tmp_path) -> None:
+    from concordia.events.sqlite import verify_ledger_export
+
+    ledger = _ledger_with_run(tmp_path)
+    export = ledger.export_manifest(
+        artifact_manifest={
+            "run-1": ({"digest": "a" * 64, "scientific_use_allowed": False},)
+        }
+    )
+    assert export.chain_report.intact
+    assert len(export.ledger_root) == 64
+    assert verify_ledger_export(export)
+    tampered = export.model_copy(update={"ledger_root": "b" * 64})
+    assert not verify_ledger_export(tampered)
+
+
+def test_hash_chain_reports_an_edited_event(tmp_path) -> None:
+    ledger = _ledger_with_run(tmp_path)
+    with ledger._connect() as connection:
+        connection.execute(
+            "UPDATE events SET payload_json = ? WHERE run_id = 'run-1' AND sequence_number = 2",
+            ('{"b":999}',),
+        )
+    report = ledger.verify_chain()
+    assert [(b.run_id, b.sequence_number) for b in report.breaks] == [("run-1", 2)]
+    assert "does not match its hash" in report.breaks[0].reason
+    assert "run-2" in report.heads
+    with pytest.raises(ValueError, match="broken"):
+        ledger.ledger_root()
+
+
+def test_hash_chain_reports_a_deleted_event(tmp_path) -> None:
+    ledger = _ledger_with_run(tmp_path)
+    with ledger._connect() as connection:
+        connection.execute("DELETE FROM events WHERE run_id = 'run-1' AND sequence_number = 2")
+    (found,) = ledger.verify_chain("run-1").breaks
+    assert (found.sequence_number, found.reason) == (3, "expected sequence 2, found 3")
+
+
+def test_existing_ledger_is_chained_on_migration(tmp_path) -> None:
+    import sqlite3
+
+    path = tmp_path / "legacy.sqlite3"
+    connection = sqlite3.connect(path)
+    connection.executescript(
+        """
+        CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL);
+        CREATE TABLE events (
+            run_id TEXT NOT NULL, sequence_number INTEGER NOT NULL,
+            event_id TEXT NOT NULL UNIQUE, event_type TEXT NOT NULL,
+            schema_version INTEGER NOT NULL, created_at TEXT NOT NULL,
+            payload_json TEXT NOT NULL, PRIMARY KEY (run_id, sequence_number));
+        INSERT INTO schema_migrations VALUES (1, 'then'), (2, 'then');
+        INSERT INTO events VALUES ('old', 1, 'x1', 'RUN_CREATED', 1, '2026-01-01', '{}');
+        INSERT INTO events VALUES ('old', 2, 'x2', 'STEP', 1, '2026-01-02', '{"k":1}');
+        """
+    )
+    connection.commit()
+    connection.close()
+    ledger = SQLiteEventLedger(path)
+    assert ledger.verify_chain().intact
+    ledger.append("old", "STEP", {}, expected_sequence=2)
+    assert ledger.verify_chain().events_checked == 3

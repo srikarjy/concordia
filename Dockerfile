@@ -8,8 +8,10 @@ RUN npm run build
 FROM python:3.13-slim
 WORKDIR /app
 ENV PYTHONPATH=/app/src PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
-COPY requirements-space.txt ./
-RUN pip install --no-cache-dir -r requirements-space.txt
+# Hash-pinned, so a rebuild of this image installs the same bytes. Regenerate with
+# make space-lock after editing requirements-space.txt.
+COPY requirements-space.lock.txt ./
+RUN pip install --no-cache-dir --require-hashes -r requirements-space.lock.txt
 COPY src ./src
 RUN python -c "from concordia.api.workspace import create_workspace_app; create_workspace_app('/tmp/concordia-space-smoke')"
 COPY --from=frontend-build /build/frontend/dist ./frontend/dist

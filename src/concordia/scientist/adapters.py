@@ -6,12 +6,35 @@ import os
 import re
 import time
 from collections.abc import Sequence
+from hashlib import sha256
+from pathlib import Path
 from typing import Any, Protocol
 from urllib.parse import urlsplit
 
 import httpx
 
 from concordia.scientist.contracts import ModelResponse
+
+
+class LocalRuntimeNotReadyError(RuntimeError):
+    """The local model runtime is misconfigured, as opposed to a model call that failed.
+
+    The scientist runtime re-raises this instead of recording ``FAILED_MODEL``, which
+    colony and qualification reports would otherwise show as "no valid response" or
+    "not qualified". It is raised only where a live call is about to be made, so
+    replay and idempotent reruns of finished executions still work without Ollama.
+    """
+
+
+def require_local_scientist_runtime() -> None:
+    if os.environ.get("OLLAMA_NO_CLOUD") != "1":
+        raise LocalRuntimeNotReadyError("set OLLAMA_NO_CLOUD=1 before local scientist calls")
+    try:
+        import ollama  # noqa: F401
+    except ImportError as error:
+        raise LocalRuntimeNotReadyError(
+            "install the optional scientist dependency first: uv sync --extra scientist"
+        ) from error
 
 
 class ScientistModelAdapter(Protocol):
@@ -91,12 +114,9 @@ class OllamaScientistAdapter:
         return self._checkpoint_digest
 
     def _client(self) -> Any:
-        if os.environ.get("OLLAMA_NO_CLOUD") != "1":
-            raise RuntimeError("set OLLAMA_NO_CLOUD=1 before local scientist calls")
-        try:
-            from ollama import Client
-        except ImportError as error:
-            raise RuntimeError("install the optional scientist dependency first") from error
+        require_local_scientist_runtime()
+        from ollama import Client
+
         return Client(host=self.host, timeout=self.timeout_seconds)
 
     def _load_identity(self) -> None:
@@ -120,8 +140,7 @@ class OllamaScientistAdapter:
         messages: Sequence[dict[str, str]],
         response_schema: dict[str, Any],
     ) -> ModelResponse:
-        if os.environ.get("OLLAMA_NO_CLOUD") != "1":
-            raise RuntimeError("set OLLAMA_NO_CLOUD=1 before local scientist calls")
+        require_local_scientist_runtime()
         self._load_identity()
         options = self.request_settings["options"]
         started = time.monotonic()
@@ -168,6 +187,124 @@ class OllamaScientistAdapter:
                 "model_details": self._model_details,
                 "done_reason": payload.get("done_reason"),
                 "total_duration_nanoseconds": payload.get("total_duration"),
+                "provider_response": payload,
+            },
+        )
+
+
+class LlamaCppScientistAdapter:
+    """Optional direct GGUF backend behind the stateless scientist interface."""
+
+    def __init__(
+        self,
+        model_path: str | Path,
+        *,
+        temperature: float = 0.0,
+        seed: int | None = None,
+        n_ctx: int = 8192,
+        n_gpu_layers: int = 0,
+        chat_format: str | None = None,
+        client_factory: Any | None = None,
+    ):
+        path = Path(model_path)
+        if not path.is_file():
+            raise ValueError("llama.cpp model_path must be an existing file")
+        if temperature < 0 or n_ctx <= 0 or n_gpu_layers < 0:
+            raise ValueError("llama.cpp generation settings are invalid")
+        self.model_path = path
+        self.temperature = temperature
+        self.seed = seed
+        self.n_ctx = n_ctx
+        self.n_gpu_layers = n_gpu_layers
+        self.chat_format = chat_format
+        self._client_factory = client_factory
+        self._client: Any | None = None
+        self._checkpoint_digest = sha256(path.read_bytes()).hexdigest()
+
+    @property
+    def request_settings(self) -> dict[str, Any]:
+        return {
+            "runtime": "llama.cpp",
+            "model_path": str(self.model_path),
+            "checkpoint_digest": self._checkpoint_digest,
+            "temperature": self.temperature,
+            "seed": self.seed,
+            "n_ctx": self.n_ctx,
+            "n_gpu_layers": self.n_gpu_layers,
+            "chat_format": self.chat_format,
+            "max_tokens": 1024,
+            "response_format": "json_object",
+            "transport_version": "llama-cpp-python-v1",
+        }
+
+    @property
+    def model_identity(self) -> str:
+        return f"gguf:{self.model_path.name}"
+
+    @property
+    def checkpoint_digest(self) -> str:
+        return self._checkpoint_digest
+
+    def _load_client(self) -> Any:
+        if self._client is not None:
+            return self._client
+        if os.environ.get("OLLAMA_NO_CLOUD") != "1":
+            raise LocalRuntimeNotReadyError(
+                "set OLLAMA_NO_CLOUD=1 before local llama.cpp calls"
+            )
+        if self._client_factory is None:
+            try:
+                from llama_cpp import Llama
+            except ImportError as error:
+                raise LocalRuntimeNotReadyError(
+                    "install the optional llama.cpp dependency: uv sync --extra llama"
+                ) from error
+            self._client_factory = Llama
+        options: dict[str, Any] = {
+            "model_path": str(self.model_path),
+            "n_ctx": self.n_ctx,
+            "n_gpu_layers": self.n_gpu_layers,
+            "verbose": False,
+        }
+        if self.chat_format is not None:
+            options["chat_format"] = self.chat_format
+        self._client = self._client_factory(**options)
+        return self._client
+
+    def generate(
+        self,
+        messages: Sequence[dict[str, str]],
+        response_schema: dict[str, Any],
+    ) -> ModelResponse:
+        client = self._load_client()
+        started = time.monotonic()
+        options: dict[str, Any] = {
+            "messages": list(messages),
+            "temperature": self.temperature,
+            "max_tokens": 1024,
+            "response_format": {"type": "json_object"},
+        }
+        if self.seed is not None:
+            options["seed"] = self.seed
+        payload = client.create_chat_completion(**options)
+        choices = payload.get("choices") or []
+        raw = choices[0].get("message", {}).get("content") if choices else None
+        if not isinstance(raw, str):
+            raise RuntimeError("llama.cpp returned no text response")
+        usage = payload.get("usage") or {}
+        return ModelResponse(
+            raw_response=raw,
+            model_identity=self.model_identity,
+            checkpoint_digest=self._checkpoint_digest,
+            elapsed_seconds=time.monotonic() - started,
+            input_tokens=usage.get("prompt_tokens"),
+            output_tokens=usage.get("completion_tokens"),
+            memory_bytes=None,
+            metadata={
+                "runtime": "llama.cpp",
+                "transport_version": "llama-cpp-python-v1",
+                "response_schema": response_schema,
+                "request_settings": self.request_settings,
                 "provider_response": payload,
             },
         )

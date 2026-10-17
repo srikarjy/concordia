@@ -42,6 +42,8 @@ class JobNotFoundError(LookupError):
 
 
 class ForwardScorer(Protocol):
+    def preflight(self, sequence: GenomicSequence) -> None: ...
+
     def score(
         self, sequence: GenomicSequence, *, checkpoint: str, target: str
     ) -> dict[str, Any]: ...
@@ -60,13 +62,18 @@ class Evo2ForwardJobQueue:
         target: str,
         per_client_limit: int = 2,
         per_client_window_seconds: int = 3_600,
+        execution_lock: threading.Lock | None = None,
     ):
         self.scorer = scorer
         self.checkpoint = checkpoint
         self.target = target
         self.per_client_limit = per_client_limit
         self.per_client_window_seconds = per_client_window_seconds
-        self._execution_lock = threading.Lock()
+        # Pass one lock to several queues that target the same ZeroGPU Space:
+        # there is a single GPU allocation behind them, so a forward pass and a
+        # gradient attribution must not be in flight at the same time even
+        # though they are separate operations with separate endpoints.
+        self._execution_lock = execution_lock or threading.Lock()
         self._postgres: PostgresForwardJobStore | None = None
         if postgres_dsn is not None:
             from concordia.genomics.postgres_backend import PostgresForwardJobStore as _PG
@@ -132,6 +139,7 @@ class Evo2ForwardJobQueue:
         must never block the HTTP request that submitted it.
         """
 
+        self.scorer.preflight(sequence)
         self._check_and_record_rate_limit(client_id)
         job_id = str(uuid.uuid4())
         if self._postgres is not None:

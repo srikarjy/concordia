@@ -1,0 +1,1061 @@
+{
+  "selection_rule": {
+    "released_on_or_after": "2024-06-01",
+    "exactly_3_protein_chains": true,
+    "resolution_max": 3.0,
+    "unique_heavy_light_by_name": true,
+    "seed": 20261011,
+    "n": 9,
+    "eligible": 94,
+    "candidates_screened": 123
+  },
+  "success_criterion": {
+    "antigen_rmsd_in_antibody_frame_ca_max": 5.0,
+    "interface_recall_min": 0.5,
+    "fixed_before_results": true
+  },
+  "secondary_metric": {
+    "name": "DockQ, antibody (H+L) vs antigen, CAPRI classes",
+    "acceptable_min": 0.23,
+    "fixed_before_results": false
+  },
+  "results": [
+    {
+      "pdb_id": "8TUZ",
+      "released": "2024-08-28",
+      "method": "X-RAY DIFFRACTION",
+      "resolution": 2.186,
+      "antigen_desc": "Outer surface protein A",
+      "lengths": {
+        "H": 223,
+        "L": 213,
+        "A": 251
+      },
+      "settings": {
+        "sampling_steps": 50,
+        "recycling_steps": 3,
+        "diffusion_samples": 5
+      },
+      "http_status": 200,
+      "wall_seconds": 11.2,
+      "score_lists": {
+        "confidence_scores": [
+          0.818581223487854,
+          0.8680322766304016,
+          0.833796501159668,
+          0.819381833076477,
+          0.8549475073814392
+        ],
+        "ptm_scores": [
+          0.7747234106063843,
+          0.8855438828468323,
+          0.7951114773750305,
+          0.7746849656105042,
+          0.8076358437538147
+        ],
+        "iptm_scores": [
+          0.7136658430099487,
+          0.8633974194526672,
+          0.7402631044387817,
+          0.7109367251396179,
+          0.7584578990936279
+        ],
+        "ligand_iptm_scores": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "protein_iptm_scores": [
+          0.7136658430099487,
+          0.8633974194526672,
+          0.7402631044387817,
+          0.7109367251396179,
+          0.7584578990936279
+        ],
+        "complex_plddt_scores": [
+          0.8448100686073303,
+          0.8691909909248352,
+          0.8571798801422119,
+          0.846493124961853,
+          0.8790698051452637
+        ],
+        "complex_iplddt_scores": [
+          0.8707699775695801,
+          0.8880482316017151,
+          0.880452573299408,
+          0.8751795887947083,
+          0.8887876868247986
+        ],
+        "complex_pde_scores": [
+          0.9256395101547241,
+          0.5126931667327881,
+          0.83045494556427,
+          0.8933258056640625,
+          0.6647424697875977
+        ],
+        "complex_ipde_scores": [
+          2.1615846157073975,
+          0.9756865501403809,
+          1.9507765769958496,
+          2.2193942070007324,
+          1.9688819646835327
+        ],
+        "chains_ptm_scores": [
+          0.9438286423683167,
+          0.9449477195739746,
+          0.8770378232002258
+        ]
+      },
+      "model_confidence": 0.818581223487854,
+      "input_payload_hash": "5cf2dc36524df4e5dbd8f4470662212dbafdcbd6d1b00dd50e357f22934c28b0",
+      "response_artifact_digest": "0a08f9ab05f6892b6089642a7a2024af7c0ebecadc802d7b81b7591a6d8fe784",
+      "scores": {
+        "aligned_residues": {
+          "H": 220,
+          "L": 213,
+          "A": 251
+        },
+        "H_rmsd_ca": 1.3,
+        "L_rmsd_ca": 0.68,
+        "A_rmsd_ca": 11.76,
+        "antibody_rmsd_ca": 1.07,
+        "antigen_rmsd_in_antibody_frame_ca": 12.58,
+        "interface_pairs_crystal": 20,
+        "interface_pairs_predicted": 33,
+        "interface_precision": 0.455,
+        "interface_recall": 0.75,
+        "dockq": 0.355,
+        "fnat": 0.585,
+        "irmsd": 3.34,
+        "lrmsd": 12.59,
+        "capri_class": "acceptable"
+      },
+      "verdict": "failure"
+    },
+    {
+      "pdb_id": "8VTD",
+      "released": "2025-07-02",
+      "method": "X-RAY DIFFRACTION",
+      "resolution": 1.23,
+      "antigen_desc": "T-cell immunoreceptor with Ig and ITIM domains",
+      "lengths": {
+        "H": 221,
+        "L": 214,
+        "A": 122
+      },
+      "settings": {
+        "sampling_steps": 50,
+        "recycling_steps": 3,
+        "diffusion_samples": 5
+      },
+      "http_status": 200,
+      "wall_seconds": 9.6,
+      "score_lists": {
+        "confidence_scores": [
+          0.9016023874282837,
+          0.9234839677810669,
+          0.9218541383743286,
+          0.9044426083564758,
+          0.9152275323867798
+        ],
+        "ptm_scores": [
+          0.8644046187400818,
+          0.868588924407959,
+          0.8930785655975342,
+          0.8853631615638733,
+          0.9028567671775818
+        ],
+        "iptm_scores": [
+          0.8312229514122009,
+          0.85767662525177,
+          0.871351420879364,
+          0.860870897769928,
+          0.8831514716148376
+        ],
+        "ligand_iptm_scores": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "protein_iptm_scores": [
+          0.8312229514122009,
+          0.85767662525177,
+          0.871351420879364,
+          0.860870897769928,
+          0.8831514716148376
+        ],
+        "complex_plddt_scores": [
+          0.9191972613334656,
+          0.9399358034133911,
+          0.9344797730445862,
+          0.915335476398468,
+          0.9232465028762817
+        ],
+        "complex_iplddt_scores": [
+          0.8906364440917969,
+          0.9288064241409302,
+          0.9177735447883606,
+          0.8928102254867554,
+          0.9053051471710205
+        ],
+        "complex_pde_scores": [
+          0.4101642668247223,
+          0.3655896782875061,
+          0.37186071276664734,
+          0.40909135341644287,
+          0.38068413734436035
+        ],
+        "complex_ipde_scores": [
+          1.6040844917297363,
+          0.9768157005310059,
+          1.1087757349014282,
+          1.5357073545455933,
+          1.2441627979278564
+        ],
+        "chains_ptm_scores": [
+          0.8898470997810364,
+          0.9109134078025818,
+          0.9224051833152771
+        ]
+      },
+      "model_confidence": 0.9016023874282837,
+      "input_payload_hash": "444632324bb9ba5f72b789b14af92089d1bfac56da45e88dc681dc443f069cf8",
+      "response_artifact_digest": "67ae53ef2ea2327dc628632b1564d727c1d0cbc8cfdc02f61cc32beb6f8ccabf",
+      "scores": {
+        "aligned_residues": {
+          "H": 221,
+          "L": 214,
+          "A": 105
+        },
+        "H_rmsd_ca": 1.08,
+        "L_rmsd_ca": 0.67,
+        "A_rmsd_ca": 1.04,
+        "antibody_rmsd_ca": 0.92,
+        "antigen_rmsd_in_antibody_frame_ca": 16.16,
+        "interface_pairs_crystal": 30,
+        "interface_pairs_predicted": 33,
+        "interface_precision": 0.0,
+        "interface_recall": 0.0,
+        "dockq": 0.089,
+        "fnat": 0.015,
+        "irmsd": 8.3,
+        "lrmsd": 15.98,
+        "capri_class": "incorrect"
+      },
+      "verdict": "failure"
+    },
+    {
+      "pdb_id": "8XK6",
+      "released": "2024-07-10",
+      "method": "X-RAY DIFFRACTION",
+      "resolution": 2.45,
+      "antigen_desc": "Envelopment polyprotein",
+      "lengths": {
+        "H": 251,
+        "L": 237,
+        "A": 357
+      },
+      "settings": {
+        "sampling_steps": 50,
+        "recycling_steps": 3,
+        "diffusion_samples": 5
+      },
+      "http_status": 200,
+      "wall_seconds": 21.2,
+      "score_lists": {
+        "confidence_scores": [
+          0.7979757785797119,
+          0.7820380330085754,
+          0.7748090624809265,
+          0.8373839259147644,
+          0.8108152747154236
+        ],
+        "ptm_scores": [
+          0.6866388916969299,
+          0.6290817856788635,
+          0.6105934381484985,
+          0.8121851682662964,
+          0.6872314214706421
+        ],
+        "iptm_scores": [
+          0.5944507718086243,
+          0.5114703178405762,
+          0.4886392652988434,
+          0.7649585604667664,
+          0.5933924317359924
+        ],
+        "ligand_iptm_scores": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "protein_iptm_scores": [
+          0.5944507718086243,
+          0.5114703178405762,
+          0.4886392652988434,
+          0.7649585604667664,
+          0.5933924317359924
+        ],
+        "complex_plddt_scores": [
+          0.848857045173645,
+          0.8496799468994141,
+          0.8463514447212219,
+          0.8554903268814087,
+          0.865170955657959
+        ],
+        "complex_iplddt_scores": [
+          0.8368101119995117,
+          0.8523740768432617,
+          0.8446749448776245,
+          0.8316584229469299,
+          0.8593659400939941
+        ],
+        "complex_pde_scores": [
+          1.7567334175109863,
+          1.5936942100524902,
+          1.587833285331726,
+          0.9155995845794678,
+          0.9156914949417114
+        ],
+        "complex_ipde_scores": [
+          4.953830242156982,
+          6.167250156402588,
+          6.528278827667236,
+          3.1400232315063477,
+          5.009018898010254
+        ],
+        "chains_ptm_scores": [
+          0.9270091652870178,
+          0.9358099102973938,
+          0.8532280325889587
+        ]
+      },
+      "model_confidence": 0.7979757785797119,
+      "input_payload_hash": "9e68beca0e317e736688997f41b482199194136bf9f3c16f031df8964270f453",
+      "response_artifact_digest": "1e80488452f00e186ed2a617f7129b2c523a76eab87ee9e11a8071cc9a468e52",
+      "scores": {
+        "aligned_residues": {
+          "H": 120,
+          "L": 111,
+          "A": 313
+        },
+        "H_rmsd_ca": 0.7,
+        "L_rmsd_ca": 0.28,
+        "A_rmsd_ca": 1.53,
+        "antibody_rmsd_ca": 0.77,
+        "antigen_rmsd_in_antibody_frame_ca": 33.43,
+        "interface_pairs_crystal": 38,
+        "interface_pairs_predicted": 40,
+        "interface_precision": 0.0,
+        "interface_recall": 0.0,
+        "dockq": 0.01,
+        "fnat": 0.0,
+        "irmsd": 13.93,
+        "lrmsd": 64.42,
+        "capri_class": "incorrect"
+      },
+      "verdict": "failure"
+    },
+    {
+      "pdb_id": "9LY5",
+      "released": "2026-03-04",
+      "method": "ELECTRON MICROSCOPY",
+      "resolution": 2.98,
+      "antigen_desc": "CD276 antigen",
+      "lengths": {
+        "H": 223,
+        "L": 213,
+        "A": 448
+      },
+      "settings": {
+        "sampling_steps": 50,
+        "recycling_steps": 3,
+        "diffusion_samples": 5
+      },
+      "http_status": 200,
+      "wall_seconds": 14.8,
+      "score_lists": {
+        "confidence_scores": [
+          0.778721034526825,
+          0.778476893901825,
+          0.7943869829177856,
+          0.7874712347984314,
+          0.7822390794754028
+        ],
+        "ptm_scores": [
+          0.4906512498855591,
+          0.49616390466690063,
+          0.5975323915481567,
+          0.5404235124588013,
+          0.5019806027412415
+        ],
+        "iptm_scores": [
+          0.37614575028419495,
+          0.38569319248199463,
+          0.5098650455474854,
+          0.43608951568603516,
+          0.38931646943092346
+        ],
+        "ligand_iptm_scores": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "protein_iptm_scores": [
+          0.37614575028419495,
+          0.38569319248199463,
+          0.5098650455474854,
+          0.43608951568603516,
+          0.38931646943092346
+        ],
+        "complex_plddt_scores": [
+          0.8793647885322571,
+          0.8766728043556213,
+          0.8655174374580383,
+          0.8753166198730469,
+          0.8804696798324585
+        ],
+        "complex_iplddt_scores": [
+          0.8690750598907471,
+          0.8610995411872864,
+          0.8438926935195923,
+          0.872319757938385,
+          0.8712853789329529
+        ],
+        "complex_pde_scores": [
+          0.7868537306785583,
+          0.7268244624137878,
+          0.6492705345153809,
+          0.7423379421234131,
+          0.7850178480148315
+        ],
+        "complex_ipde_scores": [
+          7.042415142059326,
+          7.042577743530273,
+          5.29094934463501,
+          6.6496663093566895,
+          7.16318416595459
+        ],
+        "chains_ptm_scores": [
+          0.8641997575759888,
+          0.8927064538002014,
+          0.8077581524848938
+        ]
+      },
+      "model_confidence": 0.778721034526825,
+      "input_payload_hash": "14dd5727e4d794332bdbdb6a6f8cd663ff4b4d4f43086c7952dbea4db4587e1b",
+      "response_artifact_digest": "d64afa5c9cbc49c781829ebe5ba3746b92e0d75d3f91705a8b630f26ed3a8cc9",
+      "scores": {
+        "aligned_residues": {
+          "H": 218,
+          "L": 213,
+          "A": 181
+        },
+        "H_rmsd_ca": 3.65,
+        "L_rmsd_ca": 2.85,
+        "A_rmsd_ca": 1.36,
+        "antibody_rmsd_ca": 3.48,
+        "antigen_rmsd_in_antibody_frame_ca": 72.5,
+        "interface_pairs_crystal": 27,
+        "interface_pairs_predicted": 3,
+        "interface_precision": 0.0,
+        "interface_recall": 0.0,
+        "dockq": 0.007,
+        "fnat": 0.0,
+        "irmsd": 18.1,
+        "lrmsd": 72.47,
+        "capri_class": "incorrect"
+      },
+      "verdict": "failure"
+    },
+    {
+      "pdb_id": "9NPH",
+      "released": "2025-08-27",
+      "method": "X-RAY DIFFRACTION",
+      "resolution": 2.592,
+      "antigen_desc": "Major allergen Can f 1",
+      "lengths": {
+        "H": 235,
+        "L": 212,
+        "A": 149
+      },
+      "settings": {
+        "sampling_steps": 50,
+        "recycling_steps": 3,
+        "diffusion_samples": 5
+      },
+      "http_status": 200,
+      "wall_seconds": 23.9,
+      "score_lists": {
+        "confidence_scores": [
+          0.8024660348892212,
+          0.8090742230415344,
+          0.8100935816764832,
+          0.8060209155082703,
+          0.816182553768158
+        ],
+        "ptm_scores": [
+          0.6702349185943604,
+          0.6756186485290527,
+          0.6708629131317139,
+          0.6806843876838684,
+          0.7097810506820679
+        ],
+        "iptm_scores": [
+          0.5969182848930359,
+          0.5935718417167664,
+          0.591946005821228,
+          0.6079079508781433,
+          0.6435052752494812
+        ],
+        "ligand_iptm_scores": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "protein_iptm_scores": [
+          0.5969182848930359,
+          0.5935718417167664,
+          0.591946005821228,
+          0.6079079508781433,
+          0.6435052752494812
+        ],
+        "complex_plddt_scores": [
+          0.8538529276847839,
+          0.8629498481750488,
+          0.8646304607391357,
+          0.855549156665802,
+          0.8593518733978271
+        ],
+        "complex_iplddt_scores": [
+          0.827014684677124,
+          0.8477596640586853,
+          0.8391703367233276,
+          0.8385043144226074,
+          0.8404218554496765
+        ],
+        "complex_pde_scores": [
+          0.6554941534996033,
+          0.6488797068595886,
+          0.6575363278388977,
+          0.6621294617652893,
+          0.5957882404327393
+        ],
+        "complex_ipde_scores": [
+          3.233362913131714,
+          3.4216511249542236,
+          3.4155380725860596,
+          3.3205575942993164,
+          2.840261459350586
+        ],
+        "chains_ptm_scores": [
+          0.8185616731643677,
+          0.8141869306564331,
+          0.9338074922561646
+        ]
+      },
+      "model_confidence": 0.8024660348892212,
+      "input_payload_hash": "2b53bb36224c717db381a0abab12b8d8549bc9b208a125fddffeb9626a23fa4a",
+      "response_artifact_digest": "cda076c62c4cf3f0004ed4f267a5735ab01efd31398a01e893bf7ce03b3e168f",
+      "scores": {
+        "aligned_residues": {
+          "H": 234,
+          "L": 211,
+          "A": 144
+        },
+        "H_rmsd_ca": 6.34,
+        "L_rmsd_ca": 5.96,
+        "A_rmsd_ca": 2.16,
+        "antibody_rmsd_ca": 6.73,
+        "antigen_rmsd_in_antibody_frame_ca": 23.2,
+        "interface_pairs_crystal": 34,
+        "interface_pairs_predicted": 30,
+        "interface_precision": 0.0,
+        "interface_recall": 0.0,
+        "dockq": 0.077,
+        "fnat": 0.089,
+        "irmsd": 9.84,
+        "lrmsd": 23.21,
+        "capri_class": "incorrect"
+      },
+      "verdict": "failure"
+    },
+    {
+      "pdb_id": "9NPI",
+      "released": "2025-08-27",
+      "method": "X-RAY DIFFRACTION",
+      "resolution": 1.85,
+      "antigen_desc": "Major allergen Can f 1",
+      "lengths": {
+        "H": 225,
+        "L": 215,
+        "A": 156
+      },
+      "settings": {
+        "sampling_steps": 50,
+        "recycling_steps": 3,
+        "diffusion_samples": 5
+      },
+      "http_status": 200,
+      "wall_seconds": 9.9,
+      "score_lists": {
+        "confidence_scores": [
+          0.7772405743598938,
+          0.7850342988967896,
+          0.791953444480896,
+          0.7848049402236938,
+          0.7784610390663147
+        ],
+        "ptm_scores": [
+          0.7252187132835388,
+          0.75160813331604,
+          0.7388570308685303,
+          0.7406098246574402,
+          0.7228236794471741
+        ],
+        "iptm_scores": [
+          0.6360058188438416,
+          0.6951475143432617,
+          0.6646499633789062,
+          0.6662584543228149,
+          0.6264695525169373
+        ],
+        "ligand_iptm_scores": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "protein_iptm_scores": [
+          0.6360058188438416,
+          0.6951475143432617,
+          0.6646499633789062,
+          0.6662584543228149,
+          0.6264695525169373
+        ],
+        "complex_plddt_scores": [
+          0.8125492334365845,
+          0.8075059652328491,
+          0.823779284954071,
+          0.8144415616989136,
+          0.8164588809013367
+        ],
+        "complex_iplddt_scores": [
+          0.8051798939704895,
+          0.8012535572052002,
+          0.817681610584259,
+          0.7988677024841309,
+          0.8273554444313049
+        ],
+        "complex_pde_scores": [
+          0.849685788154602,
+          0.7918795347213745,
+          0.7166962027549744,
+          0.8285782337188721,
+          0.7932267189025879
+        ],
+        "complex_ipde_scores": [
+          3.8785290718078613,
+          3.0289149284362793,
+          3.1988182067871094,
+          3.587763786315918,
+          3.7553586959838867
+        ],
+        "chains_ptm_scores": [
+          0.8821331858634949,
+          0.8993845582008362,
+          0.8647173643112183
+        ]
+      },
+      "model_confidence": 0.7772405743598938,
+      "input_payload_hash": "b48f79eeb6aa5eee60050ab9a54664086bb736a4446f671c8745be7c7bf7c516",
+      "response_artifact_digest": "2c5862012db89b604aa5fba88d721b5c2b029be71911b8a7da85441e860887d6",
+      "scores": {
+        "aligned_residues": {
+          "H": 222,
+          "L": 214,
+          "A": 133
+        },
+        "H_rmsd_ca": 2.48,
+        "L_rmsd_ca": 1.09,
+        "A_rmsd_ca": 2.79,
+        "antibody_rmsd_ca": 2.13,
+        "antigen_rmsd_in_antibody_frame_ca": 16.52,
+        "interface_pairs_crystal": 42,
+        "interface_pairs_predicted": 40,
+        "interface_precision": 0.15,
+        "interface_recall": 0.143,
+        "dockq": 0.106,
+        "fnat": 0.074,
+        "irmsd": 7.93,
+        "lrmsd": 16.5,
+        "capri_class": "incorrect"
+      },
+      "verdict": "failure"
+    },
+    {
+      "pdb_id": "9OAO",
+      "released": "2025-06-25",
+      "method": "X-RAY DIFFRACTION",
+      "resolution": 2.58,
+      "antigen_desc": "Germline-targeting HIV-1 gp120 engineered outer domain eOD-GT8-mingly",
+      "lengths": {
+        "H": 221,
+        "L": 211,
+        "A": 183
+      },
+      "settings": {
+        "sampling_steps": 50,
+        "recycling_steps": 3,
+        "diffusion_samples": 5
+      },
+      "http_status": 200,
+      "wall_seconds": 10.9,
+      "score_lists": {
+        "confidence_scores": [
+          0.8386886715888977,
+          0.8446637988090515,
+          0.8395581245422363,
+          0.855585515499115,
+          0.8535163998603821
+        ],
+        "ptm_scores": [
+          0.7196798920631409,
+          0.7290585041046143,
+          0.7159662842750549,
+          0.7796418070793152,
+          0.7547918558120728
+        ],
+        "iptm_scores": [
+          0.6343302130699158,
+          0.6422338485717773,
+          0.6268199682235718,
+          0.7210646271705627,
+          0.6861264705657959
+        ],
+        "ligand_iptm_scores": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "protein_iptm_scores": [
+          0.6343302130699158,
+          0.6422338485717773,
+          0.6268199682235718,
+          0.7210646271705627,
+          0.6861264705657959
+        ],
+        "complex_plddt_scores": [
+          0.8897782564163208,
+          0.8952712416648865,
+          0.8927426934242249,
+          0.8892157077789307,
+          0.8953638076782227
+        ],
+        "complex_iplddt_scores": [
+          0.8608850836753845,
+          0.8698352575302124,
+          0.8682542443275452,
+          0.8631563186645508,
+          0.8676196932792664
+        ],
+        "complex_pde_scores": [
+          0.6773571968078613,
+          0.6535125374794006,
+          0.6349825859069824,
+          0.5600711107254028,
+          0.6045693755149841
+        ],
+        "complex_ipde_scores": [
+          3.608297824859619,
+          3.2645978927612305,
+          3.7703499794006348,
+          2.8411591053009033,
+          3.018676519393921
+        ],
+        "chains_ptm_scores": [
+          0.9008604884147644,
+          0.9215842485427856,
+          0.9391067624092102
+        ]
+      },
+      "model_confidence": 0.8386886715888977,
+      "input_payload_hash": "a6a5a244a7f53e8421922ee496a58ee62f42ed1a938f413702b14cdec99bfe7d",
+      "response_artifact_digest": "91dc989e1f69c2951f032635554e265a602f970d0b1c20b47a6cf4945a46b684",
+      "scores": {
+        "aligned_residues": {
+          "H": 214,
+          "L": 210,
+          "A": 169
+        },
+        "H_rmsd_ca": 3.3,
+        "L_rmsd_ca": 2.49,
+        "A_rmsd_ca": 0.81,
+        "antibody_rmsd_ca": 3.21,
+        "antigen_rmsd_in_antibody_frame_ca": 44.7,
+        "interface_pairs_crystal": 60,
+        "interface_pairs_predicted": 30,
+        "interface_precision": 0.0,
+        "interface_recall": 0.0,
+        "dockq": 0.014,
+        "fnat": 0.0,
+        "irmsd": 18.0,
+        "lrmsd": 44.72,
+        "capri_class": "incorrect"
+      },
+      "verdict": "failure"
+    },
+    {
+      "pdb_id": "9SSM",
+      "released": "2026-02-18",
+      "method": "X-RAY DIFFRACTION",
+      "resolution": 2.7,
+      "antigen_desc": "Spike glycoprotein",
+      "lengths": {
+        "H": 230,
+        "L": 214,
+        "A": 249
+      },
+      "settings": {
+        "sampling_steps": 50,
+        "recycling_steps": 3,
+        "diffusion_samples": 5
+      },
+      "http_status": 200,
+      "wall_seconds": 11.0,
+      "score_lists": {
+        "confidence_scores": [
+          0.8381097912788391,
+          0.830776035785675,
+          0.8164165616035461,
+          0.8225969672203064,
+          0.8121878504753113
+        ],
+        "ptm_scores": [
+          0.6903620362281799,
+          0.6887782216072083,
+          0.6419273614883423,
+          0.6578276753425598,
+          0.6297881603240967
+        ],
+        "iptm_scores": [
+          0.5923635959625244,
+          0.591483473777771,
+          0.526064932346344,
+          0.5527017712593079,
+          0.5107401013374329
+        ],
+        "ligand_iptm_scores": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "protein_iptm_scores": [
+          0.5923635959625244,
+          0.591483473777771,
+          0.526064932346344,
+          0.5527017712593079,
+          0.5107401013374329
+        ],
+        "complex_plddt_scores": [
+          0.8995463252067566,
+          0.8905991315841675,
+          0.8890044689178467,
+          0.8900707364082336,
+          0.8875498175621033
+        ],
+        "complex_iplddt_scores": [
+          0.8920587301254272,
+          0.8820287585258484,
+          0.8799353241920471,
+          0.8778460025787354,
+          0.8807783126831055
+        ],
+        "complex_pde_scores": [
+          0.906445324420929,
+          0.7199546694755554,
+          0.973780632019043,
+          0.8854025602340698,
+          0.9270519614219666
+        ],
+        "complex_ipde_scores": [
+          4.884991645812988,
+          4.888452529907227,
+          6.067751884460449,
+          6.0605340003967285,
+          6.282159328460693
+        ],
+        "chains_ptm_scores": [
+          0.8928237557411194,
+          0.9172331094741821,
+          0.8550508618354797
+        ]
+      },
+      "model_confidence": 0.8381097912788391,
+      "input_payload_hash": "cef665e41d9af21e18cb5fdcc3f5f2672bf832a7e590b6e020430b243831acb0",
+      "response_artifact_digest": "7e37b431d85b78120cf415d8485b08a71c2f2dffa7167fd85016a6da8f9dec26",
+      "scores": {
+        "aligned_residues": {
+          "H": 221,
+          "L": 214,
+          "A": 191
+        },
+        "H_rmsd_ca": 1.03,
+        "L_rmsd_ca": 0.74,
+        "A_rmsd_ca": 0.8,
+        "antibody_rmsd_ca": 0.95,
+        "antigen_rmsd_in_antibody_frame_ca": 41.67,
+        "interface_pairs_crystal": 21,
+        "interface_pairs_predicted": 48,
+        "interface_precision": 0.083,
+        "interface_recall": 0.19,
+        "dockq": 0.054,
+        "fnat": 0.114,
+        "irmsd": 16.53,
+        "lrmsd": 41.62,
+        "capri_class": "incorrect"
+      },
+      "verdict": "failure"
+    },
+    {
+      "pdb_id": "9VHZ",
+      "released": "2025-10-01",
+      "method": "X-RAY DIFFRACTION",
+      "resolution": 2.8,
+      "antigen_desc": "Entry-fusion complex associated protein OPG095",
+      "lengths": {
+        "H": 236,
+        "L": 220,
+        "A": 181
+      },
+      "settings": {
+        "sampling_steps": 50,
+        "recycling_steps": 3,
+        "diffusion_samples": 5
+      },
+      "http_status": 200,
+      "wall_seconds": 9.9,
+      "score_lists": {
+        "confidence_scores": [
+          0.8711466789245605,
+          0.8795814514160156,
+          0.8732914328575134,
+          0.8647710680961609,
+          0.8654711842536926
+        ],
+        "ptm_scores": [
+          0.7542006969451904,
+          0.780655562877655,
+          0.7781558632850647,
+          0.7379281520843506,
+          0.7363326549530029
+        ],
+        "iptm_scores": [
+          0.6871824860572815,
+          0.7367238402366638,
+          0.7174505591392517,
+          0.6624066233634949,
+          0.6655643582344055
+        ],
+        "ligand_iptm_scores": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "protein_iptm_scores": [
+          0.6871824860572815,
+          0.7367238402366638,
+          0.7174505591392517,
+          0.6624066233634949,
+          0.6655643582344055
+        ],
+        "complex_plddt_scores": [
+          0.9171377420425415,
+          0.9152958393096924,
+          0.9122515916824341,
+          0.9153621792793274,
+          0.9154478311538696
+        ],
+        "complex_iplddt_scores": [
+          0.9151931405067444,
+          0.9077978134155273,
+          0.9041322469711304,
+          0.9158394932746887,
+          0.9060795307159424
+        ],
+        "complex_pde_scores": [
+          0.884080171585083,
+          0.6643657684326172,
+          0.7986419796943665,
+          0.8941525220870972,
+          0.7979684472084045
+        ],
+        "complex_ipde_scores": [
+          3.039992570877075,
+          2.545591115951538,
+          2.9312245845794678,
+          3.242687225341797,
+          3.2871415615081787
+        ],
+        "chains_ptm_scores": [
+          0.8632215857505798,
+          0.8985283374786377,
+          0.8941930532455444
+        ]
+      },
+      "model_confidence": 0.8711466789245605,
+      "input_payload_hash": "7f8d1ca52a14482a8dd6418bba90a3683cb275043db375ea485f1d10baa94f6b",
+      "response_artifact_digest": "d25ebfcfe703af291551d74a97f8755646436dc813034da5670ef6a62da0fe50",
+      "scores": {
+        "aligned_residues": {
+          "H": 218,
+          "L": 219,
+          "A": 169
+        },
+        "H_rmsd_ca": 4.07,
+        "L_rmsd_ca": 2.7,
+        "A_rmsd_ca": 0.78,
+        "antibody_rmsd_ca": 3.88,
+        "antigen_rmsd_in_antibody_frame_ca": 9.55,
+        "interface_pairs_crystal": 38,
+        "interface_pairs_predicted": 32,
+        "interface_precision": 0.969,
+        "interface_recall": 0.816,
+        "dockq": 0.695,
+        "fnat": 0.8,
+        "irmsd": 0.64,
+        "lrmsd": 9.56,
+        "capri_class": "medium"
+      },
+      "verdict": "failure"
+    }
+  ],
+  "summary": {
+    "n": 9,
+    "success": 0,
+    "failure": 9,
+    "dockq_acceptable_or_better": 2,
+    "capri_classes": {
+      "acceptable": 1,
+      "incorrect": 7,
+      "medium": 1
+    }
+  }
+}

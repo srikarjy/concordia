@@ -45,16 +45,17 @@ Concordia answers those mechanically and keeps the receipt.
 ## What is real, and what is not (say this first)
 
 - **Real and tested:** the audit layer, experiment DAG, claim verifier, replay, integrity checks,
-  security controls, and the Boltz-2 integration code. 243 automated tests and 8 browser tests pass.
+  security controls, and the Boltz-2 integration code. The Python and browser test suites run in CI.
 - **First real measurement:** the live Boltz-2 integration reproduced the HyHEL-10 Fab and lysozyme
   complex (PDB 3HFM) in about 5 seconds. Against the crystal structure: per-chain CA RMSD 0.76 to
   1.55 Å, antigen placement 2.07 Å in the antibody frame, and 81% of crystal interface contacts
   recovered at 74% precision. This is a known, old structure that is likely in the model's
   training data, so it shows the pipeline works, not that the model generalizes. See
   `reports/boltz2-3hfm-reference-reproduction.json`.
-- **Not yet real:** there is **no novel or validated scientific finding** in this repository. Evo 2 forward
-  scoring is not wired. RFantibody and ProteinMPNN are planned, not integrated. All fixture output is
-  labeled `scientific_use_allowed=false`.
+- **Not yet real:** there is **no novel or validated scientific finding** in this repository. Evo 2
+  generation and a strict forward-worker boundary are integrated, but no real forward score has
+  passed the frozen study protocol. RFdiffusion and ProteinMPNN are integrated as hosted campaign
+  adapters; RFantibody is not integrated. All fixture output is labeled `scientific_use_allowed=false`.
 - **Why that is a feature:** the system refuses to overclaim, which is exactly what a diligence
   reviewer wants from the layer that sits under model outputs.
 

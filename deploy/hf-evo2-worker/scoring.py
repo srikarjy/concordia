@@ -20,6 +20,21 @@ EXPECTED_SEQUENCE_LENGTH = 8_192
 EXPECTED_SCORED_TOKEN_COUNT = EXPECTED_SEQUENCE_LENGTH - 1
 
 
+def unwrap_logits(outputs: Any) -> Any:
+    """Return the logits tensor from Evo2's nested forward output.
+
+    The pinned Evo2 forward returns ``((logits,), cache)``: the logits sit two
+    tuple levels down, and the leaf is shaped ``(batch, length, vocab)``. Taking
+    only the first level leaves a tuple or a 3-D array, which the scorer rejects.
+    """
+
+    while isinstance(outputs, tuple | list):
+        if not outputs:
+            raise ValueError("model returned no logits")
+        outputs = outputs[0]
+    return outputs
+
+
 def validate_protocol_sequence(sequence: str) -> str | None:
     """Return an error message, or None if the sequence satisfies the frozen protocol."""
 

@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "campaign": "D1_1IGV_P02633_motif_targeted_de_novo_design",
+  "status": "pre_registered_before_campaign_generation",
+  "predecessor": "data/manifests/design_d1_1igv_preregistration_v3.json",
+  "correction": "ProteinMPNN accepts fixed_positions_jsonl on a single-chain real 1IGV probe, but the same field causes HTTP 500 on the RFdiffusion two-chain output when it targets the retained non-designed chain. The no-fixed control succeeds. This successor does not post-filter: it enforces the stronger chain-level invariant by passing only the generated chain in input_pdb_chains; the retained target chain, including all seven hard-protected residues, is never a design target. The failed fixed-field probe remains recorded as an upstream compatibility finding.",
+  "target": {
+    "pdb_id": "1IGV",
+    "pdb_path": "data/raw/tsuboyama_v2_230420/structures/AlphaFold_model_PDBs/1IGV.pdb",
+    "chain": "A",
+    "retained_target_range": "A21-64",
+    "motif_local_positions": [21, 26, 53, 55, 57, 59, 64],
+    "motif_uniprot_positions": [26, 31, 58, 60, 62, 64, 69],
+    "motif_letters": "QEDNDEE",
+    "uniprot_accession": "P02633",
+    "protected_feature": "UniProt BINDING",
+    "contig": "A21-64/0 50-70",
+    "contig_interpretation": "Retain input chain A residues 21-64 as the target motif-bearing region, terminate that chain with /0, and generate a new chain of length 50-70."
+  },
+  "generation": {
+    "backbone_count": 8,
+    "sequences_per_backbone": 8,
+    "total_sequence_backbone_pairs": 64,
+    "rfdiffusion_seeds": [4101, 4102, 4103, 4104, 4105, 4106, 4107, 4108],
+    "proteinmpnn_seed": 4201,
+    "proteinmpnn_sampling_temperature": 0.1,
+    "proteinmpnn_constraint_mode": "retained_target_chain_excluded_from_design",
+    "proteinmpnn_design_chain_only": true,
+    "fixed_positions_field": "supported_by_schema_but_incompatible_with_retained_non_designed_chain_on_this_hosted_two_chain_output",
+    "boltz_diffusion_samples": 1
+  },
+  "success_criterion": {
+    "global_sc_rmsd_angstrom_lt": 2.0,
+    "motif_rmsd_angstrom_lt": 1.0,
+    "minimum_passing_fraction": 0.2,
+    "minimum_passing_pairs": 13,
+    "unit_of_fraction": "sequence_backbone_pair",
+    "bar_basis": "Watson et al. Nature 620 (2023) defines in-silico motif-scaffolding success using AF2-to-design RMSD <2 A, motif RMSD <1 A and pAE <5; the paper evaluates 100 designs per problem and reports problem-level performance rather than a directly transferable per-pair rate. For this bounded 64-pair campaign, 20% is pre-registered as a conservative operational floor, close to the 19% experimental binder success rate reported across five targets, and is not a claim of experimental equivalence.",
+    "citation": "https://doi.org/10.1038/s41586-023-06415-8"
+  },
+  "scope_statement": "A passing design means only that the RFdiffusion backbone, ProteinMPNN sequence, and Boltz-2 refold were computationally self-consistent at the pre-registered RMSD thresholds. It does not show folding, stability, expression, binding, function, or biological success. pLDDT, pTM, and scRMSD are not biological-property evidence.",
+  "created_without_campaign_calls": true
+}

@@ -17,8 +17,12 @@ jobs:
           enable-cache: true
       - run: uv sync --extra dev --extra virtual-cell --extra postgres
       - run: .venv/bin/pytest -q
-      - run: .venv/bin/ruff check src tests
-      - run: .venv/bin/mypy src/concordia
+      - run: .venv/bin/ruff check .
+      - run: .venv/bin/mypy --strict src/concordia/stability
+      - run: .venv/bin/mypy src/concordia scripts/select_tsuboyama_domain.py scripts/build_tsuboyama_summary.py
+      - run: .venv/bin/mypy --disallow-untyped-defs src/concordia/stability scripts/select_tsuboyama_domain.py scripts/build_tsuboyama_summary.py
+      - run: .venv/bin/mypy .
+        continue-on-error: true
       - run: UV_CACHE_DIR=/tmp/uv-cache uv build
   frontend:
     runs-on: ubuntu-latest

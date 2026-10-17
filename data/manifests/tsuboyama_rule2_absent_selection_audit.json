@@ -1,0 +1,84 @@
+{
+  "kind": "concordia_tsuboyama_rule2_absent_selection_audit",
+  "created_at": "2026-10-17T19:56:53Z",
+  "status": "exhausted_without_valid_second_domain",
+  "selection_rule": {
+    "definition": "enumerate all ABSENT and TEST candidates; select every domain passing every freeze guard, prioritizing TEST over ABSENT only for reporting",
+    "clarified_before_label_distribution_inspection": true,
+    "reason": "The prior after-1IGV tiebreak was arbitrary. Rule 2 requires an actually mapped hard-protection feature, not merely a protein-level annotation."
+  },
+  "deviations": [
+    {
+      "original_criterion": "Rule 1: disulfide-only hard protection",
+      "trigger": "Only 2 of 983 domains had a disulfide and none passed the remaining criteria",
+      "new_criterion": "Rule 2: UniProt ACT_SITE, BINDING, METAL, or DISULFID",
+      "rationale": "The cDNA-display assay largely excludes disulfide-containing domains",
+      "timestamp": "2026-10-16T23:38:43Z",
+      "decision_digest": "ecaa921917627178638397955def230d9bc1563cc4122ac27a099e6f618f25d7",
+      "not_observed": "No label or ddG distribution for the selected domain"
+    },
+    {
+      "original_criterion": "Each random fold spans more than 60 mutable positions",
+      "trigger": "2AMI row-random folds covered 59-62 of 62 non-holdout positions",
+      "new_criterion": "Each random fold covers at least 90% of non-holdout positions",
+      "rationale": "Relative coverage detects position-based defects across domain sizes",
+      "timestamp": "2026-10-17T14:58:32Z",
+      "decision_digest": "7f959648e2e9660a1f08d916e26f705db0a107aab272f032f3fc8b9a2faca0a6",
+      "not_observed": "No label or ddG distribution for 2AMI"
+    },
+    {
+      "original_criterion": "Exact contiguous UniProt identity of 1.0",
+      "trigger": "2ROT best window identity was 0.667 with 23 mismatches and an internal indel",
+      "new_criterion": "Unique gap-free best window, identity >=0.90, no internal indels, protected-letter match, and no mismatch within +/-1 of protected residues",
+      "rationale": "Engineered DMS constructs can differ from UniProt while remaining identifiable; mapped protected residues remain the hard safety check",
+      "timestamp": "2026-10-17T19:55:21Z",
+      "decision_digest": "6d0d9a9b4aed0e2f2eb33a79924074507eb81b6a489d7ca6e4584a37e4677b99",
+      "not_observed": "No label or ddG distribution for any affected candidate"
+    }
+  ],
+  "predicate": {
+    "unique_best_window": true,
+    "identity_minimum": 0.90,
+    "zero_internal_indels": true,
+    "protected_letter_match": true,
+    "no_mismatch_within_plus_or_minus_one": true,
+    "requires_mapped_protection": true
+  },
+  "thermompnn": {
+    "revision": "370f76ec62bd929f7425e311d8df04a0d094990f",
+    "absent_list": [
+      "1BK2.pdb",
+      "1IGV.pdb",
+      "2ROT.pdb",
+      "3NGP.pdb",
+      "5ECA.pdb",
+      "5FW9.pdb",
+      "5FWB.pdb",
+      "6IPY.pdb"
+    ]
+  },
+  "superseded_attempt": {
+    "domain_id": "2ROT.pdb",
+    "accession": "P07751",
+    "best_window_identity": 0.6666666666666666,
+    "best_window_mismatches": 23,
+    "result": "rejected_no_exact_residue_mapped_protection"
+  },
+  "attempts": [
+    {"domain_id": "1BK2.pdb", "accession": "P07751", "best_window_identity": 0.9821428571428571, "result": "rejected_no_residue_mapped_hard_protection"},
+    {"domain_id": "2ROT.pdb", "accession": "P07751", "best_window_identity": 0.6666666666666666, "result": "rejected_no_exact_residue_mapped_protection"},
+    {"domain_id": "3NGP.pdb", "accession": "P07751", "best_window_identity": 0.8928571428571429, "result": "rejected_no_exact_residue_mapped_protection"},
+    {"domain_id": "5ECA.pdb", "accession": "P00523", "best_window_identity": 0.8813559322033898, "result": "rejected_no_exact_residue_mapped_protection"},
+    {"domain_id": "5FW9.pdb", "accession": "Q13813", "best_window_identity": 0.9464285714285714, "result": "rejected_no_exact_residue_mapped_protection"},
+    {"domain_id": "5FWB.pdb", "accession": "Q13813", "best_window_identity": 0.95, "result": "rejected_no_exact_residue_mapped_protection"},
+    {"domain_id": "6IPY.pdb", "accession": "P06241", "best_window_identity": 0.9830508474576272, "result": "rejected_no_exact_residue_mapped_protection"}
+  ],
+  "test_candidates": [
+    {"domain_id": "1TUC.pdb", "accession": "P07751", "thermompnn_split": "test", "best_window_identity": 0.7457627118644068, "result": "rejected_identity_and_indel_and_no_mapped_protection"},
+    {"domain_id": "2KXD.pdb", "accession": "P07751", "thermompnn_split": "test", "best_window_identity": 0.6056338028169014, "result": "rejected_identity_and_indel_and_no_mapped_protection"},
+    {"domain_id": "3DKM.pdb", "accession": "Q9ULT8", "thermompnn_split": "test", "best_window_identity": 0.9166666666666666, "result": "rejected_indel_and_no_mapped_protection"}
+  ],
+  "alignment_census_artifact": "data/processed/tsuboyama_rule2_alignment_census.json",
+  "labels_inspected": false,
+  "selected_domain": null
+}
