@@ -1,3 +1,20 @@
+# D1 Pilot Summary
+
+- Task 1: corrected motif-frame measurement; global fit is generated chain A and
+  motif is retained chain B in the same complex frame; 13 cached rows recomputed.
+- Task 2: holdout refusal rate is computed from 152 decisions: 152 refused,
+  1.0; the prior literal was also 1.0.
+- Task 3: completed all 16 pilot pairs with 3 new cached Boltz calls; 0/16 pass
+  the manifest thresholds.
+- Task 4: experimental 1PGB control produced 0.390 Å and 0.594 Å CA RMSD for
+  two sequences, so the downstream pipeline is functional.
+- Task 5: all four backbones have no CA chain breaks; lengths are 66/66/64/52,
+  and none is implausibly compact by the recorded check.
+- Recommendation: NO-GO for the full 64-pair campaign. The control passes while
+  every D1 design fails badly (global 10.657–49.737 Å; motif 19.545–73.452 Å),
+  indicating the generated backbones are not designable/self-consistent. Revisit
+  RFdiffusion contig/backbone generation before spending more Boltz quota.
+
 # D1 Pilot State
 
 Task 1 — DONE
@@ -58,3 +75,15 @@ Task 4 — DONE
   `data/design/d1_control/1PGB.pdb`, `data/design/d1_control/cache-index.json`,
   `data/design/d1_control/control-report.json`.
 - Next step: Task 5 — local sanity checks on all four RFdiffusion backbones.
+
+Task 5 — DONE
+
+- Geometry: chain-A lengths were 66, 66, 64, and 52; all four had zero
+  consecutive CA distances over 4.2 Å.
+- DSSP on the actual returned coordinates found 58/64/62/49 helical residues,
+  no sheet residues, and 8/2/2/3 loop residues respectively.
+- Radius of gyration was 15.921/28.255/27.466/22.417 Å; no compactness flag fired.
+- Gates: strict stability mypy passed; full pytest passed (443 tests). Repo-wide
+  ruff remains red only for the two pre-existing stability import-order findings.
+- Files changed: `scripts/summarize_d1_backbones.py`,
+  `results/d1_backbone_sanity.json`.

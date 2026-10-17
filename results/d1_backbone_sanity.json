@@ -1,0 +1,62 @@
+[
+  {
+    "backbone": "backbone_01.pdb",
+    "chain": "A",
+    "length": 66,
+    "secondary_structure": {
+      "helix_residues": 58,
+      "sheet_residues": 0,
+      "loop_residues": 8,
+      "dssp_codes": "-HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHT-----HHHHHHHHHHHHHHHHHHHHHHH-"
+    },
+    "radius_gyration_angstrom": 15.920606407733798,
+    "ca_ca_max_angstrom": 3.8184768465563472,
+    "ca_breaks_over_4_2_angstrom": [],
+    "implausible_compaction_flag": false
+  },
+  {
+    "backbone": "backbone_02.pdb",
+    "chain": "A",
+    "length": 66,
+    "secondary_structure": {
+      "helix_residues": 64,
+      "sheet_residues": 0,
+      "loop_residues": 2,
+      "dssp_codes": "-HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH-"
+    },
+    "radius_gyration_angstrom": 28.255279613251616,
+    "ca_ca_max_angstrom": 3.822594086883475,
+    "ca_breaks_over_4_2_angstrom": [],
+    "implausible_compaction_flag": false
+  },
+  {
+    "backbone": "backbone_03.pdb",
+    "chain": "A",
+    "length": 64,
+    "secondary_structure": {
+      "helix_residues": 62,
+      "sheet_residues": 0,
+      "loop_residues": 2,
+      "dssp_codes": "-HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH-"
+    },
+    "radius_gyration_angstrom": 27.466435551384883,
+    "ca_ca_max_angstrom": 3.8260259131172583,
+    "ca_breaks_over_4_2_angstrom": [],
+    "implausible_compaction_flag": false
+  },
+  {
+    "backbone": "backbone_04.pdb",
+    "chain": "A",
+    "length": 52,
+    "secondary_structure": {
+      "helix_residues": 49,
+      "sheet_residues": 0,
+      "loop_residues": 3,
+      "dssp_codes": "-HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH--"
+    },
+    "radius_gyration_angstrom": 22.416586268674827,
+    "ca_ca_max_angstrom": 3.8336838489182528,
+    "ca_breaks_over_4_2_angstrom": [],
+    "implausible_compaction_flag": false
+  }
+]
