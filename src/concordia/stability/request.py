@@ -19,7 +19,11 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from concordia.events.sqlite import SQLiteEventLedger
-from concordia.stability.measured import MeasuredCandidate, MeasuredStabilityEngine
+from concordia.stability.measured import (
+    MeasuredCandidate,
+    MeasuredStabilityEngine,
+    render_recommendation,
+)
 from concordia.storage.content import ContentAddressedStore
 
 _MUTATION = re.compile(r"^(?P<from>[A-Z])(?P<position>[0-9]+)(?P<to>[A-Z])$")
@@ -122,6 +126,21 @@ def run_typed_request(
     active_engine = engine or MeasuredStabilityEngine()
     candidates = candidates_for_request(active_engine, request)
     report = active_engine.rank(candidates)
+    if report["candidates"]:
+        top = report["candidates"][0]
+        slots: dict[str, str | float | int | None] = {
+            "variant_id": top["candidate"]["variant_id"],
+            "score": f"{top['mean_prediction_ddg_kcal_higher_is_more_stable']:.4f}",
+            "sigma": f"{top['ensemble_sigma']:.4f}",
+        }
+        prose = render_recommendation(
+            "Ranked candidate {variant_id}: predicted stability {score} kcal/mol; "
+            "uncertainty sigma {sigma} kcal/mol.",
+            slots,
+        )
+    else:
+        slots = {}
+        prose = ""
     report = {
         **report,
         "typed_request": request.model_dump(mode="json"),
@@ -132,6 +151,8 @@ def run_typed_request(
         ),
         "ollama_used": False,
         "holdout_used": False,
+        "slot_values": slots,
+        "rendered_prose": prose,
     }
     state_root.mkdir(parents=True, exist_ok=True)
     artifacts = ContentAddressedStore(state_root / "artifacts")
