@@ -1,0 +1,15 @@
+:root { font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #e7f3ed; background: #07110f; }
+* { box-sizing: border-box; }
+body { margin: 0; background: radial-gradient(circle at top right, #173a31, #07110f 55%); }
+.page { max-width: 1320px; margin: 0 auto; padding: 42px 22px 80px; }
+.eyebrow { color: #7ee2b1; letter-spacing: .16em; font-size: .74rem; }
+h1 { font-size: clamp(2rem, 5vw, 4.8rem); line-height: .98; max-width: 800px; margin: 16px 0 24px; }
+h2 { margin-top: 0; font-size: 1.15rem; }
+.scope { border-left: 4px solid #f0b35a; background: #10231e; padding: 18px; line-height: 1.55; max-width: 900px; }
+.grid { display: grid; gap: 18px; margin-top: 18px; }.two { grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); }
+.panel { background: rgba(11, 30, 25, .9); border: 1px solid #285248; border-radius: 14px; padding: 20px; box-shadow: 0 16px 40px #0003; }
+.muted { color: #a5bdb4; font-size: .9rem; }.provenance { margin-top: 18px; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; } th, td { text-align: left; padding: 12px 8px; border-bottom: 1px solid #24443b; } th { color: #a5bdb4; font-weight: 500; } tr { cursor: pointer; } tr.selected { background: #174b3b; }
+.refusal { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 10px; padding: 12px 0; border-bottom: 1px solid #24443b; }.refusal code { grid-column: 1 / -1; color: #ffbd83; white-space: pre-wrap; }
+.viewer-wrap { height: 440px; background: #f5f7f5; border-radius: 10px; overflow: hidden; position: relative; }.molstar { height: 100%; }.viewer-status { position: absolute; z-index: 2; top: 8px; left: 8px; background: #07110fcc; color: white; padding: 7px 10px; border-radius: 6px; font-size: .76rem; }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; color: #b6ccc3; font-size: .82rem; }.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }.hard { background: #e46767; }.soft { background: #efc45b; }.neutral { background: #9ca9a5; } code { color: #7ee2b1; overflow-wrap: anywhere; }

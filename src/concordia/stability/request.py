@@ -20,6 +20,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from concordia.events.sqlite import SQLiteEventLedger
 from concordia.stability.measured import (
+    UNCERTAINTY_PATH,
     MeasuredCandidate,
     MeasuredStabilityEngine,
     render_recommendation,
@@ -126,6 +127,21 @@ def run_typed_request(
     active_engine = engine or MeasuredStabilityEngine()
     candidates = candidates_for_request(active_engine, request)
     report = active_engine.rank(candidates)
+    uncertainty = json.loads(UNCERTAINTY_PATH.read_text(encoding="utf-8"))
+    holdout_summary = uncertainty["holdout"]
+    interval_quantile = float(holdout_summary["normalized_quantile"])
+    label_range = [
+        float(value) for value in holdout_summary["normalized"]["label_range_kcal_mol"]
+    ]
+    for item in report["candidates"]:
+        mean = float(item["mean_prediction_ddg_kcal_higher_is_more_stable"])
+        sigma = float(item["ensemble_sigma"])
+        item["interval_90_kcal_mol"] = {
+            "lower": mean - interval_quantile * sigma,
+            "upper": mean + interval_quantile * sigma,
+            "width": 2 * interval_quantile * sigma,
+            "method": "normalized split conformal",
+        }
     if report["candidates"]:
         top = report["candidates"][0]
         slots: dict[str, str | float | int | None] = {
@@ -153,6 +169,35 @@ def run_typed_request(
         "holdout_used": False,
         "slot_values": slots,
         "rendered_prose": prose,
+        "structure": {
+            "path": "structure/1IGV.pdb",
+            "source": "Tsuboyama bundled AlphaFold model; not an experimental structure",
+            "protected_residues": [
+                dict(item)
+                for item in active_engine.manifest["selection"]["hard_protected_residues"]
+            ],
+            "soft_buried_positions": sorted(
+                position
+                for position, rsa in active_engine.soft_rsa.items()
+                if rsa < 0.15
+            ),
+        },
+        "interval_context": {
+            "nominal_coverage": 0.90,
+            "holdout_picp": float(holdout_summary["normalized"]["picp"]),
+            "label_range_kcal_mol": label_range,
+            "mean_width_kcal_mol": float(holdout_summary["normalized"]["mean_width_kcal_mol"]),
+            "range_fraction": float(
+                holdout_summary["normalized"]["mean_width_kcal_mol"]
+                / (label_range[1] - label_range[0])
+            ),
+            "ranking_use": "refusal-only; not an acquisition or ranking term",
+        },
+        "scope_metrics": {
+            "thermompnn_rank_average_top10_recall_modulo": "0.336 +/- 0.060",
+            "thermompnn_rank_average_top10_recall_contiguous": "0.358 +/- 0.023",
+            "thermompnn_training_membership": "ABSENT",
+        },
     }
     state_root.mkdir(parents=True, exist_ok=True)
     artifacts = ContentAddressedStore(state_root / "artifacts")

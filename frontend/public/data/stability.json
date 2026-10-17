@@ -1,0 +1,305 @@
+{
+  "artifact_digest": "dae4e417463b959e68b7ab2f25d4475e46e0be8d63d7af4c9c42bf1e78540b00",
+  "candidates": [
+    {
+      "candidate": {
+        "mutant": "Y",
+        "mutation_count": 1,
+        "position": 52,
+        "variant_id": "1IGV.pdb_L52Y"
+      },
+      "ensemble_sigma": 0.16124941408634186,
+      "interval_90_kcal_mol": {
+        "lower": -0.44024245238829796,
+        "method": "normalized split conformal",
+        "upper": 0.8475801179461593,
+        "width": 1.2878225703344572
+      },
+      "mean_prediction_ddg_kcal_higher_is_more_stable": 0.20366883277893066,
+      "rank": 1,
+      "ranking_score": 1.9,
+      "refusal": {
+        "refused": false,
+        "triggers": [],
+        "variant_id": "1IGV.pdb_L52Y"
+      },
+      "soft_flags": [
+        {
+          "code": "SOFT_BURIED_CORE",
+          "cutoff": 0.15,
+          "rsa": 0.0
+        }
+      ]
+    },
+    {
+      "candidate": {
+        "mutant": "Q",
+        "mutation_count": 1,
+        "position": 13,
+        "variant_id": "1IGV.pdb_A13Q"
+      },
+      "ensemble_sigma": 0.13866791129112244,
+      "interval_90_kcal_mol": {
+        "lower": -1.7554320180493073,
+        "method": "normalized split conformal",
+        "upper": -0.647957197420053,
+        "width": 1.1074748206292544
+      },
+      "mean_prediction_ddg_kcal_higher_is_more_stable": -1.2016946077346802,
+      "rank": 2,
+      "ranking_score": -0.1,
+      "refusal": {
+        "refused": false,
+        "triggers": [],
+        "variant_id": "1IGV.pdb_A13Q"
+      },
+      "soft_flags": [
+        {
+          "code": "SOFT_BURIED_CORE",
+          "cutoff": 0.15,
+          "rsa": 0.0
+        }
+      ]
+    }
+  ],
+  "domain_id": "1IGV.pdb",
+  "hard_refused": 2,
+  "holdout_used": false,
+  "interval_context": {
+    "holdout_picp": 0.9407894736842105,
+    "label_range_kcal_mol": [
+      -5.211214730819397,
+      1.096194148796009
+    ],
+    "mean_width_kcal_mol": 4.673445224761963,
+    "nominal_coverage": 0.9,
+    "range_fraction": 0.7409453412582515,
+    "ranking_use": "refusal-only; not an acquisition or ranking term"
+  },
+  "ledger_intact": true,
+  "manifest_digest": "ecaa921917627178638397955def230d9bc1563cc4122ac27a099e6f618f25d7",
+  "ollama_used": false,
+  "property": "folding stability",
+  "ranked": 2,
+  "ranker": "ThermoMPNN + one-hot rank average",
+  "ranker_artifact_digest": "fe886c56097e512ff1342bb289a91afc78c69e50cae90a66bec8249805ba08c5",
+  "ranking_objective": "ThermoMPNN plus one-hot rank average selected by position-aware CV, with fixed soft-flag penalties; ensemble mean and sigma are reported separately",
+  "refusals": [
+    {
+      "refused": true,
+      "triggers": [
+        {
+          "accession": "P02633",
+          "code": "HARD_PROTECTED_UNIPROT",
+          "feature_type": "Binding site",
+          "uniprot_position": 26
+        }
+      ],
+      "variant_id": "1IGV.pdb_Q21E"
+    },
+    {
+      "refused": true,
+      "triggers": [
+        {
+          "code": "T3_MULTI_MUTANT_SINGLE_MODEL",
+          "mutation_count": 2
+        }
+      ],
+      "variant_id": "1IGV.pdb_A13Q:K6Q"
+    }
+  ],
+  "rendered_prose": "Ranked candidate 1IGV.pdb_L52Y: predicted stability 0.2037 kcal/mol; uncertainty sigma 0.1612 kcal/mol.",
+  "run_id": "typed-stability-932e3c9de5c64a99a92fa56a65c13621",
+  "scope_metrics": {
+    "thermompnn_rank_average_top10_recall_contiguous": "0.358 +/- 0.023",
+    "thermompnn_rank_average_top10_recall_modulo": "0.336 +/- 0.060",
+    "thermompnn_training_membership": "ABSENT"
+  },
+  "scope_statement": "One frozen domain and one folding-stability property; in-silico only. Intervals are too wide to act on. Hard-protected, T2, and multi-mutant requests are refused; unseen positions and buried-core residues are soft flags.",
+  "sign_convention": {
+    "definition": "deltaG_mut - deltaG_wt",
+    "field": "ddg_kcal_higher_is_more_stable",
+    "sign_convention": "higher_ddG_is_more_stable",
+    "wild_type_anchor": 0.0
+  },
+  "slot_values": {
+    "score": "0.2037",
+    "sigma": "0.1612",
+    "variant_id": "1IGV.pdb_L52Y"
+  },
+  "soft_flagged": 2,
+  "structure": {
+    "path": "structure/1IGV.pdb",
+    "protected_residues": [
+      {
+        "accession": "P02633",
+        "feature_type": "Binding site",
+        "local_position": 21,
+        "local_residue": "Q",
+        "uniprot_position": 26,
+        "uniprot_residue": "Q"
+      },
+      {
+        "accession": "P02633",
+        "feature_type": "Binding site",
+        "local_position": 26,
+        "local_residue": "E",
+        "uniprot_position": 31,
+        "uniprot_residue": "E"
+      },
+      {
+        "accession": "P02633",
+        "feature_type": "Binding site",
+        "local_position": 53,
+        "local_residue": "D",
+        "uniprot_position": 58,
+        "uniprot_residue": "D"
+      },
+      {
+        "accession": "P02633",
+        "feature_type": "Binding site",
+        "local_position": 55,
+        "local_residue": "N",
+        "uniprot_position": 60,
+        "uniprot_residue": "N"
+      },
+      {
+        "accession": "P02633",
+        "feature_type": "Binding site",
+        "local_position": 57,
+        "local_residue": "D",
+        "uniprot_position": 62,
+        "uniprot_residue": "D"
+      },
+      {
+        "accession": "P02633",
+        "feature_type": "Binding site",
+        "local_position": 59,
+        "local_residue": "E",
+        "uniprot_position": 64,
+        "uniprot_residue": "E"
+      },
+      {
+        "accession": "P02633",
+        "feature_type": "Binding site",
+        "local_position": 64,
+        "local_residue": "E",
+        "uniprot_position": 69,
+        "uniprot_residue": "E"
+      }
+    ],
+    "soft_buried_positions": [
+      5,
+      8,
+      9,
+      12,
+      13,
+      22,
+      26,
+      27,
+      30,
+      31,
+      45,
+      48,
+      49,
+      52,
+      53,
+      60,
+      64,
+      65,
+      68,
+      69
+    ],
+    "source": "Tsuboyama bundled AlphaFold model; not an experimental structure"
+  },
+  "t2_recalibration": {
+    "conditional_policy": {
+      "explanation": "T2 is calibrated only among novel positions. It discriminates unusually distant novel-position variants; known-position variants are governed by T1 and cannot trigger this threshold.",
+      "gap": 17.448071002960205,
+      "known_position_within_training_max": 4.920732021331787,
+      "novel_position_distance_min": 22.368803024291992
+    },
+    "holdout_not_used": true,
+    "k": 1,
+    "labels_used": false,
+    "manifest_file_sha256": "ee683066419099303046a16e799f7eb21d88963cdd83d8c08e28587d0faedafc",
+    "manifest_payload_digest": "ecaa921917627178638397955def230d9bc1563cc4122ac27a099e6f618f25d7",
+    "new_threshold": 40.730681228637685,
+    "old_threshold": 3.5244719743728634,
+    "predictive_metrics_recomputed": false,
+    "reason": "The previous threshold used within-training neighbor distances, which confounded position novelty with unusually distant embeddings. The new threshold is the 95th percentile of pooled test-to-training distances from modulo and contiguous held-out-position folds.",
+    "schemes": {
+      "contiguous_5": {
+        "count": 1216,
+        "max": 43.271114349365234,
+        "median": 34.08300018310547,
+        "min": 22.889671325683594,
+        "p95": 40.07619094848633
+      },
+      "modulo_5": {
+        "count": 1216,
+        "max": 43.59885787963867,
+        "median": 34.825687408447266,
+        "min": 22.368803024291992,
+        "p95": 41.23966979980469
+      },
+      "old_within_training_random_5": {
+        "count": 972,
+        "max": 4.920732021331787,
+        "median": 2.5851171016693115,
+        "min": 0.6275439858436584,
+        "p95": 3.524470329284668
+      },
+      "pooled": {
+        "count": 2432,
+        "max": 43.59885787963867,
+        "median": 34.46540069580078,
+        "min": 22.368803024291992,
+        "p95": 40.730681228637685
+      }
+    }
+  },
+  "trigger_counts": {
+    "HARD_PROTECTED_UNIPROT": 1,
+    "T3_MULTI_MUTANT_SINGLE_MODEL": 1
+  },
+  "typed_request": {
+    "domain": "1IGV",
+    "mutation_groups": [
+      [
+        {
+          "from_aa": "A",
+          "position": 13,
+          "to_aa": "Q"
+        }
+      ],
+      [
+        {
+          "from_aa": "Q",
+          "position": 21,
+          "to_aa": "E"
+        }
+      ],
+      [
+        {
+          "from_aa": "A",
+          "position": 13,
+          "to_aa": "Q"
+        },
+        {
+          "from_aa": "K",
+          "position": 6,
+          "to_aa": "Q"
+        }
+      ],
+      [
+        {
+          "from_aa": "L",
+          "position": 52,
+          "to_aa": "Y"
+        }
+      ]
+    ]
+  }
+}
+
