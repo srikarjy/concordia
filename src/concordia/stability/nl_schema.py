@@ -154,6 +154,19 @@ def extraction_digits_in_non_position_fields(response: object) -> bool:
     return any(re.search(r"\d", str(value)) for value in values)
 
 
+def enum_only_schema(_tool_names: list[str]) -> dict[str, Any]:
+    """Compatibility import for legacy entry points; return the new schema."""
+    return extraction_schema()
+
+
+def validate_enum_response(_response: object, _schema: dict[str, Any]) -> None:
+    """Fail explicitly when an old action/tool/evidence caller is still invoked."""
+    raise ValueError(
+        "legacy action/tool/evidence extraction is removed; "
+        "use validate_extraction_response"
+    )
+
+
 def render_numeric_recommendation(
     response: dict[str, Any], *, score: float | None, sigma: float | None
 ) -> str:
