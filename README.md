@@ -1,12 +1,3 @@
----
-title: Concordia Colony Scientific Workspace
-emoji: 🧬
-colorFrom: green
-colorTo: blue
-sdk: docker
-app_port: 7860
----
-
 # Concordia
 
 Concordia is an audit layer for AI-generated biology. It records what a model
