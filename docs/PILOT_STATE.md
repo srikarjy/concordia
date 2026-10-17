@@ -41,3 +41,20 @@ Task 3 — DONE
   `results/d1_pilot_motif_metrics.csv`,
   `data/design/d1_1igv_pilot_v2/boltz-cache-index.json`.
 - Next step: Task 4 — run one bounded designability control.
+
+Task 4 — DONE
+
+- Control: experimentally resolved RCSB PDB `1PGB`, monomer chain A, 56 residues;
+  two sequences requested in one ProteinMPNN call and two Boltz monomer calls.
+- Results: native-chain CA RMSDs were `0.390` Å and `0.594` Å, with 56 aligned
+  atoms for both sequences. Both are below the approximately 2 Å control criterion.
+- Interpretation: ProteinMPNN, Boltz input formatting, CA correspondence, and
+  chain handling work on a known-good monomer; the D1 failure is in the generated
+  RFdiffusion backbones, not the downstream measurement pipeline.
+- Gates: strict stability mypy passed; full pytest passed (443 tests). Ruff remains
+  blocked only by the two pre-existing I001 findings in
+  `src/concordia/stability/structure_aware.py`.
+- Files changed: `scripts/run_d1_designability_control.py`,
+  `data/design/d1_control/1PGB.pdb`, `data/design/d1_control/cache-index.json`,
+  `data/design/d1_control/control-report.json`.
+- Next step: Task 5 — local sanity checks on all four RFdiffusion backbones.

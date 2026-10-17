@@ -1,0 +1,16 @@
+{
+  "boltz-sequence-1:7e859d82171047700fd3e9632f7a47eab4a39baedc8c3316d2fc62d3ce2260bb": {
+    "elapsed_seconds": 19.863978458102793,
+    "request_artifact_digest": "d28070ed24e3b6615bbf2e3cf73e6c024682cbab28a38c919300053ad048d7b6",
+    "response_artifact_digest": "96a2c6aab2e021827ee0f1a50ffe57c4a73077f4ccf33d8e34f614ccfbda1625"
+  },
+  "boltz-sequence-2:131a292ef2a22b473ec10fe51b70cc28f9d9cbdcd41b125eecc7c1fea2be965f": {
+    "elapsed_seconds": 2.124271082924679,
+    "request_artifact_digest": "536ed15e25cc94ab38b32cb8393f3fb00535eb123341905c2590115de698ddcf",
+    "response_artifact_digest": "4ea1374389fa90955c2568c529ef5583ed399cd90f813715f6da65091f80ddb3"
+  },
+  "proteinmpnn": {
+    "request_artifact_digest": "8d75aabad59952dc6fb7b7960d7091bee548bf1fe423b41a52bfda50af699637",
+    "response_artifact_digest": "f6b01fd52fb1c649d33a12807603f7a19608d7b31a9d7df9873d4189188cdf0c"
+  }
+}
