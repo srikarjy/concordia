@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "campaign": "D1_1IGV_P02633_motif_targeted_de_novo_design",
+  "status": "pre_registered_before_pilot",
+  "predecessor": "data/manifests/design_d1_1igv_preregistration_v4.json",
+  "created_at": "2026-10-17T20:47:43Z",
+  "amendments": [
+    {
+      "id": "v5-contig-capability",
+      "timestamp": "2026-10-17T20:47:43Z",
+      "decision": "retain_contiguous_source_span",
+      "evidence": [
+        "NVIDIA's hosted RFdiffusion schema documents source-PDB retained ranges as contiguous ranges such as A10-100 and generated ranges as unprefixed ranges.",
+        "The upstream RFdiffusion issue reproduces an IndexError for multiple retained ranges interleaved with generated spans, so discontiguous retained segments are not a reliable capability of this route."
+      ],
+      "contig": "A21-64/0 50-70",
+      "reason": "The protected residues are discontiguous, but the hosted route does not provide a reliable documented or tested grammar for retaining seven separated source residues. The campaign therefore keeps the known-working contiguous 44-residue span. This is a harder task than the small-discontiguous-motif benchmark used to motivate the original bar.",
+      "outcome_blind": true,
+      "rmsd_computed_before_decision": false
+    },
+    {
+      "id": "v5-passing-bar",
+      "timestamp": "2026-10-17T20:47:43Z",
+      "decision": "amend_passing_fraction",
+      "old_fraction": 0.2,
+      "old_minimum_passing_pairs": 13,
+      "new_fraction": 0.1,
+      "new_minimum_passing_pairs": 7,
+      "reason": "A 44-residue contiguous retained span is materially harder and not the same task as a seven-residue discontiguous motif. A 10% operational floor for the fixed 64-pair campaign preserves a pre-registered success threshold while explicitly avoiding a false comparison to the published small-discontiguous-motif benchmark. The RMSD thresholds are unchanged.",
+      "outcome_blind": true,
+      "rmsd_computed_before_decision": false
+    }
+  ],
+  "target": {
+    "pdb_id": "1IGV",
+    "pdb_path": "data/raw/tsuboyama_v2_230420/structures/AlphaFold_model_PDBs/1IGV.pdb",
+    "chain": "A",
+    "retained_target_range": "A21-64",
+    "motif_local_positions": [21, 26, 53, 55, 57, 59, 64],
+    "motif_uniprot_positions": [26, 31, 58, 60, 62, 64, 69],
+    "motif_letters": "QEDNDEE",
+    "uniprot_accession": "P02633",
+    "protected_feature": "UniProt BINDING",
+    "contig": "A21-64/0 50-70",
+    "contig_interpretation": "Retain input chain A residues 21-64 as the target motif-bearing region, terminate that chain with /0, and generate a new chain of length 50-70. The seven protected residues are inside the retained span and are verified after each backbone response."
+  },
+  "generation": {
+    "backbone_count": 8,
+    "sequences_per_backbone": 8,
+    "total_sequence_backbone_pairs": 64,
+    "rfdiffusion_seeds": [4101, 4102, 4103, 4104, 4105, 4106, 4107, 4108],
+    "proteinmpnn_seed": 4201,
+    "proteinmpnn_sampling_temperature": 0.1,
+    "proteinmpnn_constraint_mode": "retained_target_chain_excluded_from_design",
+    "proteinmpnn_design_chain_only": true,
+    "fixed_positions_field": "supported_by_schema_but_incompatible_with_retained_non_designed_chain_on_this_hosted_two_chain_output",
+    "boltz_diffusion_samples": 1,
+    "inter_call_delay_seconds": 5,
+    "rate_limit_retry_delay_seconds": 10
+  },
+  "pilot": {
+    "backbone_count": 4,
+    "sequences_per_backbone": 4,
+    "total_sequence_backbone_pairs": 16,
+    "rfdiffusion_seeds": [4101, 4102, 4103, 4104],
+    "inter_call_delay_seconds": 5,
+    "does_not_count_toward_campaign_bar": true,
+    "purpose": "establish that the pipeline produces parseable RMSD measurements before spending the full 64-pair hosted campaign"
+  },
+  "success_criterion": {
+    "global_sc_rmsd_angstrom_lt": 2.0,
+    "motif_rmsd_angstrom_lt": 1.0,
+    "minimum_passing_fraction": 0.1,
+    "minimum_passing_pairs": 7,
+    "unit_of_fraction": "sequence_backbone_pair",
+    "bar_basis": "The RFdiffusion benchmark defines in-silico motif-scaffolding success using AF2-to-design RMSD <2 A, motif RMSD <1 A and pAE <5, but its small discontiguous motifs and problem-level reporting are not directly transferable to this 44-residue contiguous-retention task. The 10%/7-pair value is a pre-registered operational floor for this bounded campaign, not an experimental-success claim.",
+    "citation": "https://doi.org/10.1038/s41586-023-06415-8"
+  },
+  "scope_statement": "A passing design means only that the RFdiffusion backbone, ProteinMPNN sequence, and Boltz-2 refold were computationally self-consistent at the pre-registered RMSD thresholds. It does not show folding, stability, expression, binding, function, or biological success. pLDDT, pTM, and scRMSD are not biological-property evidence.",
+  "created_without_campaign_calls": true
+}

@@ -1,4 +1,4 @@
-.PHONY: demo serve test frontend benchmark space-lock
+.PHONY: demo serve test frontend benchmark verify space-lock
 
 # Offline, no network, exits 0: runs the genomic evidence pipeline on the bundled fixture.
 demo:
@@ -18,6 +18,13 @@ test:
 	uv sync --extra dev --extra virtual-cell --extra postgres --extra scientist --extra xai
 	.venv/bin/pytest -q && .venv/bin/ruff check src tests && .venv/bin/mypy src/concordia
 	cd frontend && npm ci && npm run build && npm test
+
+verify:
+	set -e; \
+	.venv/bin/ruff check .; \
+	.venv/bin/mypy --strict src/concordia/stability; \
+	.venv/bin/pytest -q; \
+	.venv/bin/mypy .
 
 benchmark:
 	uv sync --extra dev
