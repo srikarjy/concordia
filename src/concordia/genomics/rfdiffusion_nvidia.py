@@ -42,7 +42,7 @@ class RFdiffusionRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    target_pdb: str = Field(min_length=1, max_length=4_000_000)
+    target_pdb: str | None = Field(default=None, max_length=4_000_000)
     contigs: str = Field(min_length=1, max_length=200)
     hotspot_residues: tuple[str, ...] = Field(default_factory=tuple, max_length=32)
     diffusion_steps: int = Field(default=50, ge=1, le=100)
@@ -112,10 +112,11 @@ class NvidiaHostedRFdiffusionRunner:
     def generate(self, request: RFdiffusionRequest) -> NvidiaHostedRFdiffusionResult:
         self.preflight()
         body: dict[str, object] = {
-            "input_pdb": request.target_pdb,
             "contigs": request.contigs,
             "diffusion_steps": request.diffusion_steps,
         }
+        if request.target_pdb is not None:
+            body["input_pdb"] = request.target_pdb
         if request.hotspot_residues:
             body["hotspot_res"] = list(request.hotspot_residues)
         if request.random_seed is not None:
@@ -128,7 +129,9 @@ class NvidiaHostedRFdiffusionRunner:
                 "model_id": self.model_id,
                 "endpoint": self.endpoint,
                 "input_payload_hash": input_hash,
-                "target_pdb_bytes": len(request.target_pdb),
+                "target_pdb_bytes": (
+                    len(request.target_pdb) if request.target_pdb is not None else None
+                ),
                 "request_parameters": {
                     "contigs": request.contigs,
                     "hotspot_residues": list(request.hotspot_residues),

@@ -1,0 +1,79 @@
+{
+  "artifact_digest": "7a9c9d992bf2ea171f5e36144f65a8838291cd956ef7e3da9b87e386a26ee56e",
+  "failure": {
+    "http_status": 422,
+    "message": "Either input_pdb or input_pdb_asset must be specified",
+    "request_artifact_digest": "52cae6e29946718f5d75c095859a86930e4496a93a6f454de68a6ec55c765bab",
+    "response_artifact_digest": "828fd55ab5a2e088eb70c07ee50138e1f23eff384834603796388d3eba73268f",
+    "route": "/v1/biology/ipd/rfdiffusion/generate"
+  },
+  "fraction_passing": null,
+  "hosted_calls": {
+    "boltz2": 0,
+    "proteinmpnn": 0,
+    "rate_limit_429_count": 0,
+    "rfdiffusion": 1,
+    "total_latency_seconds": 0.0
+  },
+  "ledger_chain": {
+    "breaks": [],
+    "events_checked": 3,
+    "heads": {
+      "645aff14-9943-43ac-8a20-04a09574efe5": "a9d3b53fc2753528b2250aad5d9d5de11602cd530095f18cf37993b55d27c3cc"
+    },
+    "runs_checked": 1
+  },
+  "ledger_last_sequence": 3,
+  "manifest": {
+    "campaign": "D2_unconditional_70_residue_monomer_design",
+    "created_at": "2026-10-17T21:59:38Z",
+    "created_without_campaign_calls": true,
+    "generation": {
+      "backbone_count": 4,
+      "boltz_diffusion_samples": 1,
+      "contig_interpretation": "Generate one unconditional protein chain of exactly 70 residues; no source PDB, retained chain, motif, or hotspot is supplied.",
+      "contigs": "70-70",
+      "input_pdb": null,
+      "inter_call_delay_seconds": 5,
+      "mode": "unconditional_monomer",
+      "proteinmpnn_sampling_temperature": 0.1,
+      "proteinmpnn_seed": 5201,
+      "rate_limit_max_retries": 8,
+      "rate_limit_retry_cap_seconds": 120,
+      "rate_limit_retry_initial_seconds": 10,
+      "rfdiffusion_seeds": [
+        5101,
+        5102,
+        5103,
+        5104
+      ],
+      "sequences_per_backbone": 4,
+      "total_pairs": 16
+    },
+    "provenance": {
+      "boltz_route": "/v1/biology/mit/boltz2/predict",
+      "proteinmpnn_route": "/v1/biology/ipd/proteinmpnn/predict",
+      "rfdiffusion_route": "/v1/biology/ipd/rfdiffusion/generate"
+    },
+    "schema_version": 1,
+    "scope_statement": "A passing design means only that RFdiffusion, ProteinMPNN, and Boltz-2 were computationally self-consistent at the pre-registered global RMSD threshold. It does not show folding, stability, expression, binding, function, or biological success. pLDDT, pTM, and scRMSD are not biological-property evidence.",
+    "status": "pre_registered_before_generation",
+    "success_criterion": {
+      "bar_basis": "Published RFdiffusion work defines in-silico success using a high-confidence prediction and global RMSD below 2 A. Independent benchmarking reports over 95% designability for moderately sized unconditional RFdiffusion backbones; this bounded run pre-registers a conservative 50% pair-level operational floor rather than claiming that benchmark performance transfers to this hosted route.",
+      "global_sc_rmsd_angstrom_lt": 2.0,
+      "minimum_passing_fraction": 0.5,
+      "minimum_passing_pairs": 8,
+      "motif_rmsd": null,
+      "sources": [
+        "https://doi.org/10.1038/s41586-023-06415-8",
+        "https://doi.org/10.48550/arXiv.2405.01447"
+      ],
+      "unit_of_fraction": "sequence_backbone_pair"
+    }
+  },
+  "rows": [],
+  "run_id": "645aff14-9943-43ac-8a20-04a09574efe5",
+  "scientific_use_allowed": false,
+  "scope_statement": "A passing design means only that RFdiffusion, ProteinMPNN, and Boltz-2 were computationally self-consistent at the pre-registered global RMSD threshold. It does not show folding, stability, expression, binding, function, or biological success. pLDDT, pTM, and scRMSD are not biological-property evidence.",
+  "status": "ABORTED_ROUTE_SCHEMA"
+}\n
