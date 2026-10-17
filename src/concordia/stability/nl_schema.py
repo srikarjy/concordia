@@ -21,13 +21,13 @@ INTENTS = (
     "constraint_inspection",
     "general_review",
 )
-SPECIFICITY = ("targeted", "underspecified")
+SPECIFICITY = ("actionable", "underspecified")
 
 EXTRACTION_SYSTEM_PROMPT = """You extract only what the user explicitly said.
 
 Return exactly the requested JSON object and no prose.
 
-Intent values:
+Intent values (apply this precedence when more than one description fits):
 - stability_prediction: the user asks about measured folding stability or mutation effects.
   Positive example: "score the measured stability of A13Q". Negative example: "fold this sequence".
 - structure_prediction: the user asks for a predicted three-dimensional structure or fold.
@@ -37,8 +37,14 @@ Intent values:
 - general_review: the user asks for help without naming a specific scientific operation.
   Positive example: "help me with this protein". Negative example: "predict the structure".
 
-Specificity is targeted when the utterance names a residue position or substitution;
-otherwise it is underspecified. Never infer a position that the user did not state.
+Precedence is constraint_inspection first, then structure_prediction, then
+stability_prediction, then general_review. For example, "score the protected
+mutation" is constraint_inspection because the protected-site question determines
+the safety dispatch before scoring.
+
+Specificity is actionable only when every requested mutation has both a transcribed
+position and a one-letter destination amino acid. A position-only request is
+underspecified even though it contains a number. Never infer a position that the user did not state.
 Transcribe every stated position as an integer. Convert a spelled-out amino-acid
 name to its one-letter code only when it is clearly attached to a stated mutation.
 For a multi-mutant, put every named substitution in mutations; do not decide whether
@@ -48,17 +54,17 @@ Use an empty positions list when the user names no position.
 Examples:
 User: "Score alanine at position 13 for measured stability."
 JSON: {"intent":"stability_prediction","target":{"positions":[13],
-"mutations":[{"position":13,"to_aa":"A"}]},"specificity":"targeted"}
+"mutations":[{"position":13,"to_aa":"A"}]},"specificity":"actionable"}
 User: "Evaluate A13Q plus L52Y together."
 JSON: {"intent":"stability_prediction","target":{"positions":[13,52],
 "mutations":[{"position":13,"to_aa":"Q"},{"position":52,"to_aa":"Y"}]},
-"specificity":"targeted"}
+"specificity":"actionable"}
 User: "Help me with this protein."
 JSON: {"intent":"general_review","target":{"positions":[],"mutations":[]},
 "specificity":"underspecified"}
 User: "Inspect the protected binding site at position 64."
 JSON: {"intent":"constraint_inspection","target":{"positions":[64],
-"mutations":[]},"specificity":"targeted"}
+"mutations":[]},"specificity":"underspecified"}
 """
 
 
@@ -95,8 +101,51 @@ def extraction_schema() -> dict[str, Any]:
     }
 
 
+def _expected_intent(utterance: str) -> str:
+    """Apply the documented lexical precedence deterministically."""
+    lowered = utterance.lower()
+    if any(
+        term in lowered
+        for term in (
+            "protected",
+            "binding site",
+            "binding-site",
+            "catalytic",
+            "constraint",
+            "curated site",
+        )
+    ):
+        return "constraint_inspection"
+    if any(term in lowered for term in ("structure", "fold", "three-dimensional", "3d")):
+        return "structure_prediction"
+    if any(
+        term in lowered
+        for term in (
+            "stability",
+            "stable",
+            "ddg",
+            "mutation",
+            "mutant",
+            "variant",
+            "substitution",
+            "score",
+        )
+    ):
+        return "stability_prediction"
+    return "general_review"
+
+
+def _position_is_grounded(utterance: str, position: int) -> bool:
+    """Accept a literal number without allowing it to be part of a larger number."""
+    return re.search(rf"(?<!\d){position}(?!\d)", utterance) is not None
+
+
 def validate_extraction_response(
-    response: object, schema: dict[str, Any], mutable_positions: Collection[int]
+    response: object,
+    schema: dict[str, Any],
+    mutable_positions: Collection[int],
+    *,
+    utterance: str,
 ) -> None:
     """Validate shape, enum values, and manifest-scoped residue positions."""
     if not isinstance(response, dict):
@@ -106,6 +155,8 @@ def validate_extraction_response(
         raise ValueError("extraction response must contain exactly the required fields")
     if response["intent"] not in INTENTS or response["specificity"] not in SPECIFICITY:
         raise ValueError("invalid extraction enum")
+    if response["intent"] != _expected_intent(utterance):
+        raise ValueError("intent does not follow the documented precedence for the utterance")
     target = response["target"]
     if not isinstance(target, dict) or set(target) != {"positions", "mutations"}:
         raise ValueError("target must contain positions and mutations")
@@ -120,6 +171,8 @@ def validate_extraction_response(
         raise ValueError("target.positions must not contain duplicates")
     if any(value not in allowed for value in positions):
         raise ValueError("target position is outside the manifest mutable range")
+    if any(not _position_is_grounded(utterance, value) for value in positions):
+        raise ValueError("target position was not literally present in the utterance")
     if not isinstance(mutations, list):
         raise ValueError("target.mutations must be a list")
     mutation_positions: list[int] = []
@@ -132,9 +185,14 @@ def validate_extraction_response(
             raise ValueError("mutation position is outside the manifest mutable range")
         if not isinstance(to_aa, str) or to_aa not in AMINO_ACIDS:
             raise ValueError("mutation to_aa must be one standard amino-acid letter")
+        if not _position_is_grounded(utterance, position):
+            raise ValueError("mutation position was not literally present in the utterance")
         mutation_positions.append(position)
     if not set(mutation_positions).issubset(positions):
         raise ValueError("mutation positions must also appear in target.positions")
+    expected_specificity = "actionable" if mutations else "underspecified"
+    if response["specificity"] != expected_specificity:
+        raise ValueError("specificity must reflect whether a complete mutation is actionable")
     for value in (response["intent"], response["specificity"]):
         if re.search(r"\d", str(value)):
             raise ValueError("non-position extraction fields cannot contain digits")
@@ -155,16 +213,13 @@ def extraction_digits_in_non_position_fields(response: object) -> bool:
 
 
 def enum_only_schema(_tool_names: list[str]) -> dict[str, Any]:
-    """Compatibility import for legacy entry points; return the new schema."""
+    """Compatibility wrapper while callers migrate to the new extraction contract."""
     return extraction_schema()
 
 
-def validate_enum_response(_response: object, _schema: dict[str, Any]) -> None:
-    """Fail explicitly when an old action/tool/evidence caller is still invoked."""
-    raise ValueError(
-        "legacy action/tool/evidence extraction is removed; "
-        "use validate_extraction_response"
-    )
+def validate_enum_response(response: object, schema: dict[str, Any], *, utterance: str) -> None:
+    """Validate a migrated caller using the new extraction contract."""
+    validate_extraction_response(response, schema, range(1, 75), utterance=utterance)
 
 
 def render_numeric_recommendation(
@@ -187,5 +242,6 @@ __all__ = [
     "extraction_digits_in_non_position_fields",
     "extraction_schema",
     "render_numeric_recommendation",
+    "validate_enum_response",
     "validate_extraction_response",
 ]

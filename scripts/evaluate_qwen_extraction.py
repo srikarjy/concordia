@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import re
 import time
 from collections import defaultdict
 from datetime import UTC, datetime
@@ -14,7 +13,12 @@ from typing import Any
 
 import httpx
 
-from concordia.stability.nl_schema import enum_only_schema, validate_enum_response
+from concordia.stability.nl_schema import (
+    EXTRACTION_SYSTEM_PROMPT,
+    extraction_digits_in_non_position_fields,
+    extraction_schema,
+    validate_extraction_response,
+)
 
 THRESHOLDS = {
     "ship_exact_match_at_least": 0.90,
@@ -24,9 +28,7 @@ THRESHOLDS = {
 
 
 def digits_in_fields(response: object) -> bool:
-    return not isinstance(response, dict) or any(
-        bool(re.search(r"\d", str(value))) for value in response.values()
-    )
+    return extraction_digits_in_non_position_fields(response)
 
 
 def call_model(
@@ -41,7 +43,7 @@ def call_model(
         "messages": [
             {
                 "role": "system",
-                "content": "Return only enum JSON. Never emit digits in any value.",
+                "content": EXTRACTION_SYSTEM_PROMPT,
             },
             {"role": "user", "content": utterance},
         ],
@@ -59,7 +61,7 @@ def call_model(
 
 def evaluate(fixture_path: Path, output_path: Path, host: str, model: str) -> dict[str, Any]:
     fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
-    schema = enum_only_schema(["stability", "structure", "constraints", "none"])
+    schema = extraction_schema()
     fixture_digest = hashlib.sha256(fixture_path.read_bytes()).hexdigest()
     tags = httpx.get(f"{host}/api/tags", timeout=10.0)
     tags.raise_for_status()
@@ -87,7 +89,12 @@ def evaluate(fixture_path: Path, output_path: Path, host: str, model: str) -> di
             actual, raw, latency = call_model(host, model, schema, item["utterance"])
             validation_error: str | None = None
             try:
-                validate_enum_response(actual, schema)
+                validate_extraction_response(
+                    actual,
+                    schema,
+                    range(1, 75),
+                    utterance=item["utterance"],
+                )
             except Exception as error:
                 validation_error = str(error)
             record.update({
@@ -112,7 +119,7 @@ def evaluate(fixture_path: Path, output_path: Path, host: str, model: str) -> di
     underspecified = [item for item in completed if item["category"] == "underspecified"]
     low_proxy = [
         item for item in underspecified
-        if item.get("actual", {}).get("evidence") == "insufficient"
+        if item.get("actual", {}).get("specificity") == "underspecified"
     ]
     rate = len(exact) / len(completed) if completed else None
     result["summary"] = {
@@ -147,8 +154,8 @@ def evaluate(fixture_path: Path, output_path: Path, host: str, model: str) -> di
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--fixture", type=Path, default=Path("evals/qwen_extraction_v1.json"))
-    parser.add_argument("--output", type=Path, default=Path("results/qwen_extraction_v1.json"))
+    parser.add_argument("--fixture", type=Path, default=Path("evals/qwen_extraction_v2.json"))
+    parser.add_argument("--output", type=Path, default=Path("results/qwen_extraction_v2.json"))
     parser.add_argument("--host", default="http://127.0.0.1:11434")
     parser.add_argument("--model", default="qwen3:1.7b")
     args = parser.parse_args()

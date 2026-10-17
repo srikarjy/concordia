@@ -24,6 +24,7 @@ from concordia.stability.nl_schema import (
     render_numeric_recommendation,
     validate_extraction_response,
 )
+from concordia.stability.request import TypedStabilityRequest, run_typed_request
 from concordia.stability.structure_aware import should_refold
 from scripts.select_tsuboyama_domain import (
     canonical_variant_payload,
@@ -179,9 +180,9 @@ def test_extraction_schema_allows_only_position_digits() -> None:
     response = {
         "intent": "stability_prediction",
         "target": {"positions": [16], "mutations": [{"position": 16, "to_aa": "A"}]},
-        "specificity": "targeted",
+        "specificity": "actionable",
     }
-    validate_extraction_response(response, schema, range(1, 75))
+    validate_extraction_response(response, schema, range(1, 75), utterance="score A16Q")
     assert extraction_digits_in_non_position_fields(response) is False
 
 
@@ -190,10 +191,10 @@ def test_extraction_schema_rejects_digits_outside_positions() -> None:
     response = {
         "intent": "stability_prediction2",
         "target": {"positions": [16], "mutations": []},
-        "specificity": "targeted",
+        "specificity": "underspecified",
     }
     with pytest.raises(ValueError, match="invalid extraction enum"):
-        validate_extraction_response(response, schema, range(1, 75))
+        validate_extraction_response(response, schema, range(1, 75), utterance="score position 16")
 
 
 def test_extraction_schema_rejects_out_of_range_position() -> None:
@@ -201,10 +202,45 @@ def test_extraction_schema_rejects_out_of_range_position() -> None:
     response = {
         "intent": "stability_prediction",
         "target": {"positions": [75], "mutations": []},
-        "specificity": "targeted",
+        "specificity": "underspecified",
     }
     with pytest.raises(ValueError, match="outside"):
-        validate_extraction_response(response, schema, range(1, 75))
+        validate_extraction_response(response, schema, range(1, 75), utterance="score position 75")
+
+
+def test_extraction_specificity_is_executability_not_position_presence() -> None:
+    schema = extraction_schema()
+    response = {
+        "intent": "stability_prediction",
+        "target": {"positions": [16], "mutations": []},
+        "specificity": "actionable",
+    }
+    with pytest.raises(ValueError, match="specificity"):
+        validate_extraction_response(response, schema, range(1, 75), utterance="score position 16")
+
+
+def test_extraction_rejects_ungrounded_position() -> None:
+    schema = extraction_schema()
+    response = {
+        "intent": "stability_prediction",
+        "target": {"positions": [17], "mutations": [{"position": 17, "to_aa": "Q"}]},
+        "specificity": "actionable",
+    }
+    with pytest.raises(ValueError, match="literally present"):
+        validate_extraction_response(response, schema, range(1, 75), utterance="score A16Q")
+
+
+def test_extraction_precedence_resolves_protected_scoring() -> None:
+    schema = extraction_schema()
+    response = {
+        "intent": "stability_prediction",
+        "target": {"positions": [21], "mutations": [{"position": 21, "to_aa": "A"}]},
+        "specificity": "actionable",
+    }
+    with pytest.raises(ValueError, match="precedence"):
+        validate_extraction_response(
+            response, schema, range(1, 75), utterance="score the protected mutation Q21A"
+        )
 
 
 def test_extraction_schema_requires_nonempty_tool_registry_is_not_applicable() -> None:
@@ -221,3 +257,67 @@ def test_numeric_recommendation_requires_deterministic_slots() -> None:
     response = {"action": "score", "tool": "stability", "evidence": "measured"}
     with pytest.raises(ValueError, match="slots"):
         render_numeric_recommendation(response, score=None, sigma=0.5)
+
+
+def test_typed_request_returns_ranked_result_and_intact_ledger(
+    measured_engine: MeasuredStabilityEngine, tmp_path: Path
+) -> None:
+    request = TypedStabilityRequest.from_cli("1IGV", "A13Q,K6Q,L52Y")
+    result = run_typed_request(request, state_root=tmp_path, engine=measured_engine)
+    assert result["ranked"] == 3
+    assert result["hard_refused"] == 0
+    assert result["ranker"] == "ThermoMPNN + one-hot rank average"
+    assert result["ollama_used"] is False
+    assert result["ledger_intact"] is True
+
+
+def test_typed_request_hard_protection_returns_evidence(
+    measured_engine: MeasuredStabilityEngine, tmp_path: Path
+) -> None:
+    result = run_typed_request(
+        TypedStabilityRequest.from_cli("1IGV", "Q21E"),
+        state_root=tmp_path,
+        engine=measured_engine,
+    )
+    trigger = result["refusals"][0]["triggers"][0]
+    assert trigger["code"] == "HARD_PROTECTED_UNIPROT"
+    assert trigger["feature_type"] == "Binding site"
+    assert trigger["accession"] == "P02633"
+    assert result["ledger_intact"] is True
+
+
+def test_typed_request_multi_mutant_refuses_with_count(
+    measured_engine: MeasuredStabilityEngine, tmp_path: Path
+) -> None:
+    result = run_typed_request(
+        TypedStabilityRequest.from_cli("1IGV", "A13Q:K6Q"),
+        state_root=tmp_path,
+        engine=measured_engine,
+    )
+    trigger = result["refusals"][0]["triggers"][0]
+    assert trigger == {"code": "T3_MULTI_MUTANT_SINGLE_MODEL", "mutation_count": 2}
+    assert result["ledger_intact"] is True
+
+
+def test_typed_request_rejects_out_of_range_before_scoring(
+    measured_engine: MeasuredStabilityEngine, tmp_path: Path
+) -> None:
+    with pytest.raises(ValueError, match="outside"):
+        run_typed_request(
+            TypedStabilityRequest.from_cli("1IGV", "A75Q"),
+            state_root=tmp_path,
+            engine=measured_engine,
+        )
+
+
+def test_typed_request_runs_without_ollama(
+    measured_engine: MeasuredStabilityEngine, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("OLLAMA_HOST", raising=False)
+    result = run_typed_request(
+        TypedStabilityRequest.from_cli("1IGV", "A13Q"),
+        state_root=tmp_path,
+        engine=measured_engine,
+    )
+    assert result["ollama_used"] is False
+    assert result["ledger_intact"] is True
