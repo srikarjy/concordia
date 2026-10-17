@@ -1,0 +1,5 @@
+{
+  "buildCommand": "python3 scripts/verify_static_stability_artifact.py && cd frontend && npm ci && npm run build:stability",
+  "outputDirectory": "frontend/dist-stability",
+  "framework": null
+}

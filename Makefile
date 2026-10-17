@@ -1,4 +1,4 @@
-.PHONY: demo serve test frontend benchmark verify space-lock
+.PHONY: demo serve test frontend benchmark verify build-stability-static space-lock
 
 # Offline, no network, exits 0: runs the genomic evidence pipeline on the bundled fixture.
 demo:
@@ -13,6 +13,10 @@ serve: frontend
 
 frontend:
 	cd frontend && npm ci && npm run build
+
+build-stability-static:
+	.venv/bin/python scripts/verify_static_stability_artifact.py
+	cd frontend && npm run build:stability
 
 test:
 	uv sync --extra dev --extra virtual-cell --extra postgres --extra scientist --extra xai
