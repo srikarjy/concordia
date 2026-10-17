@@ -23,3 +23,21 @@ Task 2 — DONE
 - Files changed: `scripts/evaluate_tsuboyama_uncertainty.py`,
   `scripts/evaluate_structure_aware.py`, `tests/unit/test_tsuboyama_uncertainty.py`.
 - Next step: Task 3 — resume only uncached backbone-4 Boltz pairs.
+
+Task 3 — DONE
+
+- Cache inventory: backbone 4 sequences 2–4 were the only missing Boltz pairs;
+  the cached ProteinMPNN response supplied all three sequences, so no RFdiffusion
+  or ProteinMPNN calls were made.
+- Hosted calls: 3 Boltz-2 calls, all parsed and content-addressed; response
+  digests are recorded in `data/design/d1_1igv_pilot_v2/boltz-cache-index.json`.
+- Results: appended to `results/d1_pilot_motif_metrics.csv`; 16 total designs,
+  zero passing the manifest thresholds. Backbone-4 scRMSDs were 17.252, 24.468,
+  17.975, and 33.456 Å for sequences 1–4; all had 52 global and 7 motif CA atoms.
+- Gates: script-local lint fixed; strict stability mypy passed; full pytest passed
+  (443 tests). Repo-wide ruff still reports only the two pre-existing I001 findings
+  in `src/concordia/stability/structure_aware.py`.
+- Files changed: `scripts/resume_d1_boltz.py`,
+  `results/d1_pilot_motif_metrics.csv`,
+  `data/design/d1_1igv_pilot_v2/boltz-cache-index.json`.
+- Next step: Task 4 — run one bounded designability control.
