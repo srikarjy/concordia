@@ -836,7 +836,7 @@ def create_workspace_app(
         """Expose configured, live reachability, and last-call state separately."""
         nvidia_key = nvidia_api_key(secret_root)
         nvidia_configured = nvidia_key is not None
-        nvidia_probe = (
+        nvidia_probe: dict[str, object] = (
             _live_probe(
                 "https://health.api.nvidia.com",
                 headers={"Authorization": f"Bearer {nvidia_key}"},
@@ -846,7 +846,7 @@ def create_workspace_app(
         )
         ollama_url = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")
         ollama_configured = bool(os.environ.get("OLLAMA_HOST", "").strip())
-        ollama_probe = (
+        ollama_probe: dict[str, object] = (
             _ollama_probe(ollama_url, os.environ.get("OLLAMA_MODEL", "qwen3:1.7b"))
             if ollama_configured
             else {"reachable": False, "reachable_at": None}
@@ -855,12 +855,12 @@ def create_workspace_app(
         inference_endpoint = os.environ.get("CONCORDIA_BIONEMO_INFERENCE_URL", "").strip()
         bionemo_key = os.environ.get("CONCORDIA_BIONEMO_API_KEY", "").strip()
         bionemo_headers = {"Authorization": f"Bearer {bionemo_key}"} if bionemo_key else None
-        training_probe = (
+        training_probe: dict[str, object] = (
             _live_probe(f"{training_endpoint}/healthz", headers=bionemo_headers)
             if training_endpoint and bionemo_key
             else {"reachable": False, "reachable_at": None}
         )
-        inference_probe = (
+        inference_probe: dict[str, object] = (
             _live_probe(f"{inference_endpoint}/healthz", headers=bionemo_headers)
             if inference_endpoint and bionemo_key
             else {"reachable": False, "reachable_at": None}
@@ -2834,6 +2834,13 @@ def create_workspace_app(
             "url": "https://srikarjy025-concordia-colony.hf.space/privacy",
         }
         return schema
+
+    from concordia.api.stability import stability_router
+
+    app.include_router(stability_router(state_path / "stability"))
+    from concordia.api.reviews import review_router
+
+    app.include_router(review_router(state_path / "reviews"))
 
     if Path(frontend).is_dir():
         app.mount("/", StaticFiles(directory=frontend, html=True), name="workspace")

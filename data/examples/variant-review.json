@@ -1,0 +1,25 @@
+{
+  "input": {
+    "title": "1IGV \u00b7 retrospective mutation review",
+    "objective": "Review recorded predictions and constraints, document a human shortlist, then inspect published stability measurements. This is a retrospective workflow example, not a prospective benchmark or new experiment. Ranker artifact SHA-256: fe886c56097e512ff1342bb289a91afc78c69e50cae90a66bec8249805ba08c5",
+    "reference_sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+    "candidates_csv": "candidate_id,mutations\r\nA13Q,A13Q\r\nK6Q,K6Q\r\nL52Y,L52Y\r\nQ21E,Q21E\r\ndouble-13-6,A13Q:K6Q\r\n",
+    "predictions_csv": "candidate_id,source,metric,value,unit,direction\r\nA13Q,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-1.7307292222976685,kcal/mol,higher\r\nA13Q,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,-1.3765337467193604,kcal/mol,higher\r\nK6Q,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-0.47930121421813965,kcal/mol,higher\r\nK6Q,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,-0.37135276198387146,kcal/mol,higher\r\nL52Y,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-1.6587944030761719,kcal/mol,higher\r\nL52Y,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,0.043253093957901,kcal/mol,higher\r\n",
+    "protected_positions": [
+      21
+    ],
+    "constraint_note": "Local position 21 maps to UniProt P02633 position 26 (binding site), according to the frozen 1IGV manifest. Example constraint, not automatically inferred for new proteins."
+  },
+  "assay": {
+    "kind": "assay",
+    "label": "Published 1IGV stability \u00b7 retrospective",
+    "context": "Tsuboyama normalized dataset v2_230420; positive \u0394\u0394G is more stable. Original assay conditions are not reproduced here. Rows are normalized published estimates, not independent wet-lab replicates. Retrospective comparison only. Normalized table SHA-256: 495eb13282c123b1a06ec074986edb6aaa0c2f57858b7aac5435c0c1f1bccb79",
+    "csv_text": "candidate_id,metric,value,unit,method,status,replicate\r\nK6Q,ddg_higher_is_more_stable,-0.017398500676724993,kcal/mol,Tsuboyama proteolysis-derived estimate,measured,1\r\nA13Q,ddg_higher_is_more_stable,-1.4459037580965353,kcal/mol,Tsuboyama proteolysis-derived estimate,measured,1\r\nQ21E,ddg_higher_is_more_stable,-0.268963958091601,kcal/mol,Tsuboyama proteolysis-derived estimate,measured,1\r\nL52Y,ddg_higher_is_more_stable,0.035510267308997534,kcal/mol,Tsuboyama proteolysis-derived estimate,measured,1\r\n"
+  },
+  "provenance": {
+    "ranker_artifact_digest": "fe886c56097e512ff1342bb289a91afc78c69e50cae90a66bec8249805ba08c5",
+    "ranker_file_sha256": "c71f5b8888681a7de6422d9f811e973f5a7bfe5cbeb0d95aa4c08452e7613b3b",
+    "normalized_table_sha256": "495eb13282c123b1a06ec074986edb6aaa0c2f57858b7aac5435c0c1f1bccb79",
+    "scope": "Existing recorded predictions and published normalized measurements; no model executed for this example."
+  }
+}
