@@ -17,7 +17,9 @@ def verified_esm2_snapshot() -> tuple[Path, dict[str, str]]:
     from huggingface_hub import snapshot_download
 
     snapshot = Path(
-        snapshot_download(repo_id=ESM2_REPO, revision=ESM2_REVISION, allow_patterns=ESM2_FILES)
+        snapshot_download(
+            repo_id=ESM2_REPO, revision=ESM2_REVISION, allow_patterns=list(ESM2_FILES)
+        )
     )
     if snapshot.name != ESM2_REVISION:
         raise ValueError("ESM-2 snapshot did not resolve to the approved commit")

@@ -27,7 +27,9 @@ def load_trusted_manifest(root: Path) -> dict[str, Any]:
     raw = path.read_bytes()
     if hashlib.sha256(raw).hexdigest() != TRUSTED_MANIFEST_SHA256:
         raise ValueError("frozen stability asset manifest differs from the pinned version")
-    payload = json.loads(raw)
+    payload: Any = json.loads(raw)
+    if not isinstance(payload, dict):
+        raise ValueError("frozen stability asset manifest must be a JSON object")
     if (
         payload.get("schema_version") != 1
         or payload.get("kind") != "concordia_frozen_1igv_serving_assets"

@@ -241,8 +241,9 @@ def verify_claim(
     counterfactual_assessed = False
     critical = False
     for evidence in sorted(claim.evidence, key=lambda value: value.evidence_id):
+        empty: tuple[str, ...] = ()
         if assess_only:
-            path, artifacts, errors = (), (), ()
+            path, artifacts, errors = empty, empty, empty
         else:
             path, artifacts, errors = check_provenance(
                 reader,
