@@ -84,6 +84,17 @@ class ProvenanceArtifact(Frozen):
         return self
 
 
+class ExecutionRecord(Frozen):
+    """Retained terminal operation bound to the exact input and model claim."""
+
+    source_sequence_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    model_checkpoint: str = Field(min_length=1)
+    settings_digest: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    status: Literal["succeeded"]
+    request_artifact_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    response_artifact_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
 class EvidenceRecord(Frozen):
     evidence_id: str = Field(min_length=1)
     family: EvidenceFamily
@@ -168,6 +179,7 @@ def check_provenance(
     limit: int,
     *,
     require_execution: bool = False,
+    scope: ClaimScope | None = None,
 ) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
     """Check all dependency branches, not only a favorable shortest path."""
     checked: set[str] = set()
@@ -201,14 +213,36 @@ def check_provenance(
             if envelope.kind in {"claim", "evidence"} and not envelope.dependencies:
                 errors.add("derived artifact lacks dependencies")
             if envelope.kind == "execution":
-                execution = json.loads(payload)
-                for name in ("request_artifact_digest", "response_artifact_digest"):
-                    consumed = execution.get(name)
-                    if not isinstance(consumed, str) or len(consumed) != 64:
-                        errors.add(f"execution lacks {name}")
-                    else:
+                try:
+                    execution = ExecutionRecord.model_validate_json(payload)
+                except ValueError:
+                    errors.add("execution record is malformed")
+                else:
+                    if execution.source_sequence_digest != sequence:
+                        errors.add("execution does not use the declared source sequence")
+                    if scope is not None and execution.model_checkpoint != scope.model_checkpoint:
+                        errors.add("execution model checkpoint differs from the claim scope")
+                    expected_settings = (
+                        scope.settings_digest if isinstance(scope, StructureScope) else None
+                    )
+                    if execution.settings_digest != expected_settings:
+                        errors.add("execution settings differ from the claim scope")
+                    if sequence not in envelope.dependencies:
+                        errors.add("execution is not linked to the declared source sequence")
+                    for consumed in (
+                        execution.request_artifact_digest,
+                        execution.response_artifact_digest,
+                    ):
                         reader.get_bytes(consumed)
-                executions.add(digest)
+                    if not errors.intersection(
+                        {
+                            "execution does not use the declared source sequence",
+                            "execution model checkpoint differs from the claim scope",
+                            "execution settings differ from the claim scope",
+                            "execution is not linked to the declared source sequence",
+                        }
+                    ):
+                        executions.add(digest)
             for parent in sorted(envelope.dependencies):
                 visit(parent, (*ancestors, digest))
         except (ValueError, OSError, RecursionError):
@@ -251,6 +285,7 @@ def verify_claim(
                 claim.source_sequence,
                 policy.max_provenance_nodes,
                 require_execution=isinstance(claim.scope, StructureScope),
+                scope=claim.scope,
             )
         item_reasons = list(errors)
         if evidence.scope != claim.scope:

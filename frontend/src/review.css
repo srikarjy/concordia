@@ -2,3 +2,8 @@
 
 .replay-banner { padding: 12px 24px; background: #fff7e0; border-bottom: 1px solid #e8d79c; color: #4a3b0c; font-size: 14px; line-height: 1.5; }
 .replay-banner strong { margin-right: 4px; }
+.execution-status { display:flex; justify-content:space-between; align-items:center; gap:24px; padding:20px 22px; margin:-8px 0 26px; background:#f5eee5; border:1px solid #e4d0bc; border-radius:8px; }
+.execution-status .eyebrow { color:#8b6649; margin-bottom:7px; }
+.execution-status h2 { margin-bottom:8px; }
+.execution-status p:last-child { margin:0; max-width:800px; color:#725f50; font-size:12px; }
+@media(max-width:720px){.execution-status{align-items:flex-start;flex-direction:column}}

@@ -52,6 +52,14 @@ and in-silico results only. It does not claim that a mutation will fold, be
 stable in a cell, express, bind, or function. Its intervals are too wide to be
 used as an acquisition signal.
 
+The public replay follows one researcher workflow: import candidate mutations
+and recorded predictions, preserve a select/exclude/defer decision, import a
+later assay batch, and export a revision-specific bundle that verifies without
+this checkout. The included ThermoMPNN feasibility record is `unavailable`:
+the pinned source checkout and checkpoint were absent locally, so it contains
+no new model prediction, gradient, or attribution result. The replay labels
+the historical ranker values separately from that investigation.
+
 ## Run the project
 
 ```bash
@@ -79,6 +87,11 @@ make build-stability-static
 
 The page reads committed results and a bundled structure. It performs no model
 inference and makes no network calls.
+
+For the exact reviewer demonstration and export verification, see
+[the five-minute demo](docs/portfolio-demo.md). The release candidate's local
+evidence and remaining publication dependencies are in
+[the portfolio release record](docs/PORTFOLIO_RELEASE.md).
 
 ## Scientific boundary
 

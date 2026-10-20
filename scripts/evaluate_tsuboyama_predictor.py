@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -10,14 +11,25 @@ from typing import Any, cast
 
 import numpy as np
 import pandas as pd
-from evaluate_tsuboyama_baselines import (
-    CHECKPOINT,
-    MANIFEST,
-    Variant,
-    load_manifest,
-    load_rows,
-    metric_row,
-)
+
+try:  # Supports both ``python scripts/...`` and package-based regression tests.
+    from scripts.evaluate_tsuboyama_baselines import (
+        CHECKPOINT,
+        MANIFEST,
+        Variant,
+        load_manifest,
+        load_rows,
+        metric_row,
+    )
+except ModuleNotFoundError:  # pragma: no cover - direct script invocation fallback
+    from evaluate_tsuboyama_baselines import (  # type: ignore[no-redef]
+        CHECKPOINT,
+        MANIFEST,
+        Variant,
+        load_manifest,
+        load_rows,
+        metric_row,
+    )
 from scipy.spatial.distance import pdist
 from sklearn.decomposition import PCA
 from sklearn.gaussian_process import GaussianProcessRegressor
@@ -26,8 +38,10 @@ from sklearn.linear_model import RidgeCV
 from sklearn.preprocessing import StandardScaler
 
 from concordia.runtime.esm_checkpoint import ESM2_REVISION, load_esm2
+from concordia.stability.assets import load_trusted_manifest
 
-EMBEDDING_CACHE = Path("data/processed/tsuboyama_esm2_site_embeddings.parquet")
+FROZEN_EMBEDDING_CACHE = Path("data/processed/tsuboyama_esm2_site_embeddings.parquet")
+EMBEDDING_CACHE = FROZEN_EMBEDDING_CACHE
 OUTPUT = Path("data/processed/tsuboyama_predictor_metrics.json")
 CHECKPOINT_COMMIT = ESM2_REVISION
 SEED = 1729
@@ -107,23 +121,108 @@ def extract_site_embeddings(
     return frame, metadata
 
 
+def _file_digest(path: Path) -> str:
+    with path.open("rb") as handle:
+        return hashlib.file_digest(handle, "sha256").hexdigest()
+
+
+def _cache_metadata_path(path: Path) -> Path:
+    return path.with_suffix(path.suffix + ".provenance.json")
+
+
+def _expected_mapping(sequence: str, variants: list[Variant]) -> dict[str, object]:
+    return {
+        "sequence_sha256": hashlib.sha256(sequence.encode()).hexdigest(),
+        "variant_positions": {row.variant_id: row.position for row in variants},
+    }
+
+
+def _validate_frame(frame: pd.DataFrame, variants: list[Variant]) -> None:
+    expected = {row.variant_id: row.position for row in variants}
+    required = {"variant_id", "position"}
+    features = [column for column in frame.columns if column.startswith("f")]
+    if not required.issubset(frame.columns) or not features:
+        raise ValueError(
+            "embedding cache lacks the required identifier, position, or feature columns"
+        )
+    if len(frame) != len(expected) or frame["variant_id"].duplicated().any():
+        raise ValueError("embedding cache does not have one row per requested variant")
+    observed = {str(row.variant_id): int(row.position) for row in frame.itertuples(index=False)}
+    if observed != expected:
+        raise ValueError("embedding cache IDs or positions differ from the requested mapping")
+    if any(not np.issubdtype(frame[column].dtype, np.number) for column in features):
+        raise ValueError("embedding cache contains a nonnumeric feature column")
+
+
+def _frozen_cache_metadata(
+    path: Path, sequence: str, variants: list[Variant]
+) -> dict[str, Any] | None:
+    """Validate the one reviewed historical cache against its pinned asset manifest."""
+    root = Path(__file__).resolve().parent.parent
+    canonical = root / FROZEN_EMBEDDING_CACHE
+    if path.resolve() != canonical.resolve():
+        return None
+    manifest = load_trusted_manifest(root)
+    record = manifest["files"].get(str(FROZEN_EMBEDDING_CACHE))
+    if not isinstance(record, dict) or _file_digest(path) != record.get("sha256"):
+        raise ValueError("frozen embedding cache differs from the approved asset manifest")
+    model = manifest.get("model_source")
+    if not isinstance(model, dict):
+        raise ValueError("frozen embedding asset manifest lacks model provenance")
+    return {
+        "cache": "reused_verified_frozen_asset",
+        "path": str(FROZEN_EMBEDDING_CACHE),
+        "cache_sha256": record["sha256"],
+        **_expected_mapping(sequence, variants),
+        "checkpoint": model["esm2_checkpoint"],
+        "checkpoint_commit": model["esm2_revision"],
+        "provenance": "tsuboyama_stability_assets_v1",
+    }
+
+
+def _sidecar_metadata(path: Path, sequence: str, variants: list[Variant]) -> dict[str, Any]:
+    metadata_path = _cache_metadata_path(path)
+    payload = json.loads(metadata_path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("embedding cache provenance must be a JSON object")
+    expected = _expected_mapping(sequence, variants)
+    if (
+        payload.get("cache_sha256") != _file_digest(path)
+        or payload.get("sequence_sha256") != expected["sequence_sha256"]
+        or payload.get("variant_positions") != expected["variant_positions"]
+        or payload.get("checkpoint") != CHECKPOINT
+        or payload.get("checkpoint_commit") != CHECKPOINT_COMMIT
+        or not isinstance(payload.get("checkpoint_file_sha256"), dict)
+    ):
+        raise ValueError("embedding cache provenance does not match the requested computation")
+    return {**payload, "cache": "reused_verified_sidecar", "path": str(path)}
+
+
 def load_or_extract(sequence: str, variants: list[Variant]) -> tuple[pd.DataFrame, dict[str, Any]]:
-    expected_ids = {row.variant_id for row in variants}
     if EMBEDDING_CACHE.exists():
         frame = pd.read_parquet(EMBEDDING_CACHE)
-        if set(frame["variant_id"]) == expected_ids:
-            metadata = {
-                "cache": "reused",
-                "path": str(EMBEDDING_CACHE),
-                "checkpoint": CHECKPOINT,
-                "checkpoint_commit": CHECKPOINT_COMMIT,
-            }
+        try:
+            _validate_frame(frame, variants)
+            metadata = _frozen_cache_metadata(EMBEDDING_CACHE, sequence, variants)
+            if metadata is None:
+                metadata = _sidecar_metadata(EMBEDDING_CACHE, sequence, variants)
             return frame, metadata
+        except (OSError, ValueError, json.JSONDecodeError):
+            # A cache without matching byte and model provenance is never reused.
+            # Continue to fresh extraction, whose output receives a new sidecar.
+            pass
     frame, metadata = extract_site_embeddings(sequence, variants)
     frame.to_parquet(EMBEDDING_CACHE, index=False)
-    metadata["cache"] = "created"
-    metadata["path"] = str(EMBEDDING_CACHE)
-    return frame, metadata
+    provenance = {
+        **metadata,
+        **_expected_mapping(sequence, variants),
+        "cache_sha256": _file_digest(EMBEDDING_CACHE),
+        "feature_columns": [column for column in frame.columns if column.startswith("f")],
+    }
+    _cache_metadata_path(EMBEDDING_CACHE).write_text(
+        json.dumps(provenance, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return frame, {**provenance, "cache": "created", "path": str(EMBEDDING_CACHE)}
 
 
 def feature_lookup(frame: pd.DataFrame) -> dict[str, np.ndarray]:

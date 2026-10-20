@@ -1,5 +1,11 @@
 # Concordia protein XAI: research and product build instructions
 
+> **Portfolio delivery scope (2026-10-20):**
+> [PORTFOLIO_FINISH_PLAN.md](PORTFOLIO_FINISH_PLAN.md) controls the next release.
+> Use this document for technical rationale and scientific safeguards.
+> Its broader research and hosted-service ambitions are not all prerequisites
+> for the bounded portfolio milestone.
+
 Date: 2026-10-19. Status: proposed implementation plan, grounded in the local
 checkout and live GitHub audit. This document does not claim that the planned
 features are implemented or scientifically validated.

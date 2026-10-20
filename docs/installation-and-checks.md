@@ -42,23 +42,35 @@ python3 scripts/check_stability_assets.py
 ```
 
 This is an **availability check**, not integrity verification. Full regression
-tests and the local stability browser test need these seven files:
+tests and the local stability browser test need every file declared in
+`data/manifests/tsuboyama_stability_assets_v1.json`:
 
 - `data/manifests/tsuboyama_rule2_manifest_v3.json`
 - `data/processed/tsuboyama_v2_230420_normalized.csv`
 - `data/processed/tsuboyama_esm2_site_embeddings.parquet`
 - `data/processed/tsuboyama_ensemble_artifacts.joblib`
 - `data/processed/tsuboyama_production_ranker.json`
+- `data/processed/tsuboyama_t2_recalibration.json`
 - `data/processed/tsuboyama_uncertainty_metrics.json`
 - `data/raw/tsuboyama_v2_230420/structures/AlphaFold_model_PDBs/1IGV.pdb`
 
-The six non-manifest files are ignored local scientific assets in the current
-checkout. A fresh clone does not supply them. **Full CI cannot pass from a
-fresh clone until T2 delivers a verified, licensed asset distribution and
-preparation path.** CI fails explicitly at the preflight rather than skipping
-these tests or silently rebuilding a model. Do not deserialize an untrusted
-replacement joblib file. The existing engine also recalibrates at startup;
-immutable calibration and validation before deserialization belong to T2.
+The seven non-manifest files are ignored local scientific assets in the current
+checkout. A fresh clone does not supply them. `scripts/package_stability_assets.py`
+can create a digest-verified local `tar.gz` from a trusted root:
+
+```sh
+PYTHONPATH=src .venv/bin/python scripts/package_stability_assets.py \
+  --source-root /path/to/verified/concordia-assets \
+  --output /path/to/concordia-stability-assets-v1.tar.gz
+```
+
+Extract the archive at the checkout root before invoking `make verify`; serving
+then verifies every size and SHA-256 before opening serialized artifacts. The
+archive has not been published yet. Its release needs a reviewed hosting target
+and confirmation that the derived assets may be redistributed. Until then,
+remote fresh-clone CI is intentionally blocked at preflight rather than skipping
+tests or silently rebuilding a model. Do not deserialize an untrusted replacement
+joblib file. Serving loads the frozen calibration and does not recalibrate it.
 
 The base review workflow and static replay do not require those model files.
 The review example is included in the wheel; the static page uses committed

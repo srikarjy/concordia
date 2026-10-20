@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from concordia.api.reviews import review_router
+from concordia.review.workflow import ReviewInput, ReviewStore, export_bundle, initial_review
 
 
 def local_client(tmp_path: Path) -> TestClient:
@@ -91,3 +92,27 @@ def test_example_review_round_trip_exports_a_verifiable_bundle(tmp_path: Path) -
     )
     assert rejected.returncode != 0
     assert "Input hash mismatch" in rejected.stderr
+
+
+def test_bundle_verifies_attached_diagnostic_bytes(tmp_path: Path) -> None:
+    example = local_client(tmp_path).get("/api/reviews/example").json()
+    store = ReviewStore(tmp_path / "diagnostic-reviews")
+    review = store.save(initial_review(ReviewInput(**example["input"])), 0, "Created")
+    payload = export_bundle(
+        review,
+        [review],
+        diagnostic_artifacts={"run.json": b'{"status":"unavailable"}\n'},
+    )
+    extracted = tmp_path / "diagnostic-bundle"
+    zipfile.ZipFile(io.BytesIO(payload)).extractall(extracted)
+    verified = subprocess.run(
+        [sys.executable, "-I", "verify.py"], cwd=extracted, capture_output=True, text=True
+    )
+    assert verified.returncode == 0, verified.stderr
+    diagnostic = extracted / "diagnostics/run.json"
+    diagnostic.write_text('{"status":"altered"}\n', encoding="utf-8")
+    rejected = subprocess.run(
+        [sys.executable, "-I", "verify.py"], cwd=extracted, capture_output=True, text=True
+    )
+    assert rejected.returncode != 0
+    assert "Diagnostic hash mismatch" in rejected.stderr

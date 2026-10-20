@@ -1,0 +1,6 @@
+candidate_id,mutations,sequence,decision,reason,override_reason,flags,review_revision
+A13Q,A13Q,SPEELKGIFEKYQAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ,unreviewed,,,No measured assay result,1
+K6Q,K6Q,SPEELQGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ,unreviewed,,,No measured assay result; Source ordering differs: ddg_higher_is_more_stable (rank span ≥50% on 3 shared candidates; heuristic),1
+L52Y,L52Y,SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEEYDKNGDGEVSFEEFQVLVKKISQ,unreviewed,,,No measured assay result; Source ordering differs: ddg_higher_is_more_stable (rank span ≥50% on 3 shared candidates; heuristic),1
+Q21E,Q21E,SPEELKGIFEKYAAKEGDPNELSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ,unreviewed,,,Protected position: 21; No imported prediction; No measured assay result,1
+double-13-6,A13Q:K6Q,SPEELQGIFEKYQAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ,unreviewed,,,Multi-mutant: single-mutation evidence does not establish combination effects; No imported prediction; No measured assay result,1

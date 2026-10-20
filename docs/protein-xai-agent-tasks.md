@@ -1,5 +1,12 @@
 # Concordia: assignments for coding and research models
 
+> **Current delivery instructions (2026-10-20):**
+> Follow [PORTFOLIO_FINISH_PLAN.md](PORTFOLIO_FINISH_PLAN.md) and the
+> [T1–T3 review](reviews/2026-10-20-t1-t3-review.md).
+> The F1–F4 jobs define the bounded portfolio release. This older T1–T7 pack
+> remains technical background; do not restart it or make every later research
+> study a prerequisite for finishing the portfolio.
+
 Prepared 2026-10-19. These are implementation handoffs, not completed features.
 The detailed design is [protein-xai-build-instructions.md](protein-xai-build-instructions.md).
 The baseline is [the repository audit](audits/2026-10-19-repository-audit.md).

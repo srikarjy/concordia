@@ -24,6 +24,7 @@ from concordia.verification.cross import (
     ClaimRequest,
     ProvenanceArtifact,
     StructureScope,
+    check_provenance,
     verify_claim,
 )
 from concordia.verification.structure_rules import (
@@ -254,6 +255,10 @@ def _structure_claim(tmp_path: Path, *, with_execution: bool):
             "execution",
             (source,),
             {
+                "source_sequence_digest": source,
+                "model_checkpoint": FIXTURE_SCOPE.model_checkpoint,
+                "settings_digest": FIXTURE_SCOPE.settings_digest,
+                "status": "succeeded",
                 "request_artifact_digest": store.put_json({"test_only": True, "request": "mock"}),
                 "response_artifact_digest": store.put_json({"test_only": True, "response": "mock"}),
             },
@@ -292,3 +297,87 @@ def test_structure_claim_without_stored_execution_is_not_supported(tmp_path: Pat
     assert result.scientific_use_allowed is False
     reasons = [reason for check in result.checks for reason in check.reasons]
     assert any("lacks a stored execution artifact" in reason for reason in reasons)
+
+
+def test_unrelated_failed_execution_cannot_certify_structure_evidence(tmp_path: Path) -> None:
+    """An execution on a sibling branch cannot be borrowed by this claim."""
+    store = ContentAddressedStore(tmp_path)
+
+    def envelope(kind: str, payload: Any, parents: tuple[str, ...] = ()) -> str:
+        return store.put_json(
+            ProvenanceArtifact(
+                kind=kind,
+                payload_digest=store.put_json(payload),
+                dependencies=parents,
+                execution_mode="real",
+                scientific_use_allowed=True,
+                source="software acceptance test with artificial bytes",
+                producing_tool="test-structure-v1",
+            ).model_dump(mode="json")
+        )
+
+    source = envelope("sequence", {"sequence": "claimed"})
+    unrelated = envelope("sequence", {"sequence": "other"})
+    execution = envelope(
+        "execution",
+        {
+            "source_sequence_digest": unrelated,
+            "model_checkpoint": "unrelated-model",
+            "settings_digest": "1" * 64,
+            "status": "failed",
+            "request_artifact_digest": store.put_json({"test_only": True}),
+            "response_artifact_digest": store.put_json({"test_only": True}),
+        },
+        (unrelated,),
+    )
+    artifacts = {
+        name: envelope("evidence", {"signal": name}, (source, execution))
+        for name in ("physical", "samples", "second_model", "counterfactual", "reference")
+    }
+    measured = FIXTURE_CLEAN.model_copy(
+        update={
+            "second_model_interface_agreement": 0.7,
+            "perturbed_paratope_interface_agreement": 0.0,
+        }
+    )
+    claim = ClaimRequest(
+        claim_id="test-complex",
+        text="software test",
+        scope=FIXTURE_SCOPE,
+        source_sequence=source,
+        evidence=evidence_records(measured, FIXTURE_SCOPE, artifacts),
+    )
+
+    result = verify_claim(claim, store)
+    assert result.status == "UNVERIFIABLE"
+    assert result.scientific_use_allowed is False
+    assert any("execution record is malformed" in check.reasons for check in result.checks)
+
+
+def test_malformed_execution_payload_is_unverifiable_not_an_exception(tmp_path: Path) -> None:
+    store = ContentAddressedStore(tmp_path)
+    source = store.put_json(
+        ProvenanceArtifact(
+            kind="sequence",
+            payload_digest=store.put_json({"test_only": True}),
+            execution_mode="real",
+            scientific_use_allowed=True,
+            source="test",
+            producing_tool="test",
+        ).model_dump(mode="json")
+    )
+    execution = store.put_json(
+        ProvenanceArtifact(
+            kind="execution",
+            payload_digest=store.put_json([]),
+            dependencies=(source,),
+            execution_mode="real",
+            scientific_use_allowed=True,
+            source="test",
+            producing_tool="test",
+        ).model_dump(mode="json")
+    )
+    _, _, errors = check_provenance(
+        store, execution, source, 10, require_execution=True, scope=FIXTURE_SCOPE
+    )
+    assert "execution record is malformed" in errors

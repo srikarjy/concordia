@@ -1,27 +1,30 @@
-"""Fail early when frozen 1IGV regression assets are absent.
+"""Fail early when any frozen 1IGV serving asset is absent.
 
-This checks availability only; T2 owns trusted digests and distribution. It must
-not deserialize models, generate replacements, or silently skip regression tests.
+This checks availability only. ``verify_assets`` performs the digest check before
+serving deserializes a model. It must not generate replacements or skip tests.
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
-REQUIRED = (
-    "data/manifests/tsuboyama_rule2_manifest_v3.json",
-    "data/processed/tsuboyama_v2_230420_normalized.csv",
-    "data/processed/tsuboyama_esm2_site_embeddings.parquet",
-    "data/processed/tsuboyama_ensemble_artifacts.joblib",
-    "data/processed/tsuboyama_production_ranker.json",
-    "data/processed/tsuboyama_uncertainty_metrics.json",
-    "data/raw/tsuboyama_v2_230420/structures/AlphaFold_model_PDBs/1IGV.pdb",
-)
+ASSET_MANIFEST = Path("data/manifests/tsuboyama_stability_assets_v1.json")
 
 
 def missing_assets(root: Path) -> list[str]:
-    return [name for name in REQUIRED if not (root / name).is_file()]
+    manifest_path = root / ASSET_MANIFEST
+    if not manifest_path.is_file():
+        return [str(ASSET_MANIFEST)]
+    try:
+        payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+        files = payload["files"]
+    except (json.JSONDecodeError, KeyError, TypeError):
+        return [f"{ASSET_MANIFEST} (invalid manifest)"]
+    if not isinstance(files, dict):
+        return [f"{ASSET_MANIFEST} (invalid files map)"]
+    return [name for name in sorted(files) if not (root / name).is_file()]
 
 
 def main() -> None:
@@ -34,10 +37,10 @@ def main() -> None:
             1,
             "Frozen 1IGV regression prerequisites are missing:\n"
             + "\n".join(f"  {name}" for name in missing)
-            + "\nSee docs/installation-and-checks.md. T2 must provide the verified "
-            "asset bundle; no model retraining or test skipping is implied.\n",
+            + "\nSee docs/installation-and-checks.md for the verified asset bundle. "
+            "No model retraining or test skipping is implied.\n",
         )
-    print("All 7 frozen 1IGV input files are present (availability only, not integrity).")
+    print("All frozen 1IGV serving inputs are present (availability only, not integrity).")
 
 
 if __name__ == "__main__":

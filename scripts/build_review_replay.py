@@ -8,6 +8,7 @@ Run: PYTHONPATH=src .venv/bin/python scripts/build_review_replay.py
 
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import tempfile
@@ -30,6 +31,7 @@ from concordia.review.workflow import (
 ROOT = Path(__file__).resolve().parent.parent
 EXAMPLE = ROOT / "data/examples/variant-review.json"
 OUTPUT = ROOT / "frontend/public/review-replay"
+FEASIBILITY_RECORD = ROOT / "reports/thermompnn-feasibility/2026-10-20-1igv-s1a.json"
 AUTHOR_NOTE = (
     "Illustrative decisions written by the Concordia author to demonstrate the workflow. "
     "They are not an external researcher's review, a prospective experiment, or advice."
@@ -90,13 +92,32 @@ def main() -> None:
         if OUTPUT.exists():
             shutil.rmtree(OUTPUT)
         OUTPUT.mkdir(parents=True)
+        if not FEASIBILITY_RECORD.is_file():
+            raise FileNotFoundError(f"missing bounded feasibility record: {FEASIBILITY_RECORD}")
+        feasibility_bytes = FEASIBILITY_RECORD.read_bytes()
+        digest_path = FEASIBILITY_RECORD.with_suffix(FEASIBILITY_RECORD.suffix + ".sha256")
+        if hashlib.sha256(feasibility_bytes).hexdigest() != digest_path.read_text().strip():
+            raise ValueError("ThermoMPNN feasibility record checksum does not match")
+        (OUTPUT / "thermompnn-feasibility.json").write_bytes(feasibility_bytes)
+        (OUTPUT / "thermompnn-feasibility.json.sha256").write_text(
+            digest_path.read_text(), encoding="utf-8"
+        )
         (OUTPUT / "review.json").write_text(
             json.dumps({"author_note": AUTHOR_NOTE, "revisions": revisions}, indent=1)
         )
-        (OUTPUT / "report.html").write_text(html_report(review))
-        (OUTPUT / "selected.csv").write_text(csv_export(review, selected_only=True))
-        (OUTPUT / "decisions.csv").write_text(csv_export(review))
-        (OUTPUT / "bundle.zip").write_bytes(export_bundle(review, snapshots))
+        for snapshot in snapshots:
+            prefix = f"r{snapshot['revision']}"
+            history_to_revision = snapshots[: snapshot["revision"]]
+            (OUTPUT / f"{prefix}-report.html").write_text(html_report(snapshot))
+            (OUTPUT / f"{prefix}-selected.csv").write_text(csv_export(snapshot, selected_only=True))
+            (OUTPUT / f"{prefix}-decisions.csv").write_text(csv_export(snapshot))
+            (OUTPUT / f"{prefix}-bundle.zip").write_bytes(
+                export_bundle(
+                    snapshot,
+                    history_to_revision,
+                    diagnostic_artifacts={"thermompnn-feasibility.json": feasibility_bytes},
+                )
+            )
     print(f"replay written to {OUTPUT.relative_to(ROOT)} (revision {review['revision']})")
 
 

@@ -565,7 +565,20 @@ def html_report(review: dict[str, Any]) -> str:
 <p>Hashes detect changes to recorded content; they do not authenticate the input author or validate biological claims. Full inputs and earlier decisions are in the companion review bundle.</p></html>"""
 
 
-def export_bundle(review: dict[str, Any], history: list[dict[str, Any]]) -> bytes:
+def export_bundle(
+    review: dict[str, Any],
+    history: list[dict[str, Any]],
+    *,
+    diagnostic_artifacts: dict[str, bytes] | None = None,
+) -> bytes:
+    """Create a standalone, integrity-verifiable review archive.
+
+    Optional diagnostics are retained as exact bytes and verified alongside the
+    review history. They are evidence records, not inputs to a new prediction.
+    """
+    diagnostics = diagnostic_artifacts or {}
+    if any(not name or "/" in name or "\\" in name for name in diagnostics):
+        raise ValueError("diagnostic artifact names must be plain filenames")
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("report.html", html_report(review))
@@ -576,6 +589,14 @@ def export_bundle(review: dict[str, Any], history: list[dict[str, Any]]) -> byte
         archive.writestr("reference.fasta", ">reference\n" + review["reference_sequence"] + "\n")
         for index, item in enumerate(review["inputs"]):
             archive.writestr(f"inputs/{index + 1:03d}-{item['kind']}.csv", item["text"])
+        if diagnostics:
+            manifest = {
+                name: hashlib.sha256(content).hexdigest()
+                for name, content in sorted(diagnostics.items())
+            }
+            archive.writestr("diagnostics.json", json.dumps(manifest, indent=2, sort_keys=True))
+            for name, content in diagnostics.items():
+                archive.writestr(f"diagnostics/{name}", content)
         archive.writestr(
             "verify.py",
             '''"""Run: python3 verify.py from the extracted bundle. Uses only the standard library."""
@@ -596,11 +617,16 @@ assert snapshots[-1] == latest, "Latest snapshot mismatch"
 for index, item in enumerate(latest["inputs"]):
     raw = (root / f"inputs/{index + 1:03d}-{item['kind']}.csv").read_bytes()
     assert hashlib.sha256(raw).hexdigest() == item["sha256"], "Input hash mismatch"
+diagnostics_path = root / "diagnostics.json"
+if diagnostics_path.exists():
+    for name, digest in json.loads(diagnostics_path.read_text()).items():
+        raw = (root / "diagnostics" / name).read_bytes()
+        assert hashlib.sha256(raw).hexdigest() == digest, "Diagnostic hash mismatch"
 print("Recorded snapshots and input hashes verified. Not biological validation or external attestation.")
 ''',
         )
         archive.writestr(
             "README.txt",
-            "Open report.html to review decisions. selected-candidates.csv is the human shortlist.\nreview.json and history.json preserve full inputs, evidence and decision revisions.\nRun python3 verify.py to verify snapshot hashes, links and raw input files.\nNo hosted service or model is called. This bundle contains your sequences and evidence; review before sharing.\n",
+            "Open report.html to review decisions. selected-candidates.csv is the human shortlist.\nreview.json and history.json preserve full inputs, evidence and decision revisions.\nWhen present, diagnostics/ contains exact attached diagnostic records and diagnostics.json records their hashes.\nRun python3 verify.py to verify snapshot hashes, links, raw input files, and diagnostics.\nNo hosted service or model is called. This bundle contains your sequences and evidence; review before sharing.\n",
         )
     return buffer.getvalue()

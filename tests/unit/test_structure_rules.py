@@ -150,7 +150,14 @@ def _claim(tmp_path: Path, measured: StructureMeasurements):
         ProvenanceArtifact(
             kind="execution",
             payload_digest=store.put_json(
-                {"request_artifact_digest": request, "response_artifact_digest": response}
+                {
+                    "source_sequence_digest": source,
+                    "model_checkpoint": SCOPE.model_checkpoint,
+                    "settings_digest": SCOPE.settings_digest,
+                    "status": "succeeded",
+                    "request_artifact_digest": request,
+                    "response_artifact_digest": response,
+                }
             ),
             dependencies=(source,),
             execution_mode="real",

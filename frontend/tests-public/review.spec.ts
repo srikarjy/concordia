@@ -12,11 +12,13 @@ test('production routes ship a read-only review with working benchmark navigatio
     expect(response?.status()).toBe(200);
     expect(response?.headers()['content-security-policy']).toContain("default-src 'none'");
     await expect(page.getByRole('note')).toContainText('Read-only replay');
+    await expect(page.getByRole('region', { name: 'Fresh prediction execution status' })).toContainText('Unavailable');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('1IGV');
     await expect(page.getByRole('button', { name: 'Import evidence' })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Save decision' })).toBeDisabled();
     for (const name of ['Selected CSV', 'HTML report', 'Complete bundle']) {
       const href = await page.getByRole('link', { name }).getAttribute('href');
+      expect(href).toContain('/r7-');
       expect((await page.request.get(href!)).status()).toBe(200);
     }
   }

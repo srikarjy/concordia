@@ -148,13 +148,13 @@
     ],
     "reference_sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
     "reference_sha256": "7510757b258975434515a548f4e67014b46bbaa604f9efd0002b0f1681022282",
-    "review_id": "ed6c98a0e9174f7a804a352e8233d790",
+    "review_id": "e38337e854b740228ed3736f3cb06ec5",
     "revision": 1,
     "schema_version": 1,
     "scientific_use_allowed": false,
     "title": "1IGV \u00b7 retrospective mutation review",
-    "updated_at": "2026-10-19T04:05:07.303038+00:00",
-    "artifact_digest": "766c040e421df17031f659a7c0f4a5aa3a1d234a15b74f552185e7143b0ebae7"
+    "updated_at": "2026-10-20T18:27:18.212535+00:00",
+    "artifact_digest": "33fc72931602b1e53cb2aa8a290ae92082d0bbf7b0d8b46aa49e4648fb3a7bdb"
    },
    "flags": {
     "A13Q": [
@@ -182,38 +182,38 @@
    "history": [
     {
      "revision": 7,
-     "digest": "d7d79d005ee91f70f3987572ee3a1657fe79298007feca8e3dd1eff3b61726de",
-     "updated_at": "2026-10-19T04:05:07.308931+00:00"
+     "digest": "82125c48b07b631d51c6562f7827407aef3103abd48d7f59684955998cf709c5",
+     "updated_at": "2026-10-20T18:27:18.217591+00:00"
     },
     {
      "revision": 6,
-     "digest": "124025eef26a711db58343c9c69d93f48ea3d2f9ba5dbfdef15b4091b0125121",
-     "updated_at": "2026-10-19T04:05:07.307892+00:00"
+     "digest": "e91ca62cb4ca9d30da22b39394a430c297fea32eabb5e56fab2df92621ae8fe0",
+     "updated_at": "2026-10-20T18:27:18.216774+00:00"
     },
     {
      "revision": 5,
-     "digest": "486f836c8724321fd397626cf38d11c972c2c495b5e8e9755bdc669793334f01",
-     "updated_at": "2026-10-19T04:05:07.307132+00:00"
+     "digest": "a82b586586b29abcbcd85a8c0393097416b2645e151c28df9485cee3427fb95a",
+     "updated_at": "2026-10-20T18:27:18.216043+00:00"
     },
     {
      "revision": 4,
-     "digest": "55580f70bfc61e786f82a25a220e3b4d385e81a73779b0ff1ce71791701ac2ff",
-     "updated_at": "2026-10-19T04:05:07.306394+00:00"
+     "digest": "6a8d7c174c460ab2d434c3934e506e3951dfbfb9b794562229cc6f1311007e2c",
+     "updated_at": "2026-10-20T18:27:18.215312+00:00"
     },
     {
      "revision": 3,
-     "digest": "8c049be6c3a73a79cc463750ccd113ad1d989d447e4e582a8c586cb00a3c2e1c",
-     "updated_at": "2026-10-19T04:05:07.305416+00:00"
+     "digest": "80912c9044e68c5ba8ea87861333904931b818ffac30971888ec77cea94fc04a",
+     "updated_at": "2026-10-20T18:27:18.214520+00:00"
     },
     {
      "revision": 2,
-     "digest": "c4916540a5be0ac123393b6d7468a7e6119194aff3b9a189e496518a3cf6e57b",
-     "updated_at": "2026-10-19T04:05:07.304739+00:00"
+     "digest": "ee71a6e7c6e6e089fd1ecbd37c741b9eefe635a5f13dc2cdc75003fc7806b282",
+     "updated_at": "2026-10-20T18:27:18.213642+00:00"
     },
     {
      "revision": 1,
-     "digest": "766c040e421df17031f659a7c0f4a5aa3a1d234a15b74f552185e7143b0ebae7",
-     "updated_at": "2026-10-19T04:05:07.303038+00:00"
+     "digest": "33fc72931602b1e53cb2aa8a290ae92082d0bbf7b0d8b46aa49e4648fb3a7bdb",
+     "updated_at": "2026-10-20T18:27:18.212535+00:00"
     }
    ]
   },
@@ -358,19 +358,19 @@
       "value": 0.043253093957901
      }
     ],
-    "previous_digest": "766c040e421df17031f659a7c0f4a5aa3a1d234a15b74f552185e7143b0ebae7",
+    "previous_digest": "33fc72931602b1e53cb2aa8a290ae92082d0bbf7b0d8b46aa49e4648fb3a7bdb",
     "protected_positions": [
      21
     ],
     "reference_sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
     "reference_sha256": "7510757b258975434515a548f4e67014b46bbaa604f9efd0002b0f1681022282",
-    "review_id": "ed6c98a0e9174f7a804a352e8233d790",
+    "review_id": "e38337e854b740228ed3736f3cb06ec5",
     "revision": 2,
     "schema_version": 1,
     "scientific_use_allowed": false,
     "title": "1IGV \u00b7 retrospective mutation review",
-    "updated_at": "2026-10-19T04:05:07.304739+00:00",
-    "artifact_digest": "c4916540a5be0ac123393b6d7468a7e6119194aff3b9a189e496518a3cf6e57b"
+    "updated_at": "2026-10-20T18:27:18.213642+00:00",
+    "artifact_digest": "ee71a6e7c6e6e089fd1ecbd37c741b9eefe635a5f13dc2cdc75003fc7806b282"
    },
    "flags": {
     "A13Q": [
@@ -398,38 +398,38 @@
    "history": [
     {
      "revision": 7,
-     "digest": "d7d79d005ee91f70f3987572ee3a1657fe79298007feca8e3dd1eff3b61726de",
-     "updated_at": "2026-10-19T04:05:07.308931+00:00"
+     "digest": "82125c48b07b631d51c6562f7827407aef3103abd48d7f59684955998cf709c5",
+     "updated_at": "2026-10-20T18:27:18.217591+00:00"
     },
     {
      "revision": 6,
-     "digest": "124025eef26a711db58343c9c69d93f48ea3d2f9ba5dbfdef15b4091b0125121",
-     "updated_at": "2026-10-19T04:05:07.307892+00:00"
+     "digest": "e91ca62cb4ca9d30da22b39394a430c297fea32eabb5e56fab2df92621ae8fe0",
+     "updated_at": "2026-10-20T18:27:18.216774+00:00"
     },
     {
      "revision": 5,
-     "digest": "486f836c8724321fd397626cf38d11c972c2c495b5e8e9755bdc669793334f01",
-     "updated_at": "2026-10-19T04:05:07.307132+00:00"
+     "digest": "a82b586586b29abcbcd85a8c0393097416b2645e151c28df9485cee3427fb95a",
+     "updated_at": "2026-10-20T18:27:18.216043+00:00"
     },
     {
      "revision": 4,
-     "digest": "55580f70bfc61e786f82a25a220e3b4d385e81a73779b0ff1ce71791701ac2ff",
-     "updated_at": "2026-10-19T04:05:07.306394+00:00"
+     "digest": "6a8d7c174c460ab2d434c3934e506e3951dfbfb9b794562229cc6f1311007e2c",
+     "updated_at": "2026-10-20T18:27:18.215312+00:00"
     },
     {
      "revision": 3,
-     "digest": "8c049be6c3a73a79cc463750ccd113ad1d989d447e4e582a8c586cb00a3c2e1c",
-     "updated_at": "2026-10-19T04:05:07.305416+00:00"
+     "digest": "80912c9044e68c5ba8ea87861333904931b818ffac30971888ec77cea94fc04a",
+     "updated_at": "2026-10-20T18:27:18.214520+00:00"
     },
     {
      "revision": 2,
-     "digest": "c4916540a5be0ac123393b6d7468a7e6119194aff3b9a189e496518a3cf6e57b",
-     "updated_at": "2026-10-19T04:05:07.304739+00:00"
+     "digest": "ee71a6e7c6e6e089fd1ecbd37c741b9eefe635a5f13dc2cdc75003fc7806b282",
+     "updated_at": "2026-10-20T18:27:18.213642+00:00"
     },
     {
      "revision": 1,
-     "digest": "766c040e421df17031f659a7c0f4a5aa3a1d234a15b74f552185e7143b0ebae7",
-     "updated_at": "2026-10-19T04:05:07.303038+00:00"
+     "digest": "33fc72931602b1e53cb2aa8a290ae92082d0bbf7b0d8b46aa49e4648fb3a7bdb",
+     "updated_at": "2026-10-20T18:27:18.212535+00:00"
     }
    ]
   },
@@ -574,19 +574,19 @@
       "value": 0.043253093957901
      }
     ],
-    "previous_digest": "c4916540a5be0ac123393b6d7468a7e6119194aff3b9a189e496518a3cf6e57b",
+    "previous_digest": "ee71a6e7c6e6e089fd1ecbd37c741b9eefe635a5f13dc2cdc75003fc7806b282",
     "protected_positions": [
      21
     ],
     "reference_sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
     "reference_sha256": "7510757b258975434515a548f4e67014b46bbaa604f9efd0002b0f1681022282",
-    "review_id": "ed6c98a0e9174f7a804a352e8233d790",
+    "review_id": "e38337e854b740228ed3736f3cb06ec5",
     "revision": 3,
     "schema_version": 1,
     "scientific_use_allowed": false,
     "title": "1IGV \u00b7 retrospective mutation review",
-    "updated_at": "2026-10-19T04:05:07.305416+00:00",
-    "artifact_digest": "8c049be6c3a73a79cc463750ccd113ad1d989d447e4e582a8c586cb00a3c2e1c"
+    "updated_at": "2026-10-20T18:27:18.214520+00:00",
+    "artifact_digest": "80912c9044e68c5ba8ea87861333904931b818ffac30971888ec77cea94fc04a"
    },
    "flags": {
     "A13Q": [
@@ -614,38 +614,38 @@
    "history": [
     {
      "revision": 7,
-     "digest": "d7d79d005ee91f70f3987572ee3a1657fe79298007feca8e3dd1eff3b61726de",
-     "updated_at": "2026-10-19T04:05:07.308931+00:00"
+     "digest": "82125c48b07b631d51c6562f7827407aef3103abd48d7f59684955998cf709c5",
+     "updated_at": "2026-10-20T18:27:18.217591+00:00"
     },
     {
      "revision": 6,
-     "digest": "124025eef26a711db58343c9c69d93f48ea3d2f9ba5dbfdef15b4091b0125121",
-     "updated_at": "2026-10-19T04:05:07.307892+00:00"
+     "digest": "e91ca62cb4ca9d30da22b39394a430c297fea32eabb5e56fab2df92621ae8fe0",
+     "updated_at": "2026-10-20T18:27:18.216774+00:00"
     },
     {
      "revision": 5,
-     "digest": "486f836c8724321fd397626cf38d11c972c2c495b5e8e9755bdc669793334f01",
-     "updated_at": "2026-10-19T04:05:07.307132+00:00"
+     "digest": "a82b586586b29abcbcd85a8c0393097416b2645e151c28df9485cee3427fb95a",
+     "updated_at": "2026-10-20T18:27:18.216043+00:00"
     },
     {
      "revision": 4,
-     "digest": "55580f70bfc61e786f82a25a220e3b4d385e81a73779b0ff1ce71791701ac2ff",
-     "updated_at": "2026-10-19T04:05:07.306394+00:00"
+     "digest": "6a8d7c174c460ab2d434c3934e506e3951dfbfb9b794562229cc6f1311007e2c",
+     "updated_at": "2026-10-20T18:27:18.215312+00:00"
     },
     {
      "revision": 3,
-     "digest": "8c049be6c3a73a79cc463750ccd113ad1d989d447e4e582a8c586cb00a3c2e1c",
-     "updated_at": "2026-10-19T04:05:07.305416+00:00"
+     "digest": "80912c9044e68c5ba8ea87861333904931b818ffac30971888ec77cea94fc04a",
+     "updated_at": "2026-10-20T18:27:18.214520+00:00"
     },
     {
      "revision": 2,
-     "digest": "c4916540a5be0ac123393b6d7468a7e6119194aff3b9a189e496518a3cf6e57b",
-     "updated_at": "2026-10-19T04:05:07.304739+00:00"
+     "digest": "ee71a6e7c6e6e089fd1ecbd37c741b9eefe635a5f13dc2cdc75003fc7806b282",
+     "updated_at": "2026-10-20T18:27:18.213642+00:00"
     },
     {
      "revision": 1,
-     "digest": "766c040e421df17031f659a7c0f4a5aa3a1d234a15b74f552185e7143b0ebae7",
-     "updated_at": "2026-10-19T04:05:07.303038+00:00"
+     "digest": "33fc72931602b1e53cb2aa8a290ae92082d0bbf7b0d8b46aa49e4648fb3a7bdb",
+     "updated_at": "2026-10-20T18:27:18.212535+00:00"
     }
    ]
   },
@@ -790,19 +790,19 @@
       "value": 0.043253093957901
      }
     ],
-    "previous_digest": "8c049be6c3a73a79cc463750ccd113ad1d989d447e4e582a8c586cb00a3c2e1c",
+    "previous_digest": "80912c9044e68c5ba8ea87861333904931b818ffac30971888ec77cea94fc04a",
     "protected_positions": [
      21
     ],
     "reference_sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
     "reference_sha256": "7510757b258975434515a548f4e67014b46bbaa604f9efd0002b0f1681022282",
-    "review_id": "ed6c98a0e9174f7a804a352e8233d790",
+    "review_id": "e38337e854b740228ed3736f3cb06ec5",
     "revision": 4,
     "schema_version": 1,
     "scientific_use_allowed": false,
     "title": "1IGV \u00b7 retrospective mutation review",
-    "updated_at": "2026-10-19T04:05:07.306394+00:00",
-    "artifact_digest": "55580f70bfc61e786f82a25a220e3b4d385e81a73779b0ff1ce71791701ac2ff"
+    "updated_at": "2026-10-20T18:27:18.215312+00:00",
+    "artifact_digest": "6a8d7c174c460ab2d434c3934e506e3951dfbfb9b794562229cc6f1311007e2c"
    },
    "flags": {
     "A13Q": [
@@ -830,38 +830,38 @@
    "history": [
     {
      "revision": 7,
-     "digest": "d7d79d005ee91f70f3987572ee3a1657fe79298007feca8e3dd1eff3b61726de",
-     "updated_at": "2026-10-19T04:05:07.308931+00:00"
+     "digest": "82125c48b07b631d51c6562f7827407aef3103abd48d7f59684955998cf709c5",
+     "updated_at": "2026-10-20T18:27:18.217591+00:00"
     },
     {
      "revision": 6,
-     "digest": "124025eef26a711db58343c9c69d93f48ea3d2f9ba5dbfdef15b4091b0125121",
-     "updated_at": "2026-10-19T04:05:07.307892+00:00"
+     "digest": "e91ca62cb4ca9d30da22b39394a430c297fea32eabb5e56fab2df92621ae8fe0",
+     "updated_at": "2026-10-20T18:27:18.216774+00:00"
     },
     {
      "revision": 5,
-     "digest": "486f836c8724321fd397626cf38d11c972c2c495b5e8e9755bdc669793334f01",
-     "updated_at": "2026-10-19T04:05:07.307132+00:00"
+     "digest": "a82b586586b29abcbcd85a8c0393097416b2645e151c28df9485cee3427fb95a",
+     "updated_at": "2026-10-20T18:27:18.216043+00:00"
     },
     {
      "revision": 4,
-     "digest": "55580f70bfc61e786f82a25a220e3b4d385e81a73779b0ff1ce71791701ac2ff",
-     "updated_at": "2026-10-19T04:05:07.306394+00:00"
+     "digest": "6a8d7c174c460ab2d434c3934e506e3951dfbfb9b794562229cc6f1311007e2c",
+     "updated_at": "2026-10-20T18:27:18.215312+00:00"
     },
     {
      "revision": 3,
-     "digest": "8c049be6c3a73a79cc463750ccd113ad1d989d447e4e582a8c586cb00a3c2e1c",
-     "updated_at": "2026-10-19T04:05:07.305416+00:00"
+     "digest": "80912c9044e68c5ba8ea87861333904931b818ffac30971888ec77cea94fc04a",
+     "updated_at": "2026-10-20T18:27:18.214520+00:00"
     },
     {
      "revision": 2,
-     "digest": "c4916540a5be0ac123393b6d7468a7e6119194aff3b9a189e496518a3cf6e57b",
-     "updated_at": "2026-10-19T04:05:07.304739+00:00"
+     "digest": "ee71a6e7c6e6e089fd1ecbd37c741b9eefe635a5f13dc2cdc75003fc7806b282",
+     "updated_at": "2026-10-20T18:27:18.213642+00:00"
     },
     {
      "revision": 1,
-     "digest": "766c040e421df17031f659a7c0f4a5aa3a1d234a15b74f552185e7143b0ebae7",
-     "updated_at": "2026-10-19T04:05:07.303038+00:00"
+     "digest": "33fc72931602b1e53cb2aa8a290ae92082d0bbf7b0d8b46aa49e4648fb3a7bdb",
+     "updated_at": "2026-10-20T18:27:18.212535+00:00"
     }
    ]
   },
@@ -1006,19 +1006,19 @@
       "value": 0.043253093957901
      }
     ],
-    "previous_digest": "55580f70bfc61e786f82a25a220e3b4d385e81a73779b0ff1ce71791701ac2ff",
+    "previous_digest": "6a8d7c174c460ab2d434c3934e506e3951dfbfb9b794562229cc6f1311007e2c",
     "protected_positions": [
      21
     ],
     "reference_sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
     "reference_sha256": "7510757b258975434515a548f4e67014b46bbaa604f9efd0002b0f1681022282",
-    "review_id": "ed6c98a0e9174f7a804a352e8233d790",
+    "review_id": "e38337e854b740228ed3736f3cb06ec5",
     "revision": 5,
     "schema_version": 1,
     "scientific_use_allowed": false,
     "title": "1IGV \u00b7 retrospective mutation review",
-    "updated_at": "2026-10-19T04:05:07.307132+00:00",
-    "artifact_digest": "486f836c8724321fd397626cf38d11c972c2c495b5e8e9755bdc669793334f01"
+    "updated_at": "2026-10-20T18:27:18.216043+00:00",
+    "artifact_digest": "a82b586586b29abcbcd85a8c0393097416b2645e151c28df9485cee3427fb95a"
    },
    "flags": {
     "A13Q": [
@@ -1046,38 +1046,38 @@
    "history": [
     {
      "revision": 7,
-     "digest": "d7d79d005ee91f70f3987572ee3a1657fe79298007feca8e3dd1eff3b61726de",
-     "updated_at": "2026-10-19T04:05:07.308931+00:00"
+     "digest": "82125c48b07b631d51c6562f7827407aef3103abd48d7f59684955998cf709c5",
+     "updated_at": "2026-10-20T18:27:18.217591+00:00"
     },
     {
      "revision": 6,
-     "digest": "124025eef26a711db58343c9c69d93f48ea3d2f9ba5dbfdef15b4091b0125121",
-     "updated_at": "2026-10-19T04:05:07.307892+00:00"
+     "digest": "e91ca62cb4ca9d30da22b39394a430c297fea32eabb5e56fab2df92621ae8fe0",
+     "updated_at": "2026-10-20T18:27:18.216774+00:00"
     },
     {
      "revision": 5,
-     "digest": "486f836c8724321fd397626cf38d11c972c2c495b5e8e9755bdc669793334f01",
-     "updated_at": "2026-10-19T04:05:07.307132+00:00"
+     "digest": "a82b586586b29abcbcd85a8c0393097416b2645e151c28df9485cee3427fb95a",
+     "updated_at": "2026-10-20T18:27:18.216043+00:00"
     },
     {
      "revision": 4,
-     "digest": "55580f70bfc61e786f82a25a220e3b4d385e81a73779b0ff1ce71791701ac2ff",
-     "updated_at": "2026-10-19T04:05:07.306394+00:00"
+     "digest": "6a8d7c174c460ab2d434c3934e506e3951dfbfb9b794562229cc6f1311007e2c",
+     "updated_at": "2026-10-20T18:27:18.215312+00:00"
     },
     {
      "revision": 3,
-     "digest": "8c049be6c3a73a79cc463750ccd113ad1d989d447e4e582a8c586cb00a3c2e1c",
-     "updated_at": "2026-10-19T04:05:07.305416+00:00"
+     "digest": "80912c9044e68c5ba8ea87861333904931b818ffac30971888ec77cea94fc04a",
+     "updated_at": "2026-10-20T18:27:18.214520+00:00"
     },
     {
      "revision": 2,
-     "digest": "c4916540a5be0ac123393b6d7468a7e6119194aff3b9a189e496518a3cf6e57b",
-     "updated_at": "2026-10-19T04:05:07.304739+00:00"
+     "digest": "ee71a6e7c6e6e089fd1ecbd37c741b9eefe635a5f13dc2cdc75003fc7806b282",
+     "updated_at": "2026-10-20T18:27:18.213642+00:00"
     },
     {
      "revision": 1,
-     "digest": "766c040e421df17031f659a7c0f4a5aa3a1d234a15b74f552185e7143b0ebae7",
-     "updated_at": "2026-10-19T04:05:07.303038+00:00"
+     "digest": "33fc72931602b1e53cb2aa8a290ae92082d0bbf7b0d8b46aa49e4648fb3a7bdb",
+     "updated_at": "2026-10-20T18:27:18.212535+00:00"
     }
    ]
   },
@@ -1222,19 +1222,19 @@
       "value": 0.043253093957901
      }
     ],
-    "previous_digest": "486f836c8724321fd397626cf38d11c972c2c495b5e8e9755bdc669793334f01",
+    "previous_digest": "a82b586586b29abcbcd85a8c0393097416b2645e151c28df9485cee3427fb95a",
     "protected_positions": [
      21
     ],
     "reference_sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
     "reference_sha256": "7510757b258975434515a548f4e67014b46bbaa604f9efd0002b0f1681022282",
-    "review_id": "ed6c98a0e9174f7a804a352e8233d790",
+    "review_id": "e38337e854b740228ed3736f3cb06ec5",
     "revision": 6,
     "schema_version": 1,
     "scientific_use_allowed": false,
     "title": "1IGV \u00b7 retrospective mutation review",
-    "updated_at": "2026-10-19T04:05:07.307892+00:00",
-    "artifact_digest": "124025eef26a711db58343c9c69d93f48ea3d2f9ba5dbfdef15b4091b0125121"
+    "updated_at": "2026-10-20T18:27:18.216774+00:00",
+    "artifact_digest": "e91ca62cb4ca9d30da22b39394a430c297fea32eabb5e56fab2df92621ae8fe0"
    },
    "flags": {
     "A13Q": [
@@ -1262,38 +1262,38 @@
    "history": [
     {
      "revision": 7,
-     "digest": "d7d79d005ee91f70f3987572ee3a1657fe79298007feca8e3dd1eff3b61726de",
-     "updated_at": "2026-10-19T04:05:07.308931+00:00"
+     "digest": "82125c48b07b631d51c6562f7827407aef3103abd48d7f59684955998cf709c5",
+     "updated_at": "2026-10-20T18:27:18.217591+00:00"
     },
     {
      "revision": 6,
-     "digest": "124025eef26a711db58343c9c69d93f48ea3d2f9ba5dbfdef15b4091b0125121",
-     "updated_at": "2026-10-19T04:05:07.307892+00:00"
+     "digest": "e91ca62cb4ca9d30da22b39394a430c297fea32eabb5e56fab2df92621ae8fe0",
+     "updated_at": "2026-10-20T18:27:18.216774+00:00"
     },
     {
      "revision": 5,
-     "digest": "486f836c8724321fd397626cf38d11c972c2c495b5e8e9755bdc669793334f01",
-     "updated_at": "2026-10-19T04:05:07.307132+00:00"
+     "digest": "a82b586586b29abcbcd85a8c0393097416b2645e151c28df9485cee3427fb95a",
+     "updated_at": "2026-10-20T18:27:18.216043+00:00"
     },
     {
      "revision": 4,
-     "digest": "55580f70bfc61e786f82a25a220e3b4d385e81a73779b0ff1ce71791701ac2ff",
-     "updated_at": "2026-10-19T04:05:07.306394+00:00"
+     "digest": "6a8d7c174c460ab2d434c3934e506e3951dfbfb9b794562229cc6f1311007e2c",
+     "updated_at": "2026-10-20T18:27:18.215312+00:00"
     },
     {
      "revision": 3,
-     "digest": "8c049be6c3a73a79cc463750ccd113ad1d989d447e4e582a8c586cb00a3c2e1c",
-     "updated_at": "2026-10-19T04:05:07.305416+00:00"
+     "digest": "80912c9044e68c5ba8ea87861333904931b818ffac30971888ec77cea94fc04a",
+     "updated_at": "2026-10-20T18:27:18.214520+00:00"
     },
     {
      "revision": 2,
-     "digest": "c4916540a5be0ac123393b6d7468a7e6119194aff3b9a189e496518a3cf6e57b",
-     "updated_at": "2026-10-19T04:05:07.304739+00:00"
+     "digest": "ee71a6e7c6e6e089fd1ecbd37c741b9eefe635a5f13dc2cdc75003fc7806b282",
+     "updated_at": "2026-10-20T18:27:18.213642+00:00"
     },
     {
      "revision": 1,
-     "digest": "766c040e421df17031f659a7c0f4a5aa3a1d234a15b74f552185e7143b0ebae7",
-     "updated_at": "2026-10-19T04:05:07.303038+00:00"
+     "digest": "33fc72931602b1e53cb2aa8a290ae92082d0bbf7b0d8b46aa49e4648fb3a7bdb",
+     "updated_at": "2026-10-20T18:27:18.212535+00:00"
     }
    ]
   },
@@ -1501,19 +1501,19 @@
       "value": 0.043253093957901
      }
     ],
-    "previous_digest": "124025eef26a711db58343c9c69d93f48ea3d2f9ba5dbfdef15b4091b0125121",
+    "previous_digest": "e91ca62cb4ca9d30da22b39394a430c297fea32eabb5e56fab2df92621ae8fe0",
     "protected_positions": [
      21
     ],
     "reference_sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
     "reference_sha256": "7510757b258975434515a548f4e67014b46bbaa604f9efd0002b0f1681022282",
-    "review_id": "ed6c98a0e9174f7a804a352e8233d790",
+    "review_id": "e38337e854b740228ed3736f3cb06ec5",
     "revision": 7,
     "schema_version": 1,
     "scientific_use_allowed": false,
     "title": "1IGV \u00b7 retrospective mutation review",
-    "updated_at": "2026-10-19T04:05:07.308931+00:00",
-    "artifact_digest": "d7d79d005ee91f70f3987572ee3a1657fe79298007feca8e3dd1eff3b61726de"
+    "updated_at": "2026-10-20T18:27:18.217591+00:00",
+    "artifact_digest": "82125c48b07b631d51c6562f7827407aef3103abd48d7f59684955998cf709c5"
    },
    "flags": {
     "A13Q": [],
@@ -1536,38 +1536,38 @@
    "history": [
     {
      "revision": 7,
-     "digest": "d7d79d005ee91f70f3987572ee3a1657fe79298007feca8e3dd1eff3b61726de",
-     "updated_at": "2026-10-19T04:05:07.308931+00:00"
+     "digest": "82125c48b07b631d51c6562f7827407aef3103abd48d7f59684955998cf709c5",
+     "updated_at": "2026-10-20T18:27:18.217591+00:00"
     },
     {
      "revision": 6,
-     "digest": "124025eef26a711db58343c9c69d93f48ea3d2f9ba5dbfdef15b4091b0125121",
-     "updated_at": "2026-10-19T04:05:07.307892+00:00"
+     "digest": "e91ca62cb4ca9d30da22b39394a430c297fea32eabb5e56fab2df92621ae8fe0",
+     "updated_at": "2026-10-20T18:27:18.216774+00:00"
     },
     {
      "revision": 5,
-     "digest": "486f836c8724321fd397626cf38d11c972c2c495b5e8e9755bdc669793334f01",
-     "updated_at": "2026-10-19T04:05:07.307132+00:00"
+     "digest": "a82b586586b29abcbcd85a8c0393097416b2645e151c28df9485cee3427fb95a",
+     "updated_at": "2026-10-20T18:27:18.216043+00:00"
     },
     {
      "revision": 4,
-     "digest": "55580f70bfc61e786f82a25a220e3b4d385e81a73779b0ff1ce71791701ac2ff",
-     "updated_at": "2026-10-19T04:05:07.306394+00:00"
+     "digest": "6a8d7c174c460ab2d434c3934e506e3951dfbfb9b794562229cc6f1311007e2c",
+     "updated_at": "2026-10-20T18:27:18.215312+00:00"
     },
     {
      "revision": 3,
-     "digest": "8c049be6c3a73a79cc463750ccd113ad1d989d447e4e582a8c586cb00a3c2e1c",
-     "updated_at": "2026-10-19T04:05:07.305416+00:00"
+     "digest": "80912c9044e68c5ba8ea87861333904931b818ffac30971888ec77cea94fc04a",
+     "updated_at": "2026-10-20T18:27:18.214520+00:00"
     },
     {
      "revision": 2,
-     "digest": "c4916540a5be0ac123393b6d7468a7e6119194aff3b9a189e496518a3cf6e57b",
-     "updated_at": "2026-10-19T04:05:07.304739+00:00"
+     "digest": "ee71a6e7c6e6e089fd1ecbd37c741b9eefe635a5f13dc2cdc75003fc7806b282",
+     "updated_at": "2026-10-20T18:27:18.213642+00:00"
     },
     {
      "revision": 1,
-     "digest": "766c040e421df17031f659a7c0f4a5aa3a1d234a15b74f552185e7143b0ebae7",
-     "updated_at": "2026-10-19T04:05:07.303038+00:00"
+     "digest": "33fc72931602b1e53cb2aa8a290ae92082d0bbf7b0d8b46aa49e4648fb3a7bdb",
+     "updated_at": "2026-10-20T18:27:18.212535+00:00"
     }
    ]
   }

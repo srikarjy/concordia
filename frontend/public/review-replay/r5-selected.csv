@@ -1,0 +1,2 @@
+candidate_id,mutations,sequence,decision,reason,override_reason,flags,review_revision
+K6Q,K6Q,SPEELQGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ,selected,"Smallest predicted destabilization in ThermoMPNN; one-hot baseline orders it second, so the ordering flag stays visible.",,No measured assay result; Source ordering differs: ddg_higher_is_more_stable (rank span ≥50% on 3 shared candidates; heuristic),5
