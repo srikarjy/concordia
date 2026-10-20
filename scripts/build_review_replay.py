@@ -12,6 +12,7 @@ import hashlib
 import json
 import shutil
 import tempfile
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from concordia.review.workflow import (
@@ -36,6 +37,9 @@ AUTHOR_NOTE = (
     "Illustrative decisions written by the Concordia author to demonstrate the workflow. "
     "They are not an external researcher's review, a prospective experiment, or advice."
 )
+STATIC_REVIEW_ID = "1igv-retrospective-example-v1"
+STATIC_STARTED_AT = datetime(2026, 10, 20, 18, 27, 18, tzinfo=UTC)
+STATIC_ZIP_TIMESTAMP = (2026, 10, 20, 18, 27, 18)
 DECISIONS = [
     ("A13Q", "excluded", "Both recorded sources predict destabilization; last in both orderings."),
     (
@@ -63,8 +67,20 @@ DECISIONS = [
 def main() -> None:
     example = json.loads(EXAMPLE.read_text())
     with tempfile.TemporaryDirectory() as state:
-        store = ReviewStore(Path(state))
-        review = store.save(initial_review(ReviewInput(**example["input"])), 0, "Created")
+        save_count = 0
+
+        def clock() -> datetime:
+            nonlocal save_count
+            value = STATIC_STARTED_AT + timedelta(seconds=save_count)
+            save_count += 1
+            return value
+
+        store = ReviewStore(Path(state), clock=clock)
+        review = store.save(
+            initial_review(ReviewInput(**example["input"]), review_id=STATIC_REVIEW_ID),
+            0,
+            "Created",
+        )
         for candidate_id, decision, reason in DECISIONS:
             set_decision(
                 review,
@@ -116,6 +132,7 @@ def main() -> None:
                     snapshot,
                     history_to_revision,
                     diagnostic_artifacts={"thermompnn-feasibility.json": feasibility_bytes},
+                    zip_timestamp=STATIC_ZIP_TIMESTAMP,
                 )
             )
     print(f"replay written to {OUTPUT.relative_to(ROOT)} (revision {review['revision']})")

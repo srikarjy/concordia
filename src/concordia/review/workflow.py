@@ -15,6 +15,7 @@ import re
 import sqlite3
 import uuid
 import zipfile
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
@@ -218,7 +219,7 @@ def parse_predictions(
     return output
 
 
-def initial_review(body: ReviewInput) -> dict[str, Any]:
+def initial_review(body: ReviewInput, *, review_id: str | None = None) -> dict[str, Any]:
     reference = normalize_reference(body.reference_sequence)
     if not body.title.strip() or not body.objective.strip():
         raise InputError(["Title and objective cannot be blank."])
@@ -234,7 +235,7 @@ def initial_review(body: ReviewInput) -> dict[str, Any]:
     )
     return {
         "schema_version": 1,
-        "review_id": uuid.uuid4().hex,
+        "review_id": review_id or uuid.uuid4().hex,
         "title": body.title.strip(),
         "objective": body.objective.strip(),
         "reference_sequence": reference,
@@ -398,10 +399,11 @@ def comparison_flags(review: dict[str, Any]) -> dict[str, list[str]]:
 
 
 class ReviewStore:
-    def __init__(self, root: Path):
+    def __init__(self, root: Path, *, clock: Callable[[], datetime] | None = None):
         root.mkdir(parents=True, exist_ok=True)
         self.db = root / "reviews.sqlite3"
         self.artifacts = ContentAddressedStore(root / "artifacts")
+        self.clock = clock or (lambda: datetime.now(UTC))
         with self.connect() as db:
             db.execute(
                 "CREATE TABLE IF NOT EXISTS revisions (review_id TEXT, revision INTEGER, digest TEXT, title TEXT, updated_at TEXT, PRIMARY KEY (review_id, revision))"
@@ -465,7 +467,7 @@ class ReviewStore:
                 **review,
                 "revision": expected + 1,
                 "previous_digest": last["digest"] if last else None,
-                "updated_at": datetime.now(UTC).isoformat(),
+                "updated_at": self.clock().isoformat(),
                 "action": action,
             }
             payload.pop("artifact_digest", None)
@@ -570,6 +572,7 @@ def export_bundle(
     history: list[dict[str, Any]],
     *,
     diagnostic_artifacts: dict[str, bytes] | None = None,
+    zip_timestamp: tuple[int, int, int, int, int, int] | None = None,
 ) -> bytes:
     """Create a standalone, integrity-verifiable review archive.
 
@@ -581,23 +584,32 @@ def export_bundle(
         raise ValueError("diagnostic artifact names must be plain filenames")
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
-        archive.writestr("report.html", html_report(review))
-        archive.writestr("selected-candidates.csv", csv_export(review, True))
-        archive.writestr("all-decisions.csv", csv_export(review))
-        archive.writestr("review.json", json.dumps(review, indent=2, allow_nan=False))
-        archive.writestr("history.json", json.dumps(history, indent=2, allow_nan=False))
-        archive.writestr("reference.fasta", ">reference\n" + review["reference_sequence"] + "\n")
+
+        def write(name: str, content: str | bytes) -> None:
+            if zip_timestamp is None:
+                archive.writestr(name, content)
+                return
+            info = zipfile.ZipInfo(name, date_time=zip_timestamp)
+            info.compress_type = zipfile.ZIP_DEFLATED
+            archive.writestr(info, content)
+
+        write("report.html", html_report(review))
+        write("selected-candidates.csv", csv_export(review, True))
+        write("all-decisions.csv", csv_export(review))
+        write("review.json", json.dumps(review, indent=2, allow_nan=False))
+        write("history.json", json.dumps(history, indent=2, allow_nan=False))
+        write("reference.fasta", ">reference\n" + review["reference_sequence"] + "\n")
         for index, item in enumerate(review["inputs"]):
-            archive.writestr(f"inputs/{index + 1:03d}-{item['kind']}.csv", item["text"])
+            write(f"inputs/{index + 1:03d}-{item['kind']}.csv", item["text"])
         if diagnostics:
             manifest = {
                 name: hashlib.sha256(content).hexdigest()
                 for name, content in sorted(diagnostics.items())
             }
-            archive.writestr("diagnostics.json", json.dumps(manifest, indent=2, sort_keys=True))
+            write("diagnostics.json", json.dumps(manifest, indent=2, sort_keys=True))
             for name, content in diagnostics.items():
-                archive.writestr(f"diagnostics/{name}", content)
-        archive.writestr(
+                write(f"diagnostics/{name}", content)
+        write(
             "verify.py",
             '''"""Run: python3 verify.py from the extracted bundle. Uses only the standard library."""
 import hashlib, json
@@ -625,7 +637,7 @@ if diagnostics_path.exists():
 print("Recorded snapshots and input hashes verified. Not biological validation or external attestation.")
 ''',
         )
-        archive.writestr(
+        write(
             "README.txt",
             "Open report.html to review decisions. selected-candidates.csv is the human shortlist.\nreview.json and history.json preserve full inputs, evidence and decision revisions.\nWhen present, diagnostics/ contains exact attached diagnostic records and diagnostics.json records their hashes.\nRun python3 verify.py to verify snapshot hashes, links, raw input files, and diagnostics.\nNo hosted service or model is called. This bundle contains your sequences and evidence; review before sharing.\n",
         )

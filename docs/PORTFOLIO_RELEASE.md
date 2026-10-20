@@ -33,12 +33,14 @@ ThermoMPNN feasibility record whose terminal status is `unavailable`.
 | Artifact | SHA-256 |
 | --- | --- |
 | `reports/thermompnn-feasibility/2026-10-20-1igv-s1a.json` | `88906a76e3d9eb498a631443784980bd2ed89cacdde84cd979a27a5c5bf4b2d2` |
-| `frontend/public/review-replay/r7-bundle.zip` | `3d83a3e60898aa539dd908ded015b244134d9907ea9981cd1d6ba44753920fa4` |
+| `frontend/public/review-replay/r7-bundle.zip` | `3459a0a892a2b5d1fa2d109a14aee6559e80d1ca8a183e1875e16cc42fd71ef9` |
 | [`variant-review-replay.png`](screenshots/variant-review-replay.png) | `93a23b84e2340e4b7e575439df3968a3aba26a24b10426bf73b6dfbabd15d07b` |
 
 The r7 bundle contains `diagnostics/thermompnn-feasibility.json` and
 `diagnostics.json`. Its verifier checks those diagnostic bytes in addition to
-the review history and raw imported inputs.
+the review history and raw imported inputs. The static generator uses a fixed
+review identity, timestamps, and ZIP metadata, so consecutive replay builds
+produce identical bytes.
 
 ## Reproduction
 
