@@ -18,6 +18,7 @@ import hashlib
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -27,7 +28,7 @@ from concordia.verification.structure_baseline import (  # noqa: E402
 )
 
 
-def build_report(source: dict, *, source_digest: str, source_path: str) -> dict[str, object]:
+def build_report(source: dict, *, source_digest: str, source_path: str) -> dict[str, Any]:
     cases = tuple(
         StructureBaselineCase(
             case_id=row["pdb_id"],

@@ -43,7 +43,9 @@ from pathlib import Path
 import numpy as np
 from Bio import Align
 from Bio.PDB import MMCIFParser
+from Bio.PDB.Model import Model
 from Bio.PDB.Polypeptide import index_to_one, three_to_index
+from Bio.PDB.Residue import Residue
 
 try:
     from antibody_dockq import antibody_dockq
@@ -85,13 +87,13 @@ def _post(url: str, body: dict, timeout: int = 480) -> tuple[int, dict, dict]:
         return TRANSPORT_FAILED, {"detail": f"{type(error).__name__}: {error}"[:300]}, {}
 
 
-def _ca_residues(model) -> dict[str, list]:
+def _ca_residues(model: Model) -> dict[str, list]:
     return {
         chain.id: [r for r in chain if r.id[0] == " " and "CA" in r] for chain in model
     }
 
 
-def _one_letter(residues) -> str:
+def _one_letter(residues: list[Residue]) -> str:
     out = ""
     for residue in residues:
         try:
@@ -109,7 +111,7 @@ def _aligner() -> Align.PairwiseAligner:
     return aligner
 
 
-def _matched(aligner, predicted: list, observed: list) -> tuple[list, list]:
+def _matched(aligner: Align.PairwiseAligner, predicted: list, observed: list) -> tuple[list, list]:
     alignment = aligner.align(_one_letter(predicted), _one_letter(observed))[0]
     left, right = [], []
     for (s1, e1), (s2, e2) in zip(*alignment.aligned, strict=True):
@@ -119,11 +121,11 @@ def _matched(aligner, predicted: list, observed: list) -> tuple[list, list]:
     return left, right
 
 
-def _coords(residues) -> np.ndarray:
+def _coords(residues: list[Residue]) -> np.ndarray:
     return np.array([r["CA"].coord for r in residues])
 
 
-def _kabsch(p: np.ndarray, q: np.ndarray):
+def _kabsch(p: np.ndarray, q: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     pc, qc = p.mean(0), q.mean(0)
     u, _, vt = np.linalg.svd((p - pc).T @ (q - qc))
     d = np.sign(np.linalg.det(vt.T @ u.T))

@@ -127,7 +127,7 @@ def run_typed_request(
     active_engine = engine or MeasuredStabilityEngine()
     candidates = candidates_for_request(active_engine, request)
     report = active_engine.rank(candidates)
-    uncertainty = json.loads(UNCERTAINTY_PATH.read_text(encoding="utf-8"))
+    uncertainty = json.loads(active_engine.asset_path(UNCERTAINTY_PATH).read_text(encoding="utf-8"))
     holdout_summary = uncertainty["holdout"]
     interval_quantile = float(holdout_summary["normalized_quantile"])
     label_range = [

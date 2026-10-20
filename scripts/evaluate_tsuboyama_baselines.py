@@ -15,6 +15,8 @@ from scipy.stats import spearmanr
 from sklearn.linear_model import RidgeCV
 from sklearn.metrics import ndcg_score
 
+from concordia.runtime.esm_checkpoint import ESM2_REVISION, ESM2_SAFETENSORS_SHA256
+
 MANIFEST = Path("data/manifests/tsuboyama_rule2_manifest_v3.json")
 TABLE = Path("data/processed/tsuboyama_v2_230420_normalized.csv")
 ESM_CACHE = Path("data/processed/tsuboyama_esm2_zero_shot.json")
@@ -121,17 +123,20 @@ def get_esm_scores(
         if (
             cached.get("sequence") == sequence
             and cached.get("metadata", {}).get("checkpoint") == CHECKPOINT
+            and cached.get("metadata", {}).get("checkpoint_commit") == ESM2_REVISION
+            and cached.get("metadata", {}).get("checkpoint_file_sha256", {}).get(
+                "model.safetensors"
+            ) == ESM2_SAFETENSORS_SHA256
         ):
             return cached["scores"], cached["metadata"]
 
     os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
     import torch
-    from huggingface_hub import HfApi
-    from transformers import AutoTokenizer, EsmForMaskedLM
+    from transformers import EsmForMaskedLM
 
-    info = HfApi().model_info(CHECKPOINT)
-    tokenizer = AutoTokenizer.from_pretrained(CHECKPOINT)  # type: ignore[no-untyped-call]
-    model = EsmForMaskedLM.from_pretrained(CHECKPOINT).eval()
+    from concordia.runtime.esm_checkpoint import load_esm2
+
+    tokenizer, model, source_digests = load_esm2(EsmForMaskedLM)
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     model.to(device)
     encoded = tokenizer(sequence, return_tensors="pt")
@@ -160,7 +165,8 @@ def get_esm_scores(
                 model.to(device)
     metadata = {
         "checkpoint": CHECKPOINT,
-        "checkpoint_commit": info.sha,
+        "checkpoint_commit": ESM2_REVISION,
+        "checkpoint_file_sha256": source_digests,
         "device": str(device),
         "mps_available": bool(torch.backends.mps.is_available()),
         "mps_cpu_max_abs_diff_first_5": max(cpu_diffs, default=0.0),

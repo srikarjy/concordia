@@ -15,15 +15,20 @@ jobs:
       - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
         with:
           enable-cache: true
-      - run: uv sync --extra dev --extra virtual-cell --extra postgres
-      - run: .venv/bin/pytest -q
+      - run: uv sync --locked --extra dev --extra virtual-cell --extra postgres
       - run: .venv/bin/ruff check .
-      - run: .venv/bin/mypy --strict src/concordia/stability
-      - run: .venv/bin/mypy src/concordia scripts/select_tsuboyama_domain.py scripts/build_tsuboyama_summary.py
-      - run: .venv/bin/mypy --disallow-untyped-defs src/concordia/stability scripts/select_tsuboyama_domain.py scripts/build_tsuboyama_summary.py
-      - run: .venv/bin/mypy .
-        continue-on-error: true
+      - run: make typecheck
       - run: UV_CACHE_DIR=/tmp/uv-cache uv build
+      - name: Check installed wheel outside the source checkout
+        run: |
+          uv export --frozen --no-emit-project --no-hashes -o "$RUNNER_TEMP/concordia-base.txt"
+          uv venv "$RUNNER_TEMP/concordia-wheel"
+          uv pip install --python "$RUNNER_TEMP/concordia-wheel/bin/python" -r "$RUNNER_TEMP/concordia-base.txt" dist/*.whl
+          cp scripts/check_installed_wheel.py "$RUNNER_TEMP/concordia-wheel-smoke.py"
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/concordia-wheel/bin/python" concordia-wheel-smoke.py
+      - run: .venv/bin/python scripts/check_stability_assets.py
+      - run: .venv/bin/pytest -q
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -39,8 +44,11 @@ jobs:
       - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
         with:
           enable-cache: true
-      - run: uv sync --project ..
+      - run: uv sync --locked --project ..
       - run: npm ci
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm test
+      - run: npm run test:public
+      - run: ../.venv/bin/python ../scripts/check_stability_assets.py --root ..
+      - run: npm run test:local

@@ -26,6 +26,7 @@ from sklearn.decomposition import PCA
 from sklearn.linear_model import RidgeCV
 from sklearn.preprocessing import StandardScaler
 
+from concordia.stability.assets import resolve_asset_root, verify_assets
 from concordia.stability.ranker import load_ranker_artifact, rank_average_scores
 
 PDBParser: Any = _PDBParser
@@ -140,10 +141,19 @@ class MeasuredStabilityEngine:
         self,
         manifest_path: Path = MANIFEST_PATH,
         artifact_path: Path = ARTIFACT_PATH,
+        *,
+        asset_root: Path | None = None,
     ) -> None:
-        self.manifest_path = manifest_path
-        self.manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        serialized_manifest = manifest_path.read_bytes()
+        self.asset_root = resolve_asset_root(asset_root)
+        if manifest_path != MANIFEST_PATH or artifact_path != ARTIFACT_PATH:
+            raise ValueError(
+                "select a verified asset_root; individual frozen files cannot be overridden"
+            )
+        self.asset_manifest = verify_assets(self.asset_root)
+        self.manifest_path = self.asset_path(manifest_path)
+        artifact_path = self.asset_path(artifact_path)
+        self.manifest = json.loads(self.manifest_path.read_text(encoding="utf-8"))
+        serialized_manifest = self.manifest_path.read_bytes()
         if hashlib.sha256(serialized_manifest).hexdigest() != MANIFEST_FILE_SHA256:
             raise ValueError("measured-stability manifest file digest does not match frozen v3")
         if self.manifest.get("manifest_digest") != MANIFEST_PAYLOAD_DIGEST:
@@ -152,14 +162,16 @@ class MeasuredStabilityEngine:
         self.artifacts = joblib.load(artifact_path)
         if tuple(self.artifacts.get("seeds", ())) != SEEDS:
             raise ValueError("ensemble artifact seeds do not match the recorded Gate 4 seeds")
-        frame = pd.read_parquet(EMBEDDING_PATH)
+        frame = pd.read_parquet(self.asset_path(EMBEDDING_PATH))
         feature_columns = [column for column in frame.columns if column.startswith("f")]
         matrix = frame[feature_columns].to_numpy(dtype=np.float32)
         self.features = {
             str(variant_id): matrix[index] for index, variant_id in enumerate(frame["variant_id"])
         }
         self.rows = self._load_variants()
-        self.ranker_artifact = load_ranker_artifact()
+        self.ranker_artifact = load_ranker_artifact(
+            self.asset_path(Path("data/processed/tsuboyama_production_ranker.json"))
+        )
         self.hard_protected = {
             int(item["local_position"]): {
                 "feature_type": item["feature_type"],
@@ -174,12 +186,14 @@ class MeasuredStabilityEngine:
             for row in self.rows.values()
             if row.position not in set(self.manifest["split"]["holdout"]["positions"])
         }
-        uncertainty = json.loads(UNCERTAINTY_PATH.read_text(encoding="utf-8"))
-        old_threshold = float(uncertainty["ood"]["knn_threshold"])
-        calibration = _recalibrate_t2(self.manifest, self.features, old_threshold)
-        T2_RECALIBRATION_PATH.write_text(
-            json.dumps(calibration, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        calibration = json.loads(
+            self.asset_path(T2_RECALIBRATION_PATH).read_text(encoding="utf-8")
         )
+        if (
+            calibration.get("manifest_file_sha256") != MANIFEST_FILE_SHA256
+            or calibration.get("holdout_not_used") is not True
+        ):
+            raise ValueError("frozen calibration does not match the selected manifest/split")
         self.t2_recalibration = calibration
         self.knn_threshold = float(calibration["new_threshold"])
         training_ids = [
@@ -195,9 +209,13 @@ class MeasuredStabilityEngine:
         ).fit(scaler.transform(train_x))
         self.training_reduced = self.distance_pca.transform(scaler.transform(train_x))
 
+    def asset_path(self, relative: Path) -> Path:
+        """Resolve a file from the one explicitly selected, verified asset root."""
+        return self.asset_root / relative
+
     def _load_variants(self) -> dict[str, MeasuredCandidate]:
         rows: dict[str, MeasuredCandidate] = {}
-        with TABLE_PATH.open(newline="", encoding="utf-8") as handle:
+        with self.asset_path(TABLE_PATH).open(newline="", encoding="utf-8") as handle:
             for raw in csv.DictReader(handle):
                 if raw["domain_id"] != "1IGV.pdb" or raw["is_wild_type"] == "True":
                     continue
@@ -209,7 +227,7 @@ class MeasuredStabilityEngine:
 
     def _load_labels(self, variant_ids: set[str]) -> dict[str, float]:
         labels: dict[str, float] = {}
-        with TABLE_PATH.open(newline="", encoding="utf-8") as handle:
+        with self.asset_path(TABLE_PATH).open(newline="", encoding="utf-8") as handle:
             for raw in csv.DictReader(handle):
                 variant_id = raw["variant_id"]
                 if raw["domain_id"] == "1IGV.pdb" and variant_id in variant_ids:
@@ -220,7 +238,7 @@ class MeasuredStabilityEngine:
         return labels
 
     def _load_rsa(self) -> dict[int, float]:
-        structure = PDBParser(QUIET=True).get_structure("1IGV", str(RSA_PATH))[0]
+        structure = PDBParser(QUIET=True).get_structure("1IGV", str(self.asset_path(RSA_PATH)))[0]
         ShrakeRupley().compute(structure, level="R")
         values: dict[int, float] = {}
         for residue in structure.get_residues():

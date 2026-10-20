@@ -5,6 +5,7 @@ from __future__ import annotations
 import ipaddress
 import json
 from collections.abc import Callable
+from importlib.resources import files
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
@@ -27,7 +28,16 @@ from concordia.review.workflow import (
     set_decision,
 )
 
-EXAMPLE = Path(__file__).resolve().parents[3] / "data/examples/variant-review.json"
+
+def example_payload() -> Any:
+    """Resolve the packaged example, with a source-checkout fallback for development."""
+    packaged = files("concordia").joinpath("data/variant-review.json")
+    if packaged.is_file():
+        return json.loads(packaged.read_text(encoding="utf-8"))
+    source = Path(__file__).resolve().parents[3] / "data/examples/variant-review.json"
+    if source.is_file():
+        return json.loads(source.read_text(encoding="utf-8"))
+    raise HTTPException(503, "The bundled review example is missing; reinstall Concordia.")
 
 
 def require_local(request: Request) -> None:
@@ -71,7 +81,7 @@ def review_router(root: Path) -> APIRouter:
 
     @router.get("/example")
     def example() -> Any:
-        return json.loads(EXAMPLE.read_text())
+        return example_payload()
 
     @router.post("/preview")
     def preview(body: ReviewInput) -> Any:

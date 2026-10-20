@@ -2731,10 +2731,11 @@ def create_workspace_app(
         "/v1/structure-claims/verify",
         summary="Verify a predicted interface against deterministic rules",
         description=(
-            "Applies the structure rule pack to measured signals and returns a status "
+            "Applies the structure rule pack to caller-supplied signals and returns a rule status "
             "with its reasons. No language model is involved and no threshold is "
             "learned: a claim needs independent evidence families and a passing "
-            "counterfactual, or it is reported as unverifiable. Nothing is stored and "
+            "counterfactual. This endpoint cannot verify execution provenance. "
+            "Nothing is stored and "
             "no external model is called, so this endpoint spends nothing. Supply "
             "measurements from scripts/structure_measurements.py or your own tooling; "
             "agreement measured across samples of one model is deliberately too weak "
@@ -2763,9 +2764,13 @@ def create_workspace_app(
         )
         _, findings = plausibility(payload.measurements)
         return {
-            "schema_version": 1,
+            "schema_version": 2,
             "rule_pack": RULE_PACK_VERSION,
-            "status": result.status.value,
+            "status": "UNVERIFIABLE",
+            "rule_status": result.status.value,
+            "evidence_origin": "caller_supplied",
+            "execution_provenance": "unverified",
+            "biological_validation": "not_established",
             "reasons": list(result.reasons),
             "supporting_families": [family.value for family in result.supporting_families],
             "contradicting_families": [family.value for family in result.contradicting_families],
@@ -2776,7 +2781,8 @@ def create_workspace_app(
                     "family": check.family.value,
                     "method": check.method,
                     "assessment": check.assessment,
-                    "valid": check.valid,
+                    "rule_input_valid": check.valid,
+                    "provenance_verified": False,
                     "reasons": list(check.reasons),
                 }
                 for check in result.checks

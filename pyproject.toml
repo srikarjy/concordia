@@ -48,6 +48,9 @@ concordia = "concordia.cli:main"
 [tool.hatch.build.targets.wheel]
 packages = ["src/concordia"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"data/examples/variant-review.json" = "concordia/data/variant-review.json"
+
 [tool.pytest.ini_options]
 addopts = "-q"
 pythonpath = [".", "src"]

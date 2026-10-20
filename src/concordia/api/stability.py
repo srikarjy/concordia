@@ -43,7 +43,8 @@ def stability_router(state_root: Path) -> APIRouter:
                 status_code=503,
                 detail=(
                     "Local stability artifacts are unavailable. "
-                    "Start the server from the repository root."
+                    "Run scripts/check_stability_assets.py from the repository root "
+                    "to identify missing prerequisites; see docs/installation-and-checks.md."
                 ),
             ) from exc
         except ValueError as exc:

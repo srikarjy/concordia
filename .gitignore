@@ -13,6 +13,8 @@ htmlcov/
 build/
 dist/
 frontend/dist-stability/
+frontend/public/data/connectors.json
+frontend/public/data/dae4e417463b959e68b7ab2f25d4475e46e0be8d63d7af4c9c42bf1e78540b00.json
 node_modules/
 *.tsbuildinfo
 playwright-report/

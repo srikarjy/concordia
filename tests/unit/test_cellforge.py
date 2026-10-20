@@ -380,7 +380,7 @@ def test_builtin_genomic_and_graph_tools_are_deterministic(tmp_path) -> None:
         "xai.mutational_scan",
         capabilities=frozenset({ToolCapability.GENOMIC_COMPUTE}),
     )
-    sequence = {
+    sequence: dict[str, object] = {
         "sequence_id": "fixture:tool",
         "sequence": "ACGT",
         "assembly": "GRCh38",

@@ -67,7 +67,9 @@ STRUCTURE_ONLY_FAMILIES = frozenset(
 class ProvenanceArtifact(Frozen):
     """Envelope created at ingestion; dependencies include every consumed artifact."""
 
-    kind: Literal["sequence", "model", "annotation", "literature", "evidence", "claim"]
+    kind: Literal[
+        "sequence", "model", "annotation", "literature", "execution", "evidence", "claim"
+    ]
     payload_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
     dependencies: tuple[str, ...] = ()
     execution_mode: Literal["real", "fixture", "synthetic", "recorded_real"]
@@ -164,12 +166,15 @@ def check_provenance(
     root: str,
     sequence: str,
     limit: int,
+    *,
+    require_execution: bool = False,
 ) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
     """Check all dependency branches, not only a favorable shortest path."""
     checked: set[str] = set()
     active: set[str] = set()
     errors: set[str] = set()
     path: tuple[str, ...] = ()
+    executions: set[str] = set()
 
     def visit(digest: str, ancestors: tuple[str, ...]) -> None:
         nonlocal path
@@ -185,7 +190,7 @@ def check_provenance(
         active.add(digest)
         try:
             envelope = ProvenanceArtifact.model_validate_json(reader.get_bytes(digest))
-            reader.get_bytes(envelope.payload_digest)
+            payload = reader.get_bytes(envelope.payload_digest)
             if not envelope.scientific_use_allowed:
                 errors.add("provenance contains evidence ineligible for scientific use")
             if digest == sequence:
@@ -195,6 +200,15 @@ def check_provenance(
                     path = (*ancestors, digest)
             if envelope.kind in {"claim", "evidence"} and not envelope.dependencies:
                 errors.add("derived artifact lacks dependencies")
+            if envelope.kind == "execution":
+                execution = json.loads(payload)
+                for name in ("request_artifact_digest", "response_artifact_digest"):
+                    consumed = execution.get(name)
+                    if not isinstance(consumed, str) or len(consumed) != 64:
+                        errors.add(f"execution lacks {name}")
+                    else:
+                        reader.get_bytes(consumed)
+                executions.add(digest)
             for parent in sorted(envelope.dependencies):
                 visit(parent, (*ancestors, digest))
         except (ValueError, OSError, RecursionError):
@@ -205,6 +219,8 @@ def check_provenance(
     visit(root, ())
     if not path:
         errors.add("evidence has no path to the declared source sequence")
+    if require_execution and not executions:
+        errors.add("structure evidence lacks a stored execution artifact")
     return path, tuple(sorted(checked)), tuple(sorted(errors))
 
 
@@ -212,6 +228,8 @@ def verify_claim(
     claim: ClaimRequest,
     reader: ArtifactReader,
     policy: VerificationPolicy | None = None,
+    *,
+    assess_only: bool = False,
 ) -> VerificationResult:
     policy = policy or VerificationPolicy()
     checks: list[EvidenceCheck] = []
@@ -223,9 +241,16 @@ def verify_claim(
     counterfactual_assessed = False
     critical = False
     for evidence in sorted(claim.evidence, key=lambda value: value.evidence_id):
-        path, artifacts, errors = check_provenance(
-            reader, evidence.artifact_digest, claim.source_sequence, policy.max_provenance_nodes
-        )
+        if assess_only:
+            path, artifacts, errors = (), (), ()
+        else:
+            path, artifacts, errors = check_provenance(
+                reader,
+                evidence.artifact_digest,
+                claim.source_sequence,
+                policy.max_provenance_nodes,
+                require_execution=isinstance(claim.scope, StructureScope),
+            )
         item_reasons = list(errors)
         if evidence.scope != claim.scope:
             item_reasons.append("evidence lies outside the declared model, window, or assay scope")
@@ -301,6 +326,8 @@ def verify_claim(
         )
     if independent < policy.minimum_families:
         reasons.add("insufficient independent supporting evidence families")
+    if assess_only:
+        reasons.add("caller-supplied measurements have no verified execution provenance")
     return VerificationResult(
         claim_id=claim.claim_id,
         status=status,
@@ -309,7 +336,13 @@ def verify_claim(
         contradicting_families=tuple(sorted(contradicts)),
         checks=tuple(checks),
         reasons=tuple(sorted(reasons)),
-        scientific_use_allowed=status == SupportStatus.SUPPORTED,
+        scientific_use_allowed=status == SupportStatus.SUPPORTED and not assess_only,
+        limitation=(
+            "Rule assessment only; caller-supplied measurements do not establish execution "
+            "or biological correctness."
+            if assess_only
+            else "Support is scoped evidence agreement; it is not experimental proof."
+        ),
     )
 
 

@@ -19,7 +19,8 @@ def request_body() -> dict[str, object]:
 
 
 def test_run_event_artifact_and_replay_api(tmp_path) -> None:
-    with TestClient(create_app(tmp_path)) as client:
+    app = create_app(tmp_path)
+    with TestClient(app) as client:
         response = client.post("/runs", json=request_body(), headers={"X-Request-ID": "req-1"})
         assert response.status_code == 200
         assert response.headers["X-Request-ID"] == "req-1"
@@ -27,7 +28,7 @@ def test_run_event_artifact_and_replay_api(tmp_path) -> None:
         run_id = created["spec"]["run_id"]
         assert created["current_status"] == "SCHEDULED"
 
-        worker = LocalWorker.create(client.app.state.run_service, owner="api-test-worker")
+        worker = LocalWorker.create(app.state.run_service, owner="api-test-worker")
         completed = worker.run_once(run_id=run_id)
         assert completed is not None
         assert completed.current_status == "COMPLETED"

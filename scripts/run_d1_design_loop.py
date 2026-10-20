@@ -12,6 +12,7 @@ import json
 import time
 import uuid
 from collections.abc import Callable
+from functools import partial
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -28,14 +29,17 @@ from concordia.events.sqlite import SQLiteEventLedger, request_digest
 from concordia.genomics.boltz_nvidia import (
     BoltzComplexRequest,
     BoltzPolymer,
+    NvidiaHostedBoltzComplexResult,
     NvidiaHostedBoltzRunner,
 )
 from concordia.genomics.proteinmpnn_nvidia import (
+    NvidiaHostedProteinMpnnResult,
     NvidiaHostedProteinMpnnRunner,
     ProteinMpnnRequest,
     parse_mfasta,
 )
 from concordia.genomics.rfdiffusion_nvidia import (
+    NvidiaHostedRFdiffusionResult,
     NvidiaHostedRFdiffusionRunner,
     RFdiffusionRequest,
 )
@@ -173,7 +177,7 @@ def run(manifest_path: Path, output_dir: Path, pilot: bool = False) -> dict[str,
 
     for backbone_index, seed in enumerate(seeds, start=1):
         rf_result = _call_with_429_retry(
-            lambda seed=seed: rf.generate(
+            partial(rf.generate,
                 RFdiffusionRequest(
                     target_pdb=target_pdb,
                     contigs=target["contig"],
@@ -203,9 +207,9 @@ def run(manifest_path: Path, output_dir: Path, pilot: bool = False) -> dict[str,
             )
         binder_chain_id, binder_backbone_sequence = binder_candidates[0]
         def design_sequences(
-            rf_result=rf_result,
-            binder_chain_id=binder_chain_id,
-        ):
+            rf_result: NvidiaHostedRFdiffusionResult = rf_result,
+            binder_chain_id: str = binder_chain_id,
+        ) -> NvidiaHostedProteinMpnnResult:
             return mpnn.design(
                 ProteinMpnnRequest(
                     input_pdb=rf_result.pdb_text,
@@ -267,9 +271,9 @@ def run(manifest_path: Path, output_dir: Path, pilot: bool = False) -> dict[str,
                 )
                 continue
             def refold(
-                binder_sequence=binder_sequence,
-                target_sequence=target_sequence,
-            ):
+                binder_sequence: str = binder_sequence,
+                target_sequence: str = target_sequence,
+            ) -> NvidiaHostedBoltzComplexResult:
                 return boltz.predict_complex(
                     BoltzComplexRequest(
                         polymers=(

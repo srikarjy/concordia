@@ -46,7 +46,9 @@ from concordia.verification.structure_rules import (  # noqa: E402
 PASSING = {"SUPPORTED"}
 
 
-def _envelope(store: ContentAddressedStore, kind: str, payload: dict, parents=()) -> str:
+def _envelope(
+    store: ContentAddressedStore, kind: str, payload: dict, parents: tuple[str, ...] = ()
+) -> str:
     digest = store.put_json(payload)
     return store.put_json(
         ProvenanceArtifact(

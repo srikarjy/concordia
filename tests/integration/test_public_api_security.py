@@ -151,7 +151,10 @@ def test_structure_claim_verification_is_open_and_spends_nothing(tmp_path, monke
     # Plausible geometry alone cannot carry a claim: it rejected one of seven wrong poses.
     alone = client.post("/v1/structure-claims/verify", json=body)
     assert alone.status_code == 200
-    assert alone.json()["status"] == "MISSING_EVIDENCE"
+    assert alone.json()["status"] == "UNVERIFIABLE"
+    assert alone.json()["rule_status"] == "MISSING_EVIDENCE"
+    assert alone.json()["schema_version"] == 2
+    assert alone.json()["scientific_use_allowed"] is False
     assert alone.json()["rule_pack"] == "structure-rules-v1"
 
     # An independent model plus a counterfactual that moved the interface is enough.
@@ -166,7 +169,10 @@ def test_structure_claim_verification_is_open_and_spends_nothing(tmp_path, monke
             },
         },
     )
-    assert supported.json()["status"] == "SUPPORTED"
+    assert supported.json()["status"] == "UNVERIFIABLE"
+    assert supported.json()["rule_status"] == "SUPPORTED"
+    assert supported.json()["execution_provenance"] == "unverified"
+    assert supported.json()["scientific_use_allowed"] is False
 
     # Samples of one model are deliberately too weak to stand in for a second model.
     samples_only = client.post(
@@ -180,7 +186,8 @@ def test_structure_claim_verification_is_open_and_spends_nothing(tmp_path, monke
             },
         },
     )
-    assert samples_only.json()["status"] == "PARTIALLY_SUPPORTED"
+    assert samples_only.json()["status"] == "UNVERIFIABLE"
+    assert samples_only.json()["rule_status"] == "PARTIALLY_SUPPORTED"
     assert any("independent" in reason for reason in samples_only.json()["reasons"])
 
     # Clashes contradict a pose outright, and the finding says why.
@@ -188,7 +195,8 @@ def test_structure_claim_verification_is_open_and_spends_nothing(tmp_path, monke
         "/v1/structure-claims/verify",
         json={**body, "measurements": {**plausible, "clash_count": 16}},
     )
-    assert clashing.json()["status"] == "CONTRADICTED"
+    assert clashing.json()["status"] == "UNVERIFIABLE"
+    assert clashing.json()["rule_status"] == "CONTRADICTED"
     assert "16 interface clashes" in clashing.json()["physical_findings"]
 
     baseline = client.post(

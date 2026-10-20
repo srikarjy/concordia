@@ -3,6 +3,7 @@
 import dataclasses
 import json
 from pathlib import Path
+from typing import Any
 
 import httpx
 
@@ -61,7 +62,7 @@ def main() -> None:
         selected = candidates[selected_index]
         base = "http://127.0.0.1:7861"
 
-        def api(method: str, path: str, payload=None):
+        def api(method: str, path: str, payload: object = None) -> Any:
             response = client.request(method, base + path, json=payload)
             response.raise_for_status()
             return response.json()

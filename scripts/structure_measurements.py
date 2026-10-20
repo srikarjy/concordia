@@ -9,7 +9,7 @@ sit in the variable domain, where real antibodies bind. It is reported only when
 the roles carry variable-domain lengths, so a de novo binder is measured on
 clashes and buried surface alone rather than on a signal that does not apply.
 
-Needs biopython, which is not a project dependency.
+Uses the declared Biopython runtime dependency.
 """
 
 from __future__ import annotations
@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from Bio.PDB import MMCIFParser, NeighborSearch
+from Bio.PDB.Model import Model
 from Bio.PDB.SASA import ShrakeRupley
 
 CONTACT = 4.5
@@ -50,11 +51,11 @@ ANTIBODY_ROLES = ChainRoles(
 BINDER_ROLES = ChainRoles(receptor=("A",), ligand=("B",))
 
 
-def load(path: Path):
+def load(path: Path) -> Model:
     return MMCIFParser(QUIET=True).get_structure(path.stem, str(path))[0]
 
 
-def _interface(model, roles: ChainRoles) -> tuple[set[tuple[str, int, int]], int]:
+def _interface(model: Model, roles: ChainRoles) -> tuple[set[tuple[str, int, int]], int]:
     """Receptor-ligand residue pairs (by sequence index) in contact, and clash count."""
     index = {chain.id: {res.id: i for i, res in enumerate(chain)} for chain in model}
     receptor = [a for c in roles.receptor for a in model[c].get_atoms() if a.element != "H"]
@@ -79,13 +80,14 @@ def _interface(model, roles: ChainRoles) -> tuple[set[tuple[str, int, int]], int
     return pairs, clashes
 
 
-def _sasa(model, keep: tuple[str, ...]) -> float:
+def _sasa(model: Model, keep: tuple[str, ...]) -> float:
     part = copy.deepcopy(model)
     for chain in list(part):
         if chain.id not in keep:
             part.detach_child(chain.id)
     ShrakeRupley().compute(part, level="M")
-    return float(part.sasa)
+    # ShrakeRupley attaches sasa dynamically at the requested entity level.
+    return float(part.sasa)  # type: ignore[attr-defined]
 
 
 def physical(path: Path, roles: ChainRoles = ANTIBODY_ROLES) -> dict:

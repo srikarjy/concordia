@@ -10,7 +10,6 @@ from typing import Any, cast
 
 import numpy as np
 import pandas as pd
-import torch
 from evaluate_tsuboyama_baselines import (
     CHECKPOINT,
     MANIFEST,
@@ -25,11 +24,12 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel, WhiteKernel
 from sklearn.linear_model import RidgeCV
 from sklearn.preprocessing import StandardScaler
-from transformers import AutoTokenizer, EsmModel
+
+from concordia.runtime.esm_checkpoint import ESM2_REVISION, load_esm2
 
 EMBEDDING_CACHE = Path("data/processed/tsuboyama_esm2_site_embeddings.parquet")
 OUTPUT = Path("data/processed/tsuboyama_predictor_metrics.json")
-CHECKPOINT_COMMIT = "08e4846e537177426273712802403f7ba8261b6c"
+CHECKPOINT_COMMIT = ESM2_REVISION
 SEED = 1729
 BATCH_SIZE = 8
 PCA_COMPONENTS = 50
@@ -42,9 +42,13 @@ def mutate(sequence: str, position: int, mutant: str) -> str:
 def extract_site_embeddings(
     sequence: str, variants: list[Variant]
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
+    # Cached-feature evaluation and uncertainty tests do not need model runtimes.
+    # Install the `esm` extra only when computing new embeddings.
+    import torch
+    from transformers import EsmModel
+
     os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
-    tokenizer = AutoTokenizer.from_pretrained(CHECKPOINT)  # type: ignore[no-untyped-call]
-    model = EsmModel.from_pretrained(CHECKPOINT).eval()
+    tokenizer, model, source_digests = load_esm2(EsmModel)
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     model.to(device)
 
@@ -88,6 +92,7 @@ def extract_site_embeddings(
     metadata = {
         "checkpoint": CHECKPOINT,
         "checkpoint_commit": CHECKPOINT_COMMIT,
+        "checkpoint_file_sha256": source_digests,
         "feature_definition": (
             "mutant-site last hidden state concatenated with "
             "wild-type-site last hidden state"
