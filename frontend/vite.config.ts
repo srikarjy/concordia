@@ -8,6 +8,7 @@ export default defineConfig({
         review: new URL('./index.html', import.meta.url).pathname,
         workspace: new URL('./workspace.html', import.meta.url).pathname,
         stability: new URL('./stability.html', import.meta.url).pathname,
+        unified: new URL('./unified.html', import.meta.url).pathname,
       },
     },
   },
