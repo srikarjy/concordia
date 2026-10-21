@@ -15,6 +15,7 @@ def run(*args: str, cwd: Path = ROOT) -> None:
 def main() -> None:
     (ROOT / "frontend/public/data/connectors.json").unlink(missing_ok=True)
     run("python3", "scripts/verify_static_stability_artifact.py")
+    run("python3", "scripts/verify_review_replay.py")
     run("python3", "scripts/prepare_static_stability_payload.py")
     run("npm", "ci", cwd=ROOT / "frontend")
     run("npm", "run", "build:stability", cwd=ROOT / "frontend")

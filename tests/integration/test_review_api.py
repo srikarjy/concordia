@@ -6,6 +6,7 @@ import sys
 import zipfile
 from pathlib import Path
 
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -116,3 +117,27 @@ def test_bundle_verifies_attached_diagnostic_bytes(tmp_path: Path) -> None:
     )
     assert rejected.returncode != 0
     assert "Diagnostic hash mismatch" in rejected.stderr
+
+
+@pytest.mark.parametrize("filename", [
+    "selected-candidates.csv", "all-decisions.csv", "report.html", "reference.fasta",
+    "diagnostics.json", "diagnostics/run.json", "history.json", "review.json",
+])
+@pytest.mark.parametrize("mutation", ["change", "remove"])
+def test_bundle_rejects_changed_or_missing_files_even_with_optimization(
+    tmp_path: Path, filename: str, mutation: str,
+) -> None:
+    example = local_client(tmp_path).get("/api/reviews/example").json()
+    store = ReviewStore(tmp_path / "state")
+    review = store.save(initial_review(ReviewInput(**example["input"])), 0, "Created")
+    payload = export_bundle(review, [review], diagnostic_artifacts={"run.json": b'{}'})
+    extracted = tmp_path / "export"
+    zipfile.ZipFile(io.BytesIO(payload)).extractall(extracted)
+    command = [sys.executable, "-I", "-O", "verify.py"]
+    assert subprocess.run(command, cwd=extracted, capture_output=True).returncode == 0
+    target = extracted / filename
+    if mutation == "remove":
+        target.unlink()
+    else:
+        target.write_bytes(target.read_bytes() + b" ")
+    assert subprocess.run(command, cwd=extracted, capture_output=True).returncode != 0

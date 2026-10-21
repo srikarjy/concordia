@@ -7,6 +7,13 @@ deployed, or checked by remote CI.
 
 ## Acceptance decision
 
+Update after the 2026-10-20 follow-up review: the prior verifier omitted derived
+exports and allowed diagnostics to be removed. Those gaps are now fixed with
+whole-bundle inventory/hash verification and corruption/deletion regression
+tests. See [the execution runbook](PORTFOLIO_EXECUTION_RUNBOOK.md) for the new
+1PGA public-data run and the explicit deployment approval gate. This is a local
+candidate awaiting user review; no new deployment has been made.
+
 Accepted for a limited research-software portfolio demonstration. The shipped
 story is a provenance-aware researcher review workflow:
 
@@ -33,7 +40,8 @@ ThermoMPNN feasibility record whose terminal status is `unavailable`.
 | Artifact | SHA-256 |
 | --- | --- |
 | `reports/thermompnn-feasibility/2026-10-20-1igv-s1a.json` | `88906a76e3d9eb498a631443784980bd2ed89cacdde84cd979a27a5c5bf4b2d2` |
-| `frontend/public/review-replay/r7-bundle.zip` | `3459a0a892a2b5d1fa2d109a14aee6559e80d1ca8a183e1875e16cc42fd71ef9` |
+| `frontend/public/review-replay/r7-bundle.zip` | `ed4e7c2adda5a82e236be46d3ff5bc943a85af8e66025ab1fa75208d942c6b51` |
+| `frontend/public/public-data-review/bundle.zip` | `b620326b949224487233cd7d89308a393acb14981d625d87f99ce05bf23c2bdb` |
 | [`variant-review-replay.png`](screenshots/variant-review-replay.png) | `93a23b84e2340e4b7e575439df3968a3aba26a24b10426bf73b6dfbabd15d07b` |
 
 The r7 bundle contains `diagnostics/thermompnn-feasibility.json` and
@@ -41,6 +49,17 @@ The r7 bundle contains `diagnostics/thermompnn-feasibility.json` and
 the review history and raw imported inputs. The static generator uses a fixed
 review identity, timestamps, and ZIP metadata, so consecutive replay builds
 produce identical bytes.
+
+The separate 1PGA run downloaded the Zenodo Figure 1 table and RCSB FASTA,
+validated 930 unique measured variants, trained Ridge on 745 variants, and tested
+185 variants at 11 disjoint positions. RMSE was 1.723967 kcal/mol versus 2.442225
+for the training-mean baseline; Spearman correlation was 0.743592. This is one
+retrospective protein and one fixed split, without uncertainty or independent
+protein validation. The real HTTP review reached revision 5 and preserved
+scripted decisions before assay import. The interactive review is limited to
+three illustrative variants; it does not put the full 185-row test set into a
+researcher's decision queue. Rerunning reuses the same review ID. Fresh
+ThermoMPNN remains unexecuted.
 
 ## Reproduction
 
@@ -66,7 +85,7 @@ the built static replay after the browser tests.
   typing, repository typing, and deployment typing.
 - Full Python suite: passed (with two FastAPI/TestClient deprecation warnings).
 - Frontend TypeScript check and both production builds: passed.
-- Browser suites: 8 workspace, 3 local, and 7 public tests passed.
+- Browser suites: 8 workspace, 3 local, and 8 public tests passed.
 - Standalone verifier for the r7 static export: passed; a test also confirms a
   changed diagnostic record produces `Diagnostic hash mismatch`.
 

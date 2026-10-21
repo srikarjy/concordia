@@ -37,6 +37,13 @@ enough. It does not turn model confidence into a biological claim.
 
 ## Current demonstrations
 
+For the runnable portfolio path, use the
+[execution and deployment runbook](docs/PORTFOLIO_EXECUTION_RUNBOOK.md).
+It includes a freshly executed CPU baseline on 930 public measured 1PGA variants,
+position-held-out evaluation, a complete local review through assay import,
+and standalone verified exports. This is a retrospective software demonstration;
+the small baseline is not a validated general protein predictor.
+
 The repository contains two related workflows:
 
 1. **Structure-claim verification** for hosted structure predictions such as

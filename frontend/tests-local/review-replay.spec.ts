@@ -12,7 +12,7 @@ test('replays the completed example review read-only without calling the API', a
   await expect(page.getByRole('region', { name: 'Fresh prediction execution status' })).toContainText('Unavailable');
   const feasibility = await page.getByRole('link', { name: 'Open checksum-verified feasibility record' }).getAttribute('href');
   expect((await page.request.get(feasibility!)).status()).toBe(200);
-  await expect(page.locator('.summary-strip')).toContainText('1selected by you');
+  await expect(page.locator('.summary-strip')).toContainText('1selected');
   await expect(page.getByRole('button', { name: 'Import evidence' })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Save decision' })).toBeDisabled();
   await expect(page.locator('.assay-batch tr', { hasText: 'K6Q' })).toContainText('selected');

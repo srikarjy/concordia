@@ -66,6 +66,10 @@ DECISIONS = [
 
 def main() -> None:
     example = json.loads(EXAMPLE.read_text())
+    feasibility_bytes = FEASIBILITY_RECORD.read_bytes()
+    digest_path = FEASIBILITY_RECORD.with_suffix(FEASIBILITY_RECORD.suffix + ".sha256")
+    if hashlib.sha256(feasibility_bytes).hexdigest() != digest_path.read_text().strip():
+        raise ValueError("ThermoMPNN feasibility record checksum does not match")
     with tempfile.TemporaryDirectory() as state:
         save_count = 0
 
@@ -108,12 +112,6 @@ def main() -> None:
         if OUTPUT.exists():
             shutil.rmtree(OUTPUT)
         OUTPUT.mkdir(parents=True)
-        if not FEASIBILITY_RECORD.is_file():
-            raise FileNotFoundError(f"missing bounded feasibility record: {FEASIBILITY_RECORD}")
-        feasibility_bytes = FEASIBILITY_RECORD.read_bytes()
-        digest_path = FEASIBILITY_RECORD.with_suffix(FEASIBILITY_RECORD.suffix + ".sha256")
-        if hashlib.sha256(feasibility_bytes).hexdigest() != digest_path.read_text().strip():
-            raise ValueError("ThermoMPNN feasibility record checksum does not match")
         (OUTPUT / "thermompnn-feasibility.json").write_bytes(feasibility_bytes)
         (OUTPUT / "thermompnn-feasibility.json.sha256").write_text(
             digest_path.read_text(), encoding="utf-8"

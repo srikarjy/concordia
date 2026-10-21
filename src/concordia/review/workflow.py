@@ -382,8 +382,13 @@ def comparison_flags(review: dict[str, Any]) -> dict[str, list[str]]:
         if len(common) < 2:
             continue
         for cid in common:
+            # A constant predictor has no ranking information; comparing its
+            # arbitrary tie ranks against a varying source creates false conflicts.
+            ranking_groups = [group for group in groups.values() if len(set(group.values())) > 1]
+            if len(ranking_groups) < 2:
+                continue
             ranks = []
-            for group in groups.values():
+            for group in ranking_groups:
                 value = group[cid]
                 better = sum(
                     (group[k] > value if direction == "higher" else group[k] < value)
@@ -583,9 +588,12 @@ def export_bundle(
     if any(not name or "/" in name or "\\" in name for name in diagnostics):
         raise ValueError("diagnostic artifact names must be plain filenames")
     buffer = io.BytesIO()
+    file_hashes: dict[str, str] = {}
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
 
         def write(name: str, content: str | bytes) -> None:
+            raw = content.encode("utf-8") if isinstance(content, str) else content
+            file_hashes[name] = hashlib.sha256(raw).hexdigest()
             if zip_timestamp is None:
                 archive.writestr(name, content)
                 return
@@ -609,12 +617,17 @@ def export_bundle(
             write("diagnostics.json", json.dumps(manifest, indent=2, sort_keys=True))
             for name, content in diagnostics.items():
                 write(f"diagnostics/{name}", content)
-        write(
-            "verify.py",
-            '''"""Run: python3 verify.py from the extracted bundle. Uses only the standard library."""
+        verifier = '''"""Run: python3 verify.py from the extracted bundle. Uses only the standard library.
+
+Trust this verifier from the original download. Replacing the verifier together
+with the files can forge a locally consistent archive; this is not a signature.
+"""
 import hashlib, json
 from pathlib import Path
 root = Path(__file__).resolve().parent
+def require(condition, message):
+    if not condition:
+        raise ValueError(message)
 snapshots = json.loads((root / "history.json").read_text())
 latest = json.loads((root / "review.json").read_text())
 previous = None
@@ -622,23 +635,29 @@ for item in snapshots:
     payload = dict(item)
     recorded = payload.pop("artifact_digest")
     actual = hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
-    assert actual == recorded, "Snapshot hash mismatch"
-    assert payload["previous_digest"] == previous, "Revision chain mismatch"
+    require(actual == recorded, "Snapshot hash mismatch")
+    require(payload["previous_digest"] == previous, "Revision chain mismatch")
     previous = recorded
-assert snapshots[-1] == latest, "Latest snapshot mismatch"
+require(snapshots[-1] == latest, "Latest snapshot mismatch")
 for index, item in enumerate(latest["inputs"]):
     raw = (root / f"inputs/{index + 1:03d}-{item['kind']}.csv").read_bytes()
-    assert hashlib.sha256(raw).hexdigest() == item["sha256"], "Input hash mismatch"
+    require(hashlib.sha256(raw).hexdigest() == item["sha256"], "Input hash mismatch")
 diagnostics_path = root / "diagnostics.json"
 if diagnostics_path.exists():
     for name, digest in json.loads(diagnostics_path.read_text()).items():
         raw = (root / "diagnostics" / name).read_bytes()
-        assert hashlib.sha256(raw).hexdigest() == digest, "Diagnostic hash mismatch"
-print("Recorded snapshots and input hashes verified. Not biological validation or external attestation.")
-''',
-        )
+        require(hashlib.sha256(raw).hexdigest() == digest, "Diagnostic hash mismatch")
+expected_files = __BUNDLE_FILE_HASHES__
+actual_files = {str(path.relative_to(root)) for path in root.rglob("*") if path.is_file()}
+require(actual_files == set(expected_files) | {"verify.py"}, "Bundle file inventory mismatch")
+for name, digest in expected_files.items():
+    require(hashlib.sha256((root / name).read_bytes()).hexdigest() == digest,
+            "Bundle file hash mismatch: " + name)
+print("Bundle files, recorded snapshots and input hashes verified. Not biological validation or external attestation.")
+'''
         write(
             "README.txt",
             "Open report.html to review decisions. selected-candidates.csv is the human shortlist.\nreview.json and history.json preserve full inputs, evidence and decision revisions.\nWhen present, diagnostics/ contains exact attached diagnostic records and diagnostics.json records their hashes.\nRun python3 verify.py to verify snapshot hashes, links, raw input files, and diagnostics.\nNo hosted service or model is called. This bundle contains your sequences and evidence; review before sharing.\n",
         )
+        write("verify.py", verifier.replace("__BUNDLE_FILE_HASHES__", repr(file_hashes)))
     return buffer.getvalue()

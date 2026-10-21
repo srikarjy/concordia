@@ -96,9 +96,15 @@ def review_router(root: Path) -> APIRouter:
         return run(action)
 
     @router.post("")
-    def create(body: ReviewInput) -> Any:
+    def create(
+        body: ReviewInput,
+        review_id: str | None = Query(default=None, min_length=32, max_length=32,
+                                      pattern="^[a-f0-9]{32}$"),
+    ) -> Any:
         return run(
-            lambda: display(store.save(initial_review(body), 0, "Created from validated inputs"))
+            lambda: display(store.save(
+                initial_review(body, review_id=review_id), 0, "Created from validated inputs"
+            ))
         )
 
     @router.get("/{review_id}")

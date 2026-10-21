@@ -67,6 +67,22 @@ def test_example_flags_source_disagreement_and_missing_evidence() -> None:
     assert any(f.startswith("Multi-mutant") for f in flags["double-13-6"])
 
 
+def test_constant_baseline_does_not_create_a_fake_source_ordering_conflict() -> None:
+    predictions = (
+        "candidate_id,source,metric,value,unit,direction\n"
+        "A13Q,Ridge,score,1,kcal/mol,higher\n"
+        "K6Q,Ridge,score,2,kcal/mol,higher\n"
+        "L52Y,Ridge,score,3,kcal/mol,higher\n"
+        "A13Q,Mean baseline,score,2,kcal/mol,higher\n"
+        "K6Q,Mean baseline,score,2,kcal/mol,higher\n"
+        "L52Y,Mean baseline,score,2,kcal/mol,higher\n"
+    )
+    flags = comparison_flags(initial_review(review_input(predictions_csv=predictions)))
+    assert not any(
+        "Source ordering differs" in flag for values in flags.values() for flag in values
+    )
+
+
 @pytest.mark.parametrize(
     ("candidates", "message"),
     [

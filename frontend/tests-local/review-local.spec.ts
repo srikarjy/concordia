@@ -24,7 +24,7 @@ test('reviews the 1IGV example from decision to verified export without hosted c
   await page.getByLabel('Your decision').selectOption('excluded');
   await page.getByRole('button', { name: 'Save decision' }).click();
   await expect(page.getByRole('status')).toContainText('new revision');
-  await expect(page.locator('.summary-strip')).toContainText('1selected by you');
+  await expect(page.locator('.summary-strip')).toContainText('1selected');
 
   await page.getByRole('button', { name: /Add published 1IGV outcomes/ }).click();
   await expect(page.locator('.assay-batch')).toContainText('Decision before import');

@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-test('public stability page stays same-origin', async ({ page }) => {
+test('public stability page stays same-origin', async ({ page, baseURL }) => {
   const offenders: string[] = [];
-  const origin = new URL('http://127.0.0.1:4173').origin;
+  const origin = new URL(baseURL!).origin;
   page.on('request', (request) => {
     if (new URL(request.url()).origin !== origin) offenders.push(request.url());
   });
