@@ -55,6 +55,49 @@ def boltz_records(tmp_path_factory: pytest.TempPathFactory) -> tuple[ModelRunEvi
     )
 
 
+def _replay_records(
+    tmp_path_factory: pytest.TempPathFactory, script: str, prefix: str
+) -> tuple[tuple[ModelRunEvidence, ...], bool]:
+    root = Path(__file__).resolve().parents[2]
+    state = tmp_path_factory.mktemp(prefix)
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.pathsep.join((str(root / "src"), str(root)))
+    result = subprocess.run(
+        [sys.executable, f"scripts/{script}", "--state-root", str(state)],
+        cwd=root,
+        env=env,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    payload = json.loads(result.stdout)
+    run_id = payload["run_id"]
+    ledger = SQLiteEventLedger(state / "events.sqlite3")
+    events = ledger.events(run_id).items
+    records = tuple(
+        ModelRunEvidence.model_validate(event.payload)
+        for event in events
+        if event.event_type == "MODEL_RUN_EVIDENCE"
+    )
+    return records, ledger.verify_chain(run_id).intact
+
+
+@pytest.fixture(scope="module")
+def evo2_records(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> tuple[tuple[ModelRunEvidence, ...], bool]:
+    return _replay_records(tmp_path_factory, "replay_evo2_generation_evidence.py", "evo2-evidence")
+
+
+@pytest.fixture(scope="module")
+def thermompnn_records(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> tuple[tuple[ModelRunEvidence, ...], bool]:
+    return _replay_records(
+        tmp_path_factory, "replay_thermompnn_feasibility.py", "thermompnn-evidence"
+    )
+
+
 def test_igv_run_emits_valid_evidence(igv_records: tuple[ModelRunEvidence, ...]) -> None:
     assert len(igv_records) >= 1
 
@@ -95,6 +138,34 @@ def test_both_records_use_schema_version_one(
     igv_records: tuple[ModelRunEvidence, ...], boltz_records: tuple[ModelRunEvidence, ...]
 ) -> None:
     assert igv_records[0].schema_version == boltz_records[0].schema_version == 1
+
+
+def test_evo2_replay_emits_valid_evidence_and_intact_ledger(
+    evo2_records: tuple[tuple[ModelRunEvidence, ...], bool],
+) -> None:
+    records, intact = evo2_records
+    assert records
+    assert intact
+    assert records[0].model_id == "arc/evo2-40b-generate"
+    assert records[0].model_version == "nvidia-evo2-hosted-smoke"
+    assert records[0].params_hash is None
+    assert records[0].verification_status == "unverifiable"
+    assert records[0].schema_version == 1
+    assert any("no model_version field" in reason for reason in records[0].verification_reasons)
+
+
+def test_thermompnn_replay_emits_valid_unverifiable_evidence_and_intact_ledger(
+    thermompnn_records: tuple[tuple[ModelRunEvidence, ...], bool],
+) -> None:
+    records, intact = thermompnn_records
+    assert records
+    assert intact
+    assert records[0].model_id == "thermompnn"
+    assert records[0].params_hash is None
+    assert records[0].verification_status == "unverifiable"
+    assert any("checkpoint unavailable" in reason for reason in records[0].verification_reasons)
+    assert records[0].created_at.isoformat() == "2026-10-20T00:00:00+00:00"
+    assert records[0].schema_version == 1
 
 
 def _record(**overrides: object) -> dict[str, object]:
