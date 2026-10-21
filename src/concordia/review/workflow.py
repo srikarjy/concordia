@@ -23,6 +23,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from concordia.campaigns.assay import parse_assay_csv
+from concordia.evidence.contracts import ModelRunEvidence
 from concordia.storage.content import ContentAddressedStore
 
 AA = set("ACDEFGHIKLMNPQRSTVWY")
@@ -56,6 +57,7 @@ class ReviewInput(StrictModel):
     predictions_csv: str = Field(default="", max_length=1_000_000)
     protected_positions: list[int] = Field(default_factory=list, max_length=3000)
     constraint_note: str = Field(default="", max_length=2000)
+    model_run_evidence: list[ModelRunEvidence] = Field(default_factory=list, max_length=1000)
 
 
 class DecisionInput(StrictModel):
@@ -245,6 +247,9 @@ def initial_review(body: ReviewInput, *, review_id: str | None = None) -> dict[s
         "candidates": candidates,
         "predictions": predictions,
         "assays": [],
+        "model_run_evidence": [
+            record.model_dump(mode="json") for record in body.model_run_evidence
+        ],
         "inputs": [
             {
                 "kind": "candidates",
@@ -606,6 +611,22 @@ def export_bundle(
         write("all-decisions.csv", csv_export(review))
         write("review.json", json.dumps(review, indent=2, allow_nan=False))
         write("history.json", json.dumps(history, indent=2, allow_nan=False))
+        model_run_evidence = [
+            ModelRunEvidence.model_validate(record).model_dump(mode="json")
+            for record in review.get("model_run_evidence", [])
+        ]
+        write(
+            "bundle.json",
+            json.dumps(
+                {
+                    "schema_version": 2,
+                    "review_id": review["review_id"],
+                    "model_run_evidence": model_run_evidence,
+                },
+                indent=2,
+                allow_nan=False,
+            ),
+        )
         write("reference.fasta", ">reference\n" + review["reference_sequence"] + "\n")
         for index, item in enumerate(review["inputs"]):
             write(f"inputs/{index + 1:03d}-{item['kind']}.csv", item["text"])
@@ -622,7 +643,7 @@ def export_bundle(
 Trust this verifier from the original download. Replacing the verifier together
 with the files can forge a locally consistent archive; this is not a signature.
 """
-import hashlib, json
+import hashlib, json, re
 from pathlib import Path
 root = Path(__file__).resolve().parent
 def require(condition, message):
@@ -630,6 +651,31 @@ def require(condition, message):
         raise ValueError(message)
 snapshots = json.loads((root / "history.json").read_text())
 latest = json.loads((root / "review.json").read_text())
+bundle_path = root / "bundle.json"
+if bundle_path.exists():
+    bundle = json.loads(bundle_path.read_text())
+    require(bundle.get("schema_version") == 2, "Unsupported bundle schema version")
+    require(bundle.get("review_id") == latest.get("review_id"), "Bundle review ID mismatch")
+    require(isinstance(bundle.get("model_run_evidence"), list), "Invalid model-run evidence list")
+    for record in bundle["model_run_evidence"]:
+        require(record.get("schema_version") == 1, "Invalid model-run evidence schema version")
+        for field in ("run_id", "model_id", "model_version", "raw_output_ref"):
+            require(isinstance(record.get(field), str) and record[field], "Invalid evidence " + field)
+        require(re.fullmatch(r"[0-9a-f]{64}", record.get("input_hash", "")) is not None,
+                "Invalid evidence input_hash")
+        params_hash = record.get("params_hash")
+        require(params_hash is None or re.fullmatch(r"[0-9a-f]{64}", params_hash) is not None,
+                "Invalid evidence params_hash")
+        require(record.get("verification_status") in ("supported", "unverifiable", "refused"),
+                "Invalid evidence verification_status")
+        reasons = record.get("verification_reasons")
+        require(isinstance(reasons, list), "Invalid evidence verification_reasons")
+        if params_hash is None:
+            require(record["verification_status"] == "unverifiable",
+                    "Missing params require unverifiable status")
+            require(bool(reasons), "Missing params require verification reasons")
+        require(isinstance(record.get("created_at"), str) and record["created_at"],
+                "Invalid evidence created_at")
 previous = None
 for item in snapshots:
     payload = dict(item)

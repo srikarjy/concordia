@@ -11,6 +11,23 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
+
+def validate_bundle_archive(archive: zipfile.ZipFile) -> tuple[object, ...]:
+    """Validate optional v2 evidence metadata; v1 archives omit bundle.json."""
+    from concordia.evidence.contracts import ModelRunEvidence
+
+    try:
+        raw = archive.read("bundle.json")
+    except KeyError:
+        return ()
+    bundle = json.loads(raw)
+    if bundle.get("schema_version") != 2:
+        raise ValueError("Unsupported review bundle schema version")
+    if not isinstance(bundle.get("model_run_evidence"), list):
+        raise ValueError("Invalid model_run_evidence list")
+    return tuple(ModelRunEvidence.model_validate(item) for item in bundle["model_run_evidence"])
 
 
 def main() -> None:
@@ -22,6 +39,7 @@ def main() -> None:
         with tempfile.TemporaryDirectory() as temporary:
             target = Path(temporary)
             with zipfile.ZipFile(replay / f"{prefix}-bundle.zip") as archive:
+                validate_bundle_archive(archive)
                 archive.extractall(target)
             subprocess.run([sys.executable, "-I", "verify.py"], cwd=target, check=True)
             if json.loads((target / "review.json").read_text()) != review:
@@ -39,6 +57,7 @@ def main() -> None:
     with tempfile.TemporaryDirectory() as temporary:
         target = Path(temporary)
         with zipfile.ZipFile(public / "bundle.zip") as archive:
+            validate_bundle_archive(archive)
             archive.extractall(target)
         subprocess.run([sys.executable, "-I", "verify.py"], cwd=target, check=True)
         for outer, inner in [("execution.json", "diagnostics/execution.json"),

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import io
 import json
 import os
 import re
 import subprocess
 import sys
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -12,8 +14,10 @@ from pydantic import ValidationError
 
 from concordia.events.sqlite import SQLiteEventLedger
 from concordia.evidence.contracts import ModelRunEvidence
+from concordia.review.workflow import ReviewInput, ReviewStore, export_bundle, initial_review
 from concordia.stability.measured import MeasuredStabilityEngine
 from concordia.stability.request import TypedStabilityRequest, run_typed_request
+from scripts.verify_review_replay import validate_bundle_archive
 
 
 @pytest.fixture(scope="module")
@@ -166,6 +170,51 @@ def test_thermompnn_replay_emits_valid_unverifiable_evidence_and_intact_ledger(
     assert any("checkpoint unavailable" in reason for reason in records[0].verification_reasons)
     assert records[0].created_at.isoformat() == "2026-10-20T00:00:00+00:00"
     assert records[0].schema_version == 1
+
+
+def test_v2_review_bundle_round_trips_all_four_emitters(
+    tmp_path: Path,
+    igv_records: tuple[ModelRunEvidence, ...],
+    boltz_records: tuple[ModelRunEvidence, ...],
+    evo2_records: tuple[tuple[ModelRunEvidence, ...], bool],
+    thermompnn_records: tuple[tuple[ModelRunEvidence, ...], bool],
+) -> None:
+    evidence = [
+        igv_records[0],
+        boltz_records[0],
+        evo2_records[0][0],
+        thermompnn_records[0][0],
+    ]
+    review = initial_review(
+        ReviewInput(
+            title="Emitter evidence integration",
+            objective="Round-trip four recorded model evidence sources.",
+            reference_sequence="ACDEFGHIKLMNPQRSTVWY",
+            candidates_csv="candidate_id,mutations\nvariant-1,A1G\n",
+            model_run_evidence=evidence,
+        )
+    )
+    stored = ReviewStore(tmp_path / "review-store").save(review, 0, "Created")
+    payload = export_bundle(stored, [stored])
+    archive = zipfile.ZipFile(io.BytesIO(payload))
+    bundle = json.loads(archive.read("bundle.json"))
+
+    assert bundle["schema_version"] == 2
+    assert len(bundle["model_run_evidence"]) == 4
+    assert len(validate_bundle_archive(archive)) == 4
+    extracted = tmp_path / "v2-bundle"
+    archive.extractall(extracted)
+    verified = subprocess.run(
+        [sys.executable, "-I", "verify.py"], cwd=extracted, capture_output=True, text=True
+    )
+    assert verified.returncode == 0, verified.stderr
+
+
+def test_v1_review_bundle_without_evidence_remains_accepted() -> None:
+    root = Path(__file__).resolve().parents[2]
+    with zipfile.ZipFile(root / "frontend/public/review-replay/r7-bundle.zip") as archive:
+        assert "bundle.json" not in archive.namelist()
+        assert validate_bundle_archive(archive) == ()
 
 
 def _record(**overrides: object) -> dict[str, object]:
