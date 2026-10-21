@@ -46,8 +46,9 @@ Concordia answers those mechanically and keeps the receipt.
 
 - **Real and tested:** the audit layer, experiment DAG, claim verifier, replay, integrity checks,
   security controls, and the Boltz-2 integration code. The Python and browser test suites run in CI.
-- **First real measurement:** the live Boltz-2 integration reproduced the HyHEL-10 Fab and lysozyme
-  complex (PDB 3HFM) in about 5 seconds. Against the crystal structure: per-chain CA RMSD 0.76 to
+- **First real measurement:** a recorded Boltz-2 run reproduced the HyHEL-10 Fab and lysozyme
+  complex (PDB 3HFM) in about 5 seconds; the endpoint was not re-verified in the current
+  environment. Against the crystal structure: per-chain CA RMSD 0.76 to
   1.55 Å, antigen placement 2.07 Å in the antibody frame, and 81% of crystal interface contacts
   recovered at 74% precision. This is a known, old structure that is likely in the model's
   training data, so it shows the pipeline works, not that the model generalizes. See
@@ -70,5 +71,5 @@ trusting it with a real decision.
 ## Links
 
 - Code: https://github.com/srikarjy/concordia
-- Live workspace: https://srikarjy025-concordia-colony.hf.space (read-only demonstration)
+- Historical demo Space (read-only, current status not verified): https://srikarjy025-concordia-colony.hf.space
 - Technical guide, limits and security notes: `docs/guide.md`
