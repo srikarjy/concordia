@@ -112,14 +112,28 @@ def _record(**overrides: object) -> dict[str, object]:
 
 
 @pytest.mark.parametrize(
-    "overrides",
+    "overrides,match",
     [
-        {"params_hash": None, "verification_status": "supported", "verification_reasons": ("gap",)},
-        {"params_hash": None, "verification_status": "unverifiable", "verification_reasons": ()},
-        {"params_hash": "not-a-hash"},
+        (
+            {
+                "params_hash": None,
+                "verification_status": "supported",
+                "verification_reasons": ("gap",),
+            },
+            "verification_status",
+        ),
+        (
+            {
+                "params_hash": None,
+                "verification_status": "unverifiable",
+                "verification_reasons": (),
+            },
+            "verification reason",
+        ),
+        ({"params_hash": "not-a-hash"}, "params_hash"),
     ],
     ids=("missing-params-supported", "missing-params-no-reason", "malformed-params-hash"),
 )
-def test_invalid_evidence_is_rejected(overrides: dict[str, object]) -> None:
-    with pytest.raises(ValidationError, match="1 validation error for ModelRunEvidence"):
+def test_invalid_evidence_is_rejected(overrides: dict[str, object], match: str) -> None:
+    with pytest.raises(ValidationError, match=match):
         ModelRunEvidence.model_validate(_record(**overrides))
