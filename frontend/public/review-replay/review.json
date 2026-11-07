@@ -1,0 +1,1575 @@
+{
+ "author_note": "Illustrative decisions written by the Concordia author to demonstrate the workflow. They are not an external researcher's review, a prospective experiment, or advice.",
+ "revisions": [
+  {
+   "review": {
+    "action": "Created",
+    "assays": [],
+    "boundary": "Human-reviewed evidence record. Imported predictions and measurements retain their source labels; authenticity and biological utility are not independently verified. Selection is a researcher decision, not a validated model recommendation.",
+    "candidates": [
+     {
+      "candidate_id": "A13Q",
+      "decision": "unreviewed",
+      "mutations": "A13Q",
+      "override_reason": "",
+      "positions": [
+       13
+      ],
+      "protected_hits": [],
+      "reason": "",
+      "sequence": "SPEELKGIFEKYQAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "7c2d6ae9afa304bf59c6a0c1351fd7e7a8fedf55a062e49e014e0303ca9c9efb"
+     },
+     {
+      "candidate_id": "K6Q",
+      "decision": "unreviewed",
+      "mutations": "K6Q",
+      "override_reason": "",
+      "positions": [
+       6
+      ],
+      "protected_hits": [],
+      "reason": "",
+      "sequence": "SPEELQGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "65f636075875ca2f8c6e24c28279692bc9b306c5965f9bf3c3c81b1787f000a0"
+     },
+     {
+      "candidate_id": "L52Y",
+      "decision": "unreviewed",
+      "mutations": "L52Y",
+      "override_reason": "",
+      "positions": [
+       52
+      ],
+      "protected_hits": [],
+      "reason": "",
+      "sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEEYDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "be4e00b02912b95c8a829d6dc0d788fa8fd82b952905f2b62c374ffd1ed7433f"
+     },
+     {
+      "candidate_id": "Q21E",
+      "decision": "unreviewed",
+      "mutations": "Q21E",
+      "override_reason": "",
+      "positions": [
+       21
+      ],
+      "protected_hits": [
+       21
+      ],
+      "reason": "",
+      "sequence": "SPEELKGIFEKYAAKEGDPNELSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "fbf602be1a428c36152be6d2a4eef4a3823416ab80ec4fbc68166a4262f996c1"
+     },
+     {
+      "candidate_id": "double-13-6",
+      "decision": "unreviewed",
+      "mutations": "A13Q:K6Q",
+      "override_reason": "",
+      "positions": [
+       13,
+       6
+      ],
+      "protected_hits": [],
+      "reason": "",
+      "sequence": "SPEELQGIFEKYQAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "284ae19c6c8b7c7cf38804b342898aed191d24782af5dd0b6c7c99386daf1f4b"
+     }
+    ],
+    "constraint_note": "Local position 21 maps to UniProt P02633 position 26 (binding site), according to the frozen 1IGV manifest. Example constraint, not automatically inferred for new proteins.",
+    "inputs": [
+     {
+      "kind": "candidates",
+      "label": "Original candidate import",
+      "sha256": "041b067d5061f84f5a1c2535eb1d513bc8c9d6a0fdb8c259b642bffd8fe1fcc5",
+      "text": "candidate_id,mutations\r\nA13Q,A13Q\r\nK6Q,K6Q\r\nL52Y,L52Y\r\nQ21E,Q21E\r\ndouble-13-6,A13Q:K6Q\r\n"
+     },
+     {
+      "kind": "predictions",
+      "label": "Original prediction import",
+      "sha256": "c3049aa773fed143c86c63ed0e6c4f124cb62977a071d82b475ef2b2ee10d248",
+      "text": "candidate_id,source,metric,value,unit,direction\r\nA13Q,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-1.7307292222976685,kcal/mol,higher\r\nA13Q,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,-1.3765337467193604,kcal/mol,higher\r\nK6Q,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-0.47930121421813965,kcal/mol,higher\r\nK6Q,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,-0.37135276198387146,kcal/mol,higher\r\nL52Y,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-1.6587944030761719,kcal/mol,higher\r\nL52Y,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,0.043253093957901,kcal/mol,higher\r\n"
+     }
+    ],
+    "objective": "Review recorded predictions and constraints, document a human shortlist, then inspect published stability measurements. This is a retrospective workflow example, not a prospective benchmark or new experiment. Ranker artifact SHA-256: fe886c56097e512ff1342bb289a91afc78c69e50cae90a66bec8249805ba08c5",
+    "predictions": [
+     {
+      "candidate_id": "A13Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "ThermoMPNN recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -1.7307292222976685
+     },
+     {
+      "candidate_id": "A13Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "One-hot baseline recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -1.3765337467193604
+     },
+     {
+      "candidate_id": "K6Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "ThermoMPNN recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -0.47930121421813965
+     },
+     {
+      "candidate_id": "K6Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "One-hot baseline recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -0.37135276198387146
+     },
+     {
+      "candidate_id": "L52Y",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "ThermoMPNN recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -1.6587944030761719
+     },
+     {
+      "candidate_id": "L52Y",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "One-hot baseline recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": 0.043253093957901
+     }
+    ],
+    "previous_digest": null,
+    "protected_positions": [
+     21
+    ],
+    "reference_sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+    "reference_sha256": "7510757b258975434515a548f4e67014b46bbaa604f9efd0002b0f1681022282",
+    "review_id": "1igv-retrospective-example-v1",
+    "revision": 1,
+    "schema_version": 1,
+    "scientific_use_allowed": false,
+    "title": "1IGV \u00b7 retrospective mutation review",
+    "updated_at": "2026-10-20T18:27:18+00:00",
+    "artifact_digest": "03080dfe06aef7071b3c845c3fd112f563aadaa46ca6859f478a7e696be1bfb5"
+   },
+   "flags": {
+    "A13Q": [
+     "No measured assay result"
+    ],
+    "K6Q": [
+     "No measured assay result",
+     "Source ordering differs: ddg_higher_is_more_stable (rank span \u226550% on 3 shared candidates; heuristic)"
+    ],
+    "L52Y": [
+     "No measured assay result",
+     "Source ordering differs: ddg_higher_is_more_stable (rank span \u226550% on 3 shared candidates; heuristic)"
+    ],
+    "Q21E": [
+     "Protected position: 21",
+     "No imported prediction",
+     "No measured assay result"
+    ],
+    "double-13-6": [
+     "Multi-mutant: single-mutation evidence does not establish combination effects",
+     "No imported prediction",
+     "No measured assay result"
+    ]
+   },
+   "history": [
+    {
+     "revision": 7,
+     "digest": "759a87cbbd5ec1af42fc7a8e672f4fc6824a3b0f8f11c75b8445442f1430e52c",
+     "updated_at": "2026-10-20T18:27:24+00:00"
+    },
+    {
+     "revision": 6,
+     "digest": "99c33c07ba92102d898d40dc694f1e89887ab02d1897bb6e515c2b094bfb6b78",
+     "updated_at": "2026-10-20T18:27:23+00:00"
+    },
+    {
+     "revision": 5,
+     "digest": "bf17c859121cb29d57dbe4aa035c903bf82addfbbfa1be68e4613552ccc19f13",
+     "updated_at": "2026-10-20T18:27:22+00:00"
+    },
+    {
+     "revision": 4,
+     "digest": "f7b0185598bd9b12f0eb28670285f04f57b02bda6a7652ff958ec0f4f0320284",
+     "updated_at": "2026-10-20T18:27:21+00:00"
+    },
+    {
+     "revision": 3,
+     "digest": "88ebdc07325d9bbf046619fc04299110a867a05a6032add5221e929d644a2e60",
+     "updated_at": "2026-10-20T18:27:20+00:00"
+    },
+    {
+     "revision": 2,
+     "digest": "47324a89418c16159dd0afcdac65b570eae82a77e5cb5bfc14366fd57fea0222",
+     "updated_at": "2026-10-20T18:27:19+00:00"
+    },
+    {
+     "revision": 1,
+     "digest": "03080dfe06aef7071b3c845c3fd112f563aadaa46ca6859f478a7e696be1bfb5",
+     "updated_at": "2026-10-20T18:27:18+00:00"
+    }
+   ]
+  },
+  {
+   "review": {
+    "action": "Decision: A13Q \u2192 excluded",
+    "assays": [],
+    "boundary": "Human-reviewed evidence record. Imported predictions and measurements retain their source labels; authenticity and biological utility are not independently verified. Selection is a researcher decision, not a validated model recommendation.",
+    "candidates": [
+     {
+      "candidate_id": "A13Q",
+      "decision": "excluded",
+      "mutations": "A13Q",
+      "override_reason": "",
+      "positions": [
+       13
+      ],
+      "protected_hits": [],
+      "reason": "Both recorded sources predict destabilization; last in both orderings.",
+      "sequence": "SPEELKGIFEKYQAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "7c2d6ae9afa304bf59c6a0c1351fd7e7a8fedf55a062e49e014e0303ca9c9efb"
+     },
+     {
+      "candidate_id": "K6Q",
+      "decision": "unreviewed",
+      "mutations": "K6Q",
+      "override_reason": "",
+      "positions": [
+       6
+      ],
+      "protected_hits": [],
+      "reason": "",
+      "sequence": "SPEELQGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "65f636075875ca2f8c6e24c28279692bc9b306c5965f9bf3c3c81b1787f000a0"
+     },
+     {
+      "candidate_id": "L52Y",
+      "decision": "unreviewed",
+      "mutations": "L52Y",
+      "override_reason": "",
+      "positions": [
+       52
+      ],
+      "protected_hits": [],
+      "reason": "",
+      "sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEEYDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "be4e00b02912b95c8a829d6dc0d788fa8fd82b952905f2b62c374ffd1ed7433f"
+     },
+     {
+      "candidate_id": "Q21E",
+      "decision": "unreviewed",
+      "mutations": "Q21E",
+      "override_reason": "",
+      "positions": [
+       21
+      ],
+      "protected_hits": [
+       21
+      ],
+      "reason": "",
+      "sequence": "SPEELKGIFEKYAAKEGDPNELSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "fbf602be1a428c36152be6d2a4eef4a3823416ab80ec4fbc68166a4262f996c1"
+     },
+     {
+      "candidate_id": "double-13-6",
+      "decision": "unreviewed",
+      "mutations": "A13Q:K6Q",
+      "override_reason": "",
+      "positions": [
+       13,
+       6
+      ],
+      "protected_hits": [],
+      "reason": "",
+      "sequence": "SPEELQGIFEKYQAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "284ae19c6c8b7c7cf38804b342898aed191d24782af5dd0b6c7c99386daf1f4b"
+     }
+    ],
+    "constraint_note": "Local position 21 maps to UniProt P02633 position 26 (binding site), according to the frozen 1IGV manifest. Example constraint, not automatically inferred for new proteins.",
+    "inputs": [
+     {
+      "kind": "candidates",
+      "label": "Original candidate import",
+      "sha256": "041b067d5061f84f5a1c2535eb1d513bc8c9d6a0fdb8c259b642bffd8fe1fcc5",
+      "text": "candidate_id,mutations\r\nA13Q,A13Q\r\nK6Q,K6Q\r\nL52Y,L52Y\r\nQ21E,Q21E\r\ndouble-13-6,A13Q:K6Q\r\n"
+     },
+     {
+      "kind": "predictions",
+      "label": "Original prediction import",
+      "sha256": "c3049aa773fed143c86c63ed0e6c4f124cb62977a071d82b475ef2b2ee10d248",
+      "text": "candidate_id,source,metric,value,unit,direction\r\nA13Q,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-1.7307292222976685,kcal/mol,higher\r\nA13Q,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,-1.3765337467193604,kcal/mol,higher\r\nK6Q,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-0.47930121421813965,kcal/mol,higher\r\nK6Q,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,-0.37135276198387146,kcal/mol,higher\r\nL52Y,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-1.6587944030761719,kcal/mol,higher\r\nL52Y,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,0.043253093957901,kcal/mol,higher\r\n"
+     }
+    ],
+    "objective": "Review recorded predictions and constraints, document a human shortlist, then inspect published stability measurements. This is a retrospective workflow example, not a prospective benchmark or new experiment. Ranker artifact SHA-256: fe886c56097e512ff1342bb289a91afc78c69e50cae90a66bec8249805ba08c5",
+    "predictions": [
+     {
+      "candidate_id": "A13Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "ThermoMPNN recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -1.7307292222976685
+     },
+     {
+      "candidate_id": "A13Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "One-hot baseline recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -1.3765337467193604
+     },
+     {
+      "candidate_id": "K6Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "ThermoMPNN recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -0.47930121421813965
+     },
+     {
+      "candidate_id": "K6Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "One-hot baseline recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -0.37135276198387146
+     },
+     {
+      "candidate_id": "L52Y",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "ThermoMPNN recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -1.6587944030761719
+     },
+     {
+      "candidate_id": "L52Y",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "One-hot baseline recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": 0.043253093957901
+     }
+    ],
+    "previous_digest": "03080dfe06aef7071b3c845c3fd112f563aadaa46ca6859f478a7e696be1bfb5",
+    "protected_positions": [
+     21
+    ],
+    "reference_sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+    "reference_sha256": "7510757b258975434515a548f4e67014b46bbaa604f9efd0002b0f1681022282",
+    "review_id": "1igv-retrospective-example-v1",
+    "revision": 2,
+    "schema_version": 1,
+    "scientific_use_allowed": false,
+    "title": "1IGV \u00b7 retrospective mutation review",
+    "updated_at": "2026-10-20T18:27:19+00:00",
+    "artifact_digest": "47324a89418c16159dd0afcdac65b570eae82a77e5cb5bfc14366fd57fea0222"
+   },
+   "flags": {
+    "A13Q": [
+     "No measured assay result"
+    ],
+    "K6Q": [
+     "No measured assay result",
+     "Source ordering differs: ddg_higher_is_more_stable (rank span \u226550% on 3 shared candidates; heuristic)"
+    ],
+    "L52Y": [
+     "No measured assay result",
+     "Source ordering differs: ddg_higher_is_more_stable (rank span \u226550% on 3 shared candidates; heuristic)"
+    ],
+    "Q21E": [
+     "Protected position: 21",
+     "No imported prediction",
+     "No measured assay result"
+    ],
+    "double-13-6": [
+     "Multi-mutant: single-mutation evidence does not establish combination effects",
+     "No imported prediction",
+     "No measured assay result"
+    ]
+   },
+   "history": [
+    {
+     "revision": 7,
+     "digest": "759a87cbbd5ec1af42fc7a8e672f4fc6824a3b0f8f11c75b8445442f1430e52c",
+     "updated_at": "2026-10-20T18:27:24+00:00"
+    },
+    {
+     "revision": 6,
+     "digest": "99c33c07ba92102d898d40dc694f1e89887ab02d1897bb6e515c2b094bfb6b78",
+     "updated_at": "2026-10-20T18:27:23+00:00"
+    },
+    {
+     "revision": 5,
+     "digest": "bf17c859121cb29d57dbe4aa035c903bf82addfbbfa1be68e4613552ccc19f13",
+     "updated_at": "2026-10-20T18:27:22+00:00"
+    },
+    {
+     "revision": 4,
+     "digest": "f7b0185598bd9b12f0eb28670285f04f57b02bda6a7652ff958ec0f4f0320284",
+     "updated_at": "2026-10-20T18:27:21+00:00"
+    },
+    {
+     "revision": 3,
+     "digest": "88ebdc07325d9bbf046619fc04299110a867a05a6032add5221e929d644a2e60",
+     "updated_at": "2026-10-20T18:27:20+00:00"
+    },
+    {
+     "revision": 2,
+     "digest": "47324a89418c16159dd0afcdac65b570eae82a77e5cb5bfc14366fd57fea0222",
+     "updated_at": "2026-10-20T18:27:19+00:00"
+    },
+    {
+     "revision": 1,
+     "digest": "03080dfe06aef7071b3c845c3fd112f563aadaa46ca6859f478a7e696be1bfb5",
+     "updated_at": "2026-10-20T18:27:18+00:00"
+    }
+   ]
+  },
+  {
+   "review": {
+    "action": "Decision: K6Q \u2192 selected",
+    "assays": [],
+    "boundary": "Human-reviewed evidence record. Imported predictions and measurements retain their source labels; authenticity and biological utility are not independently verified. Selection is a researcher decision, not a validated model recommendation.",
+    "candidates": [
+     {
+      "candidate_id": "A13Q",
+      "decision": "excluded",
+      "mutations": "A13Q",
+      "override_reason": "",
+      "positions": [
+       13
+      ],
+      "protected_hits": [],
+      "reason": "Both recorded sources predict destabilization; last in both orderings.",
+      "sequence": "SPEELKGIFEKYQAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "7c2d6ae9afa304bf59c6a0c1351fd7e7a8fedf55a062e49e014e0303ca9c9efb"
+     },
+     {
+      "candidate_id": "K6Q",
+      "decision": "selected",
+      "mutations": "K6Q",
+      "override_reason": "",
+      "positions": [
+       6
+      ],
+      "protected_hits": [],
+      "reason": "Smallest predicted destabilization in ThermoMPNN; one-hot baseline orders it second, so the ordering flag stays visible.",
+      "sequence": "SPEELQGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "65f636075875ca2f8c6e24c28279692bc9b306c5965f9bf3c3c81b1787f000a0"
+     },
+     {
+      "candidate_id": "L52Y",
+      "decision": "unreviewed",
+      "mutations": "L52Y",
+      "override_reason": "",
+      "positions": [
+       52
+      ],
+      "protected_hits": [],
+      "reason": "",
+      "sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEEYDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "be4e00b02912b95c8a829d6dc0d788fa8fd82b952905f2b62c374ffd1ed7433f"
+     },
+     {
+      "candidate_id": "Q21E",
+      "decision": "unreviewed",
+      "mutations": "Q21E",
+      "override_reason": "",
+      "positions": [
+       21
+      ],
+      "protected_hits": [
+       21
+      ],
+      "reason": "",
+      "sequence": "SPEELKGIFEKYAAKEGDPNELSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "fbf602be1a428c36152be6d2a4eef4a3823416ab80ec4fbc68166a4262f996c1"
+     },
+     {
+      "candidate_id": "double-13-6",
+      "decision": "unreviewed",
+      "mutations": "A13Q:K6Q",
+      "override_reason": "",
+      "positions": [
+       13,
+       6
+      ],
+      "protected_hits": [],
+      "reason": "",
+      "sequence": "SPEELQGIFEKYQAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "284ae19c6c8b7c7cf38804b342898aed191d24782af5dd0b6c7c99386daf1f4b"
+     }
+    ],
+    "constraint_note": "Local position 21 maps to UniProt P02633 position 26 (binding site), according to the frozen 1IGV manifest. Example constraint, not automatically inferred for new proteins.",
+    "inputs": [
+     {
+      "kind": "candidates",
+      "label": "Original candidate import",
+      "sha256": "041b067d5061f84f5a1c2535eb1d513bc8c9d6a0fdb8c259b642bffd8fe1fcc5",
+      "text": "candidate_id,mutations\r\nA13Q,A13Q\r\nK6Q,K6Q\r\nL52Y,L52Y\r\nQ21E,Q21E\r\ndouble-13-6,A13Q:K6Q\r\n"
+     },
+     {
+      "kind": "predictions",
+      "label": "Original prediction import",
+      "sha256": "c3049aa773fed143c86c63ed0e6c4f124cb62977a071d82b475ef2b2ee10d248",
+      "text": "candidate_id,source,metric,value,unit,direction\r\nA13Q,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-1.7307292222976685,kcal/mol,higher\r\nA13Q,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,-1.3765337467193604,kcal/mol,higher\r\nK6Q,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-0.47930121421813965,kcal/mol,higher\r\nK6Q,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,-0.37135276198387146,kcal/mol,higher\r\nL52Y,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-1.6587944030761719,kcal/mol,higher\r\nL52Y,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,0.043253093957901,kcal/mol,higher\r\n"
+     }
+    ],
+    "objective": "Review recorded predictions and constraints, document a human shortlist, then inspect published stability measurements. This is a retrospective workflow example, not a prospective benchmark or new experiment. Ranker artifact SHA-256: fe886c56097e512ff1342bb289a91afc78c69e50cae90a66bec8249805ba08c5",
+    "predictions": [
+     {
+      "candidate_id": "A13Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "ThermoMPNN recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -1.7307292222976685
+     },
+     {
+      "candidate_id": "A13Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "One-hot baseline recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -1.3765337467193604
+     },
+     {
+      "candidate_id": "K6Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "ThermoMPNN recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -0.47930121421813965
+     },
+     {
+      "candidate_id": "K6Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "One-hot baseline recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -0.37135276198387146
+     },
+     {
+      "candidate_id": "L52Y",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "ThermoMPNN recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -1.6587944030761719
+     },
+     {
+      "candidate_id": "L52Y",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "One-hot baseline recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": 0.043253093957901
+     }
+    ],
+    "previous_digest": "47324a89418c16159dd0afcdac65b570eae82a77e5cb5bfc14366fd57fea0222",
+    "protected_positions": [
+     21
+    ],
+    "reference_sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+    "reference_sha256": "7510757b258975434515a548f4e67014b46bbaa604f9efd0002b0f1681022282",
+    "review_id": "1igv-retrospective-example-v1",
+    "revision": 3,
+    "schema_version": 1,
+    "scientific_use_allowed": false,
+    "title": "1IGV \u00b7 retrospective mutation review",
+    "updated_at": "2026-10-20T18:27:20+00:00",
+    "artifact_digest": "88ebdc07325d9bbf046619fc04299110a867a05a6032add5221e929d644a2e60"
+   },
+   "flags": {
+    "A13Q": [
+     "No measured assay result"
+    ],
+    "K6Q": [
+     "No measured assay result",
+     "Source ordering differs: ddg_higher_is_more_stable (rank span \u226550% on 3 shared candidates; heuristic)"
+    ],
+    "L52Y": [
+     "No measured assay result",
+     "Source ordering differs: ddg_higher_is_more_stable (rank span \u226550% on 3 shared candidates; heuristic)"
+    ],
+    "Q21E": [
+     "Protected position: 21",
+     "No imported prediction",
+     "No measured assay result"
+    ],
+    "double-13-6": [
+     "Multi-mutant: single-mutation evidence does not establish combination effects",
+     "No imported prediction",
+     "No measured assay result"
+    ]
+   },
+   "history": [
+    {
+     "revision": 7,
+     "digest": "759a87cbbd5ec1af42fc7a8e672f4fc6824a3b0f8f11c75b8445442f1430e52c",
+     "updated_at": "2026-10-20T18:27:24+00:00"
+    },
+    {
+     "revision": 6,
+     "digest": "99c33c07ba92102d898d40dc694f1e89887ab02d1897bb6e515c2b094bfb6b78",
+     "updated_at": "2026-10-20T18:27:23+00:00"
+    },
+    {
+     "revision": 5,
+     "digest": "bf17c859121cb29d57dbe4aa035c903bf82addfbbfa1be68e4613552ccc19f13",
+     "updated_at": "2026-10-20T18:27:22+00:00"
+    },
+    {
+     "revision": 4,
+     "digest": "f7b0185598bd9b12f0eb28670285f04f57b02bda6a7652ff958ec0f4f0320284",
+     "updated_at": "2026-10-20T18:27:21+00:00"
+    },
+    {
+     "revision": 3,
+     "digest": "88ebdc07325d9bbf046619fc04299110a867a05a6032add5221e929d644a2e60",
+     "updated_at": "2026-10-20T18:27:20+00:00"
+    },
+    {
+     "revision": 2,
+     "digest": "47324a89418c16159dd0afcdac65b570eae82a77e5cb5bfc14366fd57fea0222",
+     "updated_at": "2026-10-20T18:27:19+00:00"
+    },
+    {
+     "revision": 1,
+     "digest": "03080dfe06aef7071b3c845c3fd112f563aadaa46ca6859f478a7e696be1bfb5",
+     "updated_at": "2026-10-20T18:27:18+00:00"
+    }
+   ]
+  },
+  {
+   "review": {
+    "action": "Decision: L52Y \u2192 deferred",
+    "assays": [],
+    "boundary": "Human-reviewed evidence record. Imported predictions and measurements retain their source labels; authenticity and biological utility are not independently verified. Selection is a researcher decision, not a validated model recommendation.",
+    "candidates": [
+     {
+      "candidate_id": "A13Q",
+      "decision": "excluded",
+      "mutations": "A13Q",
+      "override_reason": "",
+      "positions": [
+       13
+      ],
+      "protected_hits": [],
+      "reason": "Both recorded sources predict destabilization; last in both orderings.",
+      "sequence": "SPEELKGIFEKYQAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "7c2d6ae9afa304bf59c6a0c1351fd7e7a8fedf55a062e49e014e0303ca9c9efb"
+     },
+     {
+      "candidate_id": "K6Q",
+      "decision": "selected",
+      "mutations": "K6Q",
+      "override_reason": "",
+      "positions": [
+       6
+      ],
+      "protected_hits": [],
+      "reason": "Smallest predicted destabilization in ThermoMPNN; one-hot baseline orders it second, so the ordering flag stays visible.",
+      "sequence": "SPEELQGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "65f636075875ca2f8c6e24c28279692bc9b306c5965f9bf3c3c81b1787f000a0"
+     },
+     {
+      "candidate_id": "L52Y",
+      "decision": "deferred",
+      "mutations": "L52Y",
+      "override_reason": "",
+      "positions": [
+       52
+      ],
+      "protected_hits": [],
+      "reason": "Sources disagree: ThermoMPNN predicts destabilization, the one-hot baseline is near neutral. Needs more evidence before selection.",
+      "sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEEYDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "be4e00b02912b95c8a829d6dc0d788fa8fd82b952905f2b62c374ffd1ed7433f"
+     },
+     {
+      "candidate_id": "Q21E",
+      "decision": "unreviewed",
+      "mutations": "Q21E",
+      "override_reason": "",
+      "positions": [
+       21
+      ],
+      "protected_hits": [
+       21
+      ],
+      "reason": "",
+      "sequence": "SPEELKGIFEKYAAKEGDPNELSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "fbf602be1a428c36152be6d2a4eef4a3823416ab80ec4fbc68166a4262f996c1"
+     },
+     {
+      "candidate_id": "double-13-6",
+      "decision": "unreviewed",
+      "mutations": "A13Q:K6Q",
+      "override_reason": "",
+      "positions": [
+       13,
+       6
+      ],
+      "protected_hits": [],
+      "reason": "",
+      "sequence": "SPEELQGIFEKYQAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "284ae19c6c8b7c7cf38804b342898aed191d24782af5dd0b6c7c99386daf1f4b"
+     }
+    ],
+    "constraint_note": "Local position 21 maps to UniProt P02633 position 26 (binding site), according to the frozen 1IGV manifest. Example constraint, not automatically inferred for new proteins.",
+    "inputs": [
+     {
+      "kind": "candidates",
+      "label": "Original candidate import",
+      "sha256": "041b067d5061f84f5a1c2535eb1d513bc8c9d6a0fdb8c259b642bffd8fe1fcc5",
+      "text": "candidate_id,mutations\r\nA13Q,A13Q\r\nK6Q,K6Q\r\nL52Y,L52Y\r\nQ21E,Q21E\r\ndouble-13-6,A13Q:K6Q\r\n"
+     },
+     {
+      "kind": "predictions",
+      "label": "Original prediction import",
+      "sha256": "c3049aa773fed143c86c63ed0e6c4f124cb62977a071d82b475ef2b2ee10d248",
+      "text": "candidate_id,source,metric,value,unit,direction\r\nA13Q,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-1.7307292222976685,kcal/mol,higher\r\nA13Q,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,-1.3765337467193604,kcal/mol,higher\r\nK6Q,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-0.47930121421813965,kcal/mol,higher\r\nK6Q,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,-0.37135276198387146,kcal/mol,higher\r\nL52Y,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-1.6587944030761719,kcal/mol,higher\r\nL52Y,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,0.043253093957901,kcal/mol,higher\r\n"
+     }
+    ],
+    "objective": "Review recorded predictions and constraints, document a human shortlist, then inspect published stability measurements. This is a retrospective workflow example, not a prospective benchmark or new experiment. Ranker artifact SHA-256: fe886c56097e512ff1342bb289a91afc78c69e50cae90a66bec8249805ba08c5",
+    "predictions": [
+     {
+      "candidate_id": "A13Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "ThermoMPNN recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -1.7307292222976685
+     },
+     {
+      "candidate_id": "A13Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "One-hot baseline recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -1.3765337467193604
+     },
+     {
+      "candidate_id": "K6Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "ThermoMPNN recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -0.47930121421813965
+     },
+     {
+      "candidate_id": "K6Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "One-hot baseline recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -0.37135276198387146
+     },
+     {
+      "candidate_id": "L52Y",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "ThermoMPNN recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -1.6587944030761719
+     },
+     {
+      "candidate_id": "L52Y",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "One-hot baseline recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": 0.043253093957901
+     }
+    ],
+    "previous_digest": "88ebdc07325d9bbf046619fc04299110a867a05a6032add5221e929d644a2e60",
+    "protected_positions": [
+     21
+    ],
+    "reference_sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+    "reference_sha256": "7510757b258975434515a548f4e67014b46bbaa604f9efd0002b0f1681022282",
+    "review_id": "1igv-retrospective-example-v1",
+    "revision": 4,
+    "schema_version": 1,
+    "scientific_use_allowed": false,
+    "title": "1IGV \u00b7 retrospective mutation review",
+    "updated_at": "2026-10-20T18:27:21+00:00",
+    "artifact_digest": "f7b0185598bd9b12f0eb28670285f04f57b02bda6a7652ff958ec0f4f0320284"
+   },
+   "flags": {
+    "A13Q": [
+     "No measured assay result"
+    ],
+    "K6Q": [
+     "No measured assay result",
+     "Source ordering differs: ddg_higher_is_more_stable (rank span \u226550% on 3 shared candidates; heuristic)"
+    ],
+    "L52Y": [
+     "No measured assay result",
+     "Source ordering differs: ddg_higher_is_more_stable (rank span \u226550% on 3 shared candidates; heuristic)"
+    ],
+    "Q21E": [
+     "Protected position: 21",
+     "No imported prediction",
+     "No measured assay result"
+    ],
+    "double-13-6": [
+     "Multi-mutant: single-mutation evidence does not establish combination effects",
+     "No imported prediction",
+     "No measured assay result"
+    ]
+   },
+   "history": [
+    {
+     "revision": 7,
+     "digest": "759a87cbbd5ec1af42fc7a8e672f4fc6824a3b0f8f11c75b8445442f1430e52c",
+     "updated_at": "2026-10-20T18:27:24+00:00"
+    },
+    {
+     "revision": 6,
+     "digest": "99c33c07ba92102d898d40dc694f1e89887ab02d1897bb6e515c2b094bfb6b78",
+     "updated_at": "2026-10-20T18:27:23+00:00"
+    },
+    {
+     "revision": 5,
+     "digest": "bf17c859121cb29d57dbe4aa035c903bf82addfbbfa1be68e4613552ccc19f13",
+     "updated_at": "2026-10-20T18:27:22+00:00"
+    },
+    {
+     "revision": 4,
+     "digest": "f7b0185598bd9b12f0eb28670285f04f57b02bda6a7652ff958ec0f4f0320284",
+     "updated_at": "2026-10-20T18:27:21+00:00"
+    },
+    {
+     "revision": 3,
+     "digest": "88ebdc07325d9bbf046619fc04299110a867a05a6032add5221e929d644a2e60",
+     "updated_at": "2026-10-20T18:27:20+00:00"
+    },
+    {
+     "revision": 2,
+     "digest": "47324a89418c16159dd0afcdac65b570eae82a77e5cb5bfc14366fd57fea0222",
+     "updated_at": "2026-10-20T18:27:19+00:00"
+    },
+    {
+     "revision": 1,
+     "digest": "03080dfe06aef7071b3c845c3fd112f563aadaa46ca6859f478a7e696be1bfb5",
+     "updated_at": "2026-10-20T18:27:18+00:00"
+    }
+   ]
+  },
+  {
+   "review": {
+    "action": "Decision: Q21E \u2192 excluded",
+    "assays": [],
+    "boundary": "Human-reviewed evidence record. Imported predictions and measurements retain their source labels; authenticity and biological utility are not independently verified. Selection is a researcher decision, not a validated model recommendation.",
+    "candidates": [
+     {
+      "candidate_id": "A13Q",
+      "decision": "excluded",
+      "mutations": "A13Q",
+      "override_reason": "",
+      "positions": [
+       13
+      ],
+      "protected_hits": [],
+      "reason": "Both recorded sources predict destabilization; last in both orderings.",
+      "sequence": "SPEELKGIFEKYQAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "7c2d6ae9afa304bf59c6a0c1351fd7e7a8fedf55a062e49e014e0303ca9c9efb"
+     },
+     {
+      "candidate_id": "K6Q",
+      "decision": "selected",
+      "mutations": "K6Q",
+      "override_reason": "",
+      "positions": [
+       6
+      ],
+      "protected_hits": [],
+      "reason": "Smallest predicted destabilization in ThermoMPNN; one-hot baseline orders it second, so the ordering flag stays visible.",
+      "sequence": "SPEELQGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "65f636075875ca2f8c6e24c28279692bc9b306c5965f9bf3c3c81b1787f000a0"
+     },
+     {
+      "candidate_id": "L52Y",
+      "decision": "deferred",
+      "mutations": "L52Y",
+      "override_reason": "",
+      "positions": [
+       52
+      ],
+      "protected_hits": [],
+      "reason": "Sources disagree: ThermoMPNN predicts destabilization, the one-hot baseline is near neutral. Needs more evidence before selection.",
+      "sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEEYDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "be4e00b02912b95c8a829d6dc0d788fa8fd82b952905f2b62c374ffd1ed7433f"
+     },
+     {
+      "candidate_id": "Q21E",
+      "decision": "excluded",
+      "mutations": "Q21E",
+      "override_reason": "",
+      "positions": [
+       21
+      ],
+      "protected_hits": [
+       21
+      ],
+      "reason": "Touches protected binding-site position 21; no prediction supplied.",
+      "sequence": "SPEELKGIFEKYAAKEGDPNELSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "fbf602be1a428c36152be6d2a4eef4a3823416ab80ec4fbc68166a4262f996c1"
+     },
+     {
+      "candidate_id": "double-13-6",
+      "decision": "unreviewed",
+      "mutations": "A13Q:K6Q",
+      "override_reason": "",
+      "positions": [
+       13,
+       6
+      ],
+      "protected_hits": [],
+      "reason": "",
+      "sequence": "SPEELQGIFEKYQAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "284ae19c6c8b7c7cf38804b342898aed191d24782af5dd0b6c7c99386daf1f4b"
+     }
+    ],
+    "constraint_note": "Local position 21 maps to UniProt P02633 position 26 (binding site), according to the frozen 1IGV manifest. Example constraint, not automatically inferred for new proteins.",
+    "inputs": [
+     {
+      "kind": "candidates",
+      "label": "Original candidate import",
+      "sha256": "041b067d5061f84f5a1c2535eb1d513bc8c9d6a0fdb8c259b642bffd8fe1fcc5",
+      "text": "candidate_id,mutations\r\nA13Q,A13Q\r\nK6Q,K6Q\r\nL52Y,L52Y\r\nQ21E,Q21E\r\ndouble-13-6,A13Q:K6Q\r\n"
+     },
+     {
+      "kind": "predictions",
+      "label": "Original prediction import",
+      "sha256": "c3049aa773fed143c86c63ed0e6c4f124cb62977a071d82b475ef2b2ee10d248",
+      "text": "candidate_id,source,metric,value,unit,direction\r\nA13Q,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-1.7307292222976685,kcal/mol,higher\r\nA13Q,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,-1.3765337467193604,kcal/mol,higher\r\nK6Q,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-0.47930121421813965,kcal/mol,higher\r\nK6Q,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,-0.37135276198387146,kcal/mol,higher\r\nL52Y,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-1.6587944030761719,kcal/mol,higher\r\nL52Y,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,0.043253093957901,kcal/mol,higher\r\n"
+     }
+    ],
+    "objective": "Review recorded predictions and constraints, document a human shortlist, then inspect published stability measurements. This is a retrospective workflow example, not a prospective benchmark or new experiment. Ranker artifact SHA-256: fe886c56097e512ff1342bb289a91afc78c69e50cae90a66bec8249805ba08c5",
+    "predictions": [
+     {
+      "candidate_id": "A13Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "ThermoMPNN recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -1.7307292222976685
+     },
+     {
+      "candidate_id": "A13Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "One-hot baseline recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -1.3765337467193604
+     },
+     {
+      "candidate_id": "K6Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "ThermoMPNN recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -0.47930121421813965
+     },
+     {
+      "candidate_id": "K6Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "One-hot baseline recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -0.37135276198387146
+     },
+     {
+      "candidate_id": "L52Y",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "ThermoMPNN recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -1.6587944030761719
+     },
+     {
+      "candidate_id": "L52Y",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "One-hot baseline recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": 0.043253093957901
+     }
+    ],
+    "previous_digest": "f7b0185598bd9b12f0eb28670285f04f57b02bda6a7652ff958ec0f4f0320284",
+    "protected_positions": [
+     21
+    ],
+    "reference_sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+    "reference_sha256": "7510757b258975434515a548f4e67014b46bbaa604f9efd0002b0f1681022282",
+    "review_id": "1igv-retrospective-example-v1",
+    "revision": 5,
+    "schema_version": 1,
+    "scientific_use_allowed": false,
+    "title": "1IGV \u00b7 retrospective mutation review",
+    "updated_at": "2026-10-20T18:27:22+00:00",
+    "artifact_digest": "bf17c859121cb29d57dbe4aa035c903bf82addfbbfa1be68e4613552ccc19f13"
+   },
+   "flags": {
+    "A13Q": [
+     "No measured assay result"
+    ],
+    "K6Q": [
+     "No measured assay result",
+     "Source ordering differs: ddg_higher_is_more_stable (rank span \u226550% on 3 shared candidates; heuristic)"
+    ],
+    "L52Y": [
+     "No measured assay result",
+     "Source ordering differs: ddg_higher_is_more_stable (rank span \u226550% on 3 shared candidates; heuristic)"
+    ],
+    "Q21E": [
+     "Protected position: 21",
+     "No imported prediction",
+     "No measured assay result"
+    ],
+    "double-13-6": [
+     "Multi-mutant: single-mutation evidence does not establish combination effects",
+     "No imported prediction",
+     "No measured assay result"
+    ]
+   },
+   "history": [
+    {
+     "revision": 7,
+     "digest": "759a87cbbd5ec1af42fc7a8e672f4fc6824a3b0f8f11c75b8445442f1430e52c",
+     "updated_at": "2026-10-20T18:27:24+00:00"
+    },
+    {
+     "revision": 6,
+     "digest": "99c33c07ba92102d898d40dc694f1e89887ab02d1897bb6e515c2b094bfb6b78",
+     "updated_at": "2026-10-20T18:27:23+00:00"
+    },
+    {
+     "revision": 5,
+     "digest": "bf17c859121cb29d57dbe4aa035c903bf82addfbbfa1be68e4613552ccc19f13",
+     "updated_at": "2026-10-20T18:27:22+00:00"
+    },
+    {
+     "revision": 4,
+     "digest": "f7b0185598bd9b12f0eb28670285f04f57b02bda6a7652ff958ec0f4f0320284",
+     "updated_at": "2026-10-20T18:27:21+00:00"
+    },
+    {
+     "revision": 3,
+     "digest": "88ebdc07325d9bbf046619fc04299110a867a05a6032add5221e929d644a2e60",
+     "updated_at": "2026-10-20T18:27:20+00:00"
+    },
+    {
+     "revision": 2,
+     "digest": "47324a89418c16159dd0afcdac65b570eae82a77e5cb5bfc14366fd57fea0222",
+     "updated_at": "2026-10-20T18:27:19+00:00"
+    },
+    {
+     "revision": 1,
+     "digest": "03080dfe06aef7071b3c845c3fd112f563aadaa46ca6859f478a7e696be1bfb5",
+     "updated_at": "2026-10-20T18:27:18+00:00"
+    }
+   ]
+  },
+  {
+   "review": {
+    "action": "Decision: double-13-6 \u2192 excluded",
+    "assays": [],
+    "boundary": "Human-reviewed evidence record. Imported predictions and measurements retain their source labels; authenticity and biological utility are not independently verified. Selection is a researcher decision, not a validated model recommendation.",
+    "candidates": [
+     {
+      "candidate_id": "A13Q",
+      "decision": "excluded",
+      "mutations": "A13Q",
+      "override_reason": "",
+      "positions": [
+       13
+      ],
+      "protected_hits": [],
+      "reason": "Both recorded sources predict destabilization; last in both orderings.",
+      "sequence": "SPEELKGIFEKYQAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "7c2d6ae9afa304bf59c6a0c1351fd7e7a8fedf55a062e49e014e0303ca9c9efb"
+     },
+     {
+      "candidate_id": "K6Q",
+      "decision": "selected",
+      "mutations": "K6Q",
+      "override_reason": "",
+      "positions": [
+       6
+      ],
+      "protected_hits": [],
+      "reason": "Smallest predicted destabilization in ThermoMPNN; one-hot baseline orders it second, so the ordering flag stays visible.",
+      "sequence": "SPEELQGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "65f636075875ca2f8c6e24c28279692bc9b306c5965f9bf3c3c81b1787f000a0"
+     },
+     {
+      "candidate_id": "L52Y",
+      "decision": "deferred",
+      "mutations": "L52Y",
+      "override_reason": "",
+      "positions": [
+       52
+      ],
+      "protected_hits": [],
+      "reason": "Sources disagree: ThermoMPNN predicts destabilization, the one-hot baseline is near neutral. Needs more evidence before selection.",
+      "sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEEYDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "be4e00b02912b95c8a829d6dc0d788fa8fd82b952905f2b62c374ffd1ed7433f"
+     },
+     {
+      "candidate_id": "Q21E",
+      "decision": "excluded",
+      "mutations": "Q21E",
+      "override_reason": "",
+      "positions": [
+       21
+      ],
+      "protected_hits": [
+       21
+      ],
+      "reason": "Touches protected binding-site position 21; no prediction supplied.",
+      "sequence": "SPEELKGIFEKYAAKEGDPNELSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "fbf602be1a428c36152be6d2a4eef4a3823416ab80ec4fbc68166a4262f996c1"
+     },
+     {
+      "candidate_id": "double-13-6",
+      "decision": "excluded",
+      "mutations": "A13Q:K6Q",
+      "override_reason": "",
+      "positions": [
+       13,
+       6
+      ],
+      "protected_hits": [],
+      "reason": "Multi-mutant containing A13Q; single-mutation predictions do not establish the combination effect.",
+      "sequence": "SPEELQGIFEKYQAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "284ae19c6c8b7c7cf38804b342898aed191d24782af5dd0b6c7c99386daf1f4b"
+     }
+    ],
+    "constraint_note": "Local position 21 maps to UniProt P02633 position 26 (binding site), according to the frozen 1IGV manifest. Example constraint, not automatically inferred for new proteins.",
+    "inputs": [
+     {
+      "kind": "candidates",
+      "label": "Original candidate import",
+      "sha256": "041b067d5061f84f5a1c2535eb1d513bc8c9d6a0fdb8c259b642bffd8fe1fcc5",
+      "text": "candidate_id,mutations\r\nA13Q,A13Q\r\nK6Q,K6Q\r\nL52Y,L52Y\r\nQ21E,Q21E\r\ndouble-13-6,A13Q:K6Q\r\n"
+     },
+     {
+      "kind": "predictions",
+      "label": "Original prediction import",
+      "sha256": "c3049aa773fed143c86c63ed0e6c4f124cb62977a071d82b475ef2b2ee10d248",
+      "text": "candidate_id,source,metric,value,unit,direction\r\nA13Q,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-1.7307292222976685,kcal/mol,higher\r\nA13Q,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,-1.3765337467193604,kcal/mol,higher\r\nK6Q,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-0.47930121421813965,kcal/mol,higher\r\nK6Q,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,-0.37135276198387146,kcal/mol,higher\r\nL52Y,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-1.6587944030761719,kcal/mol,higher\r\nL52Y,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,0.043253093957901,kcal/mol,higher\r\n"
+     }
+    ],
+    "objective": "Review recorded predictions and constraints, document a human shortlist, then inspect published stability measurements. This is a retrospective workflow example, not a prospective benchmark or new experiment. Ranker artifact SHA-256: fe886c56097e512ff1342bb289a91afc78c69e50cae90a66bec8249805ba08c5",
+    "predictions": [
+     {
+      "candidate_id": "A13Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "ThermoMPNN recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -1.7307292222976685
+     },
+     {
+      "candidate_id": "A13Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "One-hot baseline recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -1.3765337467193604
+     },
+     {
+      "candidate_id": "K6Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "ThermoMPNN recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -0.47930121421813965
+     },
+     {
+      "candidate_id": "K6Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "One-hot baseline recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -0.37135276198387146
+     },
+     {
+      "candidate_id": "L52Y",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "ThermoMPNN recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -1.6587944030761719
+     },
+     {
+      "candidate_id": "L52Y",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "One-hot baseline recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": 0.043253093957901
+     }
+    ],
+    "previous_digest": "bf17c859121cb29d57dbe4aa035c903bf82addfbbfa1be68e4613552ccc19f13",
+    "protected_positions": [
+     21
+    ],
+    "reference_sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+    "reference_sha256": "7510757b258975434515a548f4e67014b46bbaa604f9efd0002b0f1681022282",
+    "review_id": "1igv-retrospective-example-v1",
+    "revision": 6,
+    "schema_version": 1,
+    "scientific_use_allowed": false,
+    "title": "1IGV \u00b7 retrospective mutation review",
+    "updated_at": "2026-10-20T18:27:23+00:00",
+    "artifact_digest": "99c33c07ba92102d898d40dc694f1e89887ab02d1897bb6e515c2b094bfb6b78"
+   },
+   "flags": {
+    "A13Q": [
+     "No measured assay result"
+    ],
+    "K6Q": [
+     "No measured assay result",
+     "Source ordering differs: ddg_higher_is_more_stable (rank span \u226550% on 3 shared candidates; heuristic)"
+    ],
+    "L52Y": [
+     "No measured assay result",
+     "Source ordering differs: ddg_higher_is_more_stable (rank span \u226550% on 3 shared candidates; heuristic)"
+    ],
+    "Q21E": [
+     "Protected position: 21",
+     "No imported prediction",
+     "No measured assay result"
+    ],
+    "double-13-6": [
+     "Multi-mutant: single-mutation evidence does not establish combination effects",
+     "No imported prediction",
+     "No measured assay result"
+    ]
+   },
+   "history": [
+    {
+     "revision": 7,
+     "digest": "759a87cbbd5ec1af42fc7a8e672f4fc6824a3b0f8f11c75b8445442f1430e52c",
+     "updated_at": "2026-10-20T18:27:24+00:00"
+    },
+    {
+     "revision": 6,
+     "digest": "99c33c07ba92102d898d40dc694f1e89887ab02d1897bb6e515c2b094bfb6b78",
+     "updated_at": "2026-10-20T18:27:23+00:00"
+    },
+    {
+     "revision": 5,
+     "digest": "bf17c859121cb29d57dbe4aa035c903bf82addfbbfa1be68e4613552ccc19f13",
+     "updated_at": "2026-10-20T18:27:22+00:00"
+    },
+    {
+     "revision": 4,
+     "digest": "f7b0185598bd9b12f0eb28670285f04f57b02bda6a7652ff958ec0f4f0320284",
+     "updated_at": "2026-10-20T18:27:21+00:00"
+    },
+    {
+     "revision": 3,
+     "digest": "88ebdc07325d9bbf046619fc04299110a867a05a6032add5221e929d644a2e60",
+     "updated_at": "2026-10-20T18:27:20+00:00"
+    },
+    {
+     "revision": 2,
+     "digest": "47324a89418c16159dd0afcdac65b570eae82a77e5cb5bfc14366fd57fea0222",
+     "updated_at": "2026-10-20T18:27:19+00:00"
+    },
+    {
+     "revision": 1,
+     "digest": "03080dfe06aef7071b3c845c3fd112f563aadaa46ca6859f478a7e696be1bfb5",
+     "updated_at": "2026-10-20T18:27:18+00:00"
+    }
+   ]
+  },
+  {
+   "review": {
+    "action": "Imported assay: Published 1IGV stability \u00b7 retrospective",
+    "assays": [
+     {
+      "context": "Tsuboyama normalized dataset v2_230420; positive \u0394\u0394G is more stable. Original assay conditions are not reproduced here. Rows are normalized published estimates, not independent wet-lab replicates. Retrospective comparison only. Normalized table SHA-256: 495eb13282c123b1a06ec074986edb6aaa0c2f57858b7aac5435c0c1f1bccb79",
+      "decision_revision": 6,
+      "decisions_at_import": {
+       "A13Q": "excluded",
+       "K6Q": "selected",
+       "L52Y": "deferred",
+       "Q21E": "excluded",
+       "double-13-6": "excluded"
+      },
+      "input_sha256": "da8922f10205268e4d37b632d31b06643b65fd26a71f2a89f2d42d120625c2d6",
+      "label": "Published 1IGV stability \u00b7 retrospective",
+      "rows": [
+       {
+        "candidate_id": "K6Q",
+        "method": "Tsuboyama proteolysis-derived estimate",
+        "metric": "ddg_higher_is_more_stable",
+        "replicate": 1,
+        "source_artifact_digest": null,
+        "status": "measured",
+        "unit": "kcal/mol",
+        "value": -0.017398500676724993
+       },
+       {
+        "candidate_id": "A13Q",
+        "method": "Tsuboyama proteolysis-derived estimate",
+        "metric": "ddg_higher_is_more_stable",
+        "replicate": 1,
+        "source_artifact_digest": null,
+        "status": "measured",
+        "unit": "kcal/mol",
+        "value": -1.4459037580965353
+       },
+       {
+        "candidate_id": "Q21E",
+        "method": "Tsuboyama proteolysis-derived estimate",
+        "metric": "ddg_higher_is_more_stable",
+        "replicate": 1,
+        "source_artifact_digest": null,
+        "status": "measured",
+        "unit": "kcal/mol",
+        "value": -0.268963958091601
+       },
+       {
+        "candidate_id": "L52Y",
+        "method": "Tsuboyama proteolysis-derived estimate",
+        "metric": "ddg_higher_is_more_stable",
+        "replicate": 1,
+        "source_artifact_digest": null,
+        "status": "measured",
+        "unit": "kcal/mol",
+        "value": 0.035510267308997534
+       }
+      ]
+     }
+    ],
+    "boundary": "Human-reviewed evidence record. Imported predictions and measurements retain their source labels; authenticity and biological utility are not independently verified. Selection is a researcher decision, not a validated model recommendation.",
+    "candidates": [
+     {
+      "candidate_id": "A13Q",
+      "decision": "excluded",
+      "mutations": "A13Q",
+      "override_reason": "",
+      "positions": [
+       13
+      ],
+      "protected_hits": [],
+      "reason": "Both recorded sources predict destabilization; last in both orderings.",
+      "sequence": "SPEELKGIFEKYQAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "7c2d6ae9afa304bf59c6a0c1351fd7e7a8fedf55a062e49e014e0303ca9c9efb"
+     },
+     {
+      "candidate_id": "K6Q",
+      "decision": "selected",
+      "mutations": "K6Q",
+      "override_reason": "",
+      "positions": [
+       6
+      ],
+      "protected_hits": [],
+      "reason": "Smallest predicted destabilization in ThermoMPNN; one-hot baseline orders it second, so the ordering flag stays visible.",
+      "sequence": "SPEELQGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "65f636075875ca2f8c6e24c28279692bc9b306c5965f9bf3c3c81b1787f000a0"
+     },
+     {
+      "candidate_id": "L52Y",
+      "decision": "deferred",
+      "mutations": "L52Y",
+      "override_reason": "",
+      "positions": [
+       52
+      ],
+      "protected_hits": [],
+      "reason": "Sources disagree: ThermoMPNN predicts destabilization, the one-hot baseline is near neutral. Needs more evidence before selection.",
+      "sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEEYDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "be4e00b02912b95c8a829d6dc0d788fa8fd82b952905f2b62c374ffd1ed7433f"
+     },
+     {
+      "candidate_id": "Q21E",
+      "decision": "excluded",
+      "mutations": "Q21E",
+      "override_reason": "",
+      "positions": [
+       21
+      ],
+      "protected_hits": [
+       21
+      ],
+      "reason": "Touches protected binding-site position 21; no prediction supplied.",
+      "sequence": "SPEELKGIFEKYAAKEGDPNELSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "fbf602be1a428c36152be6d2a4eef4a3823416ab80ec4fbc68166a4262f996c1"
+     },
+     {
+      "candidate_id": "double-13-6",
+      "decision": "excluded",
+      "mutations": "A13Q:K6Q",
+      "override_reason": "",
+      "positions": [
+       13,
+       6
+      ],
+      "protected_hits": [],
+      "reason": "Multi-mutant containing A13Q; single-mutation predictions do not establish the combination effect.",
+      "sequence": "SPEELQGIFEKYQAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sequence_sha256": "284ae19c6c8b7c7cf38804b342898aed191d24782af5dd0b6c7c99386daf1f4b"
+     }
+    ],
+    "constraint_note": "Local position 21 maps to UniProt P02633 position 26 (binding site), according to the frozen 1IGV manifest. Example constraint, not automatically inferred for new proteins.",
+    "inputs": [
+     {
+      "kind": "candidates",
+      "label": "Original candidate import",
+      "sha256": "041b067d5061f84f5a1c2535eb1d513bc8c9d6a0fdb8c259b642bffd8fe1fcc5",
+      "text": "candidate_id,mutations\r\nA13Q,A13Q\r\nK6Q,K6Q\r\nL52Y,L52Y\r\nQ21E,Q21E\r\ndouble-13-6,A13Q:K6Q\r\n"
+     },
+     {
+      "kind": "predictions",
+      "label": "Original prediction import",
+      "sha256": "c3049aa773fed143c86c63ed0e6c4f124cb62977a071d82b475ef2b2ee10d248",
+      "text": "candidate_id,source,metric,value,unit,direction\r\nA13Q,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-1.7307292222976685,kcal/mol,higher\r\nA13Q,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,-1.3765337467193604,kcal/mol,higher\r\nK6Q,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-0.47930121421813965,kcal/mol,higher\r\nK6Q,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,-0.37135276198387146,kcal/mol,higher\r\nL52Y,ThermoMPNN recorded fe886c56097e,ddg_higher_is_more_stable,-1.6587944030761719,kcal/mol,higher\r\nL52Y,One-hot baseline recorded fe886c56097e,ddg_higher_is_more_stable,0.043253093957901,kcal/mol,higher\r\n"
+     },
+     {
+      "context": "Tsuboyama normalized dataset v2_230420; positive \u0394\u0394G is more stable. Original assay conditions are not reproduced here. Rows are normalized published estimates, not independent wet-lab replicates. Retrospective comparison only. Normalized table SHA-256: 495eb13282c123b1a06ec074986edb6aaa0c2f57858b7aac5435c0c1f1bccb79",
+      "kind": "assay",
+      "label": "Published 1IGV stability \u00b7 retrospective",
+      "sha256": "da8922f10205268e4d37b632d31b06643b65fd26a71f2a89f2d42d120625c2d6",
+      "text": "candidate_id,metric,value,unit,method,status,replicate\r\nK6Q,ddg_higher_is_more_stable,-0.017398500676724993,kcal/mol,Tsuboyama proteolysis-derived estimate,measured,1\r\nA13Q,ddg_higher_is_more_stable,-1.4459037580965353,kcal/mol,Tsuboyama proteolysis-derived estimate,measured,1\r\nQ21E,ddg_higher_is_more_stable,-0.268963958091601,kcal/mol,Tsuboyama proteolysis-derived estimate,measured,1\r\nL52Y,ddg_higher_is_more_stable,0.035510267308997534,kcal/mol,Tsuboyama proteolysis-derived estimate,measured,1\r\n"
+     }
+    ],
+    "objective": "Review recorded predictions and constraints, document a human shortlist, then inspect published stability measurements. This is a retrospective workflow example, not a prospective benchmark or new experiment. Ranker artifact SHA-256: fe886c56097e512ff1342bb289a91afc78c69e50cae90a66bec8249805ba08c5",
+    "predictions": [
+     {
+      "candidate_id": "A13Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "ThermoMPNN recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -1.7307292222976685
+     },
+     {
+      "candidate_id": "A13Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "One-hot baseline recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -1.3765337467193604
+     },
+     {
+      "candidate_id": "K6Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "ThermoMPNN recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -0.47930121421813965
+     },
+     {
+      "candidate_id": "K6Q",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "One-hot baseline recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -0.37135276198387146
+     },
+     {
+      "candidate_id": "L52Y",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "ThermoMPNN recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": -1.6587944030761719
+     },
+     {
+      "candidate_id": "L52Y",
+      "direction": "higher",
+      "metric": "ddg_higher_is_more_stable",
+      "source": "One-hot baseline recorded fe886c56097e",
+      "unit": "kcal/mol",
+      "value": 0.043253093957901
+     }
+    ],
+    "previous_digest": "99c33c07ba92102d898d40dc694f1e89887ab02d1897bb6e515c2b094bfb6b78",
+    "protected_positions": [
+     21
+    ],
+    "reference_sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+    "reference_sha256": "7510757b258975434515a548f4e67014b46bbaa604f9efd0002b0f1681022282",
+    "review_id": "1igv-retrospective-example-v1",
+    "revision": 7,
+    "schema_version": 1,
+    "scientific_use_allowed": false,
+    "title": "1IGV \u00b7 retrospective mutation review",
+    "updated_at": "2026-10-20T18:27:24+00:00",
+    "artifact_digest": "759a87cbbd5ec1af42fc7a8e672f4fc6824a3b0f8f11c75b8445442f1430e52c"
+   },
+   "flags": {
+    "A13Q": [],
+    "K6Q": [
+     "Source ordering differs: ddg_higher_is_more_stable (rank span \u226550% on 3 shared candidates; heuristic)"
+    ],
+    "L52Y": [
+     "Source ordering differs: ddg_higher_is_more_stable (rank span \u226550% on 3 shared candidates; heuristic)"
+    ],
+    "Q21E": [
+     "Protected position: 21",
+     "No imported prediction"
+    ],
+    "double-13-6": [
+     "Multi-mutant: single-mutation evidence does not establish combination effects",
+     "No imported prediction",
+     "No measured assay result"
+    ]
+   },
+   "history": [
+    {
+     "revision": 7,
+     "digest": "759a87cbbd5ec1af42fc7a8e672f4fc6824a3b0f8f11c75b8445442f1430e52c",
+     "updated_at": "2026-10-20T18:27:24+00:00"
+    },
+    {
+     "revision": 6,
+     "digest": "99c33c07ba92102d898d40dc694f1e89887ab02d1897bb6e515c2b094bfb6b78",
+     "updated_at": "2026-10-20T18:27:23+00:00"
+    },
+    {
+     "revision": 5,
+     "digest": "bf17c859121cb29d57dbe4aa035c903bf82addfbbfa1be68e4613552ccc19f13",
+     "updated_at": "2026-10-20T18:27:22+00:00"
+    },
+    {
+     "revision": 4,
+     "digest": "f7b0185598bd9b12f0eb28670285f04f57b02bda6a7652ff958ec0f4f0320284",
+     "updated_at": "2026-10-20T18:27:21+00:00"
+    },
+    {
+     "revision": 3,
+     "digest": "88ebdc07325d9bbf046619fc04299110a867a05a6032add5221e929d644a2e60",
+     "updated_at": "2026-10-20T18:27:20+00:00"
+    },
+    {
+     "revision": 2,
+     "digest": "47324a89418c16159dd0afcdac65b570eae82a77e5cb5bfc14366fd57fea0222",
+     "updated_at": "2026-10-20T18:27:19+00:00"
+    },
+    {
+     "revision": 1,
+     "digest": "03080dfe06aef7071b3c845c3fd112f563aadaa46ca6859f478a7e696be1bfb5",
+     "updated_at": "2026-10-20T18:27:18+00:00"
+    }
+   ]
+  }
+ ]
+}

@@ -8,13 +8,19 @@
     "build": "tsc -b && vite build",
     "build:stability": "tsc -b && vite build --config vite.stability.config.ts",
     "check": "tsc -b",
-    "test": "playwright test"
+    "preview": "vite preview",
+    "preview:stability": "vite preview --outDir dist-stability",
+    "test": "playwright test",
+    "test:local": "playwright test --config playwright.local.config.ts",
+    "test:public": "playwright test --config playwright.public.config.ts",
+    "test:all": "npm test && npm run test:local && npm run test:public"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.58.0",
     "3dmol": "^2.5.5",
     "graphology": "^0.26.0",
     "lucide-react": "^0.468.0",
-    "molstar": "^5.13.1",
+    "molstar": "5.12.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "sigma": "^3.0.2"

@@ -144,8 +144,30 @@ def _claim(tmp_path: Path, measured: StructureMeasurements):
         )
 
     source = envelope("sequence")
+    request = store.put_json({"test_only": True, "request": "mock prediction"})
+    response = store.put_json({"test_only": True, "response": "mock structure"})
+    execution = store.put_json(
+        ProvenanceArtifact(
+            kind="execution",
+            payload_digest=store.put_json(
+                {
+                    "source_sequence_digest": source,
+                    "model_checkpoint": SCOPE.model_checkpoint,
+                    "settings_digest": SCOPE.settings_digest,
+                    "status": "succeeded",
+                    "request_artifact_digest": request,
+                    "response_artifact_digest": response,
+                }
+            ),
+            dependencies=(source,),
+            execution_mode="real",
+            scientific_use_allowed=True,
+            source="software acceptance test with artificial retained bytes",
+            producing_tool="test-structure-v1",
+        ).model_dump(mode="json")
+    )
     names = ("physical", "samples", "second_model", "counterfactual", "reference")
-    artifacts = {name: envelope("evidence", (source,)) for name in names}
+    artifacts = {name: envelope("evidence", (execution,)) for name in names}
     claim = ClaimRequest(
         claim_id="test-complex",
         text="software test",

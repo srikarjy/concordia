@@ -1,0 +1,442 @@
+{
+  "execution": {
+    "attempted": false,
+    "context_substitution_diagnostic": "not_run",
+    "embedding_injection_parity": "not_run",
+    "gradient_check": "not_run",
+    "integrated_gradients": "not_run",
+    "ordinary_adapter_parity": "not_run"
+  },
+  "investigation": "thermompnn_cpu_feasibility",
+  "limitations": [
+    "This is a compute and mapping feasibility record, not predictor validation.",
+    "No assay label was read by this feasibility record.",
+    "Unavailable prerequisites do not establish a model execution or attribution result."
+  ],
+  "preflight": {
+    "blockers": [
+      "ThermoMPNN source root was not provided",
+      "ThermoMPNN checkpoint cannot be located without a source root"
+    ],
+    "model": {
+      "checkpoint": {
+        "actual_sha256": null,
+        "expected_sha256": "af449118ccfb4e34971d802321907ed82a8a035ae80f055bf8fc56009a4a838a",
+        "relative_path": "models/thermoMPNN_default.pt"
+      },
+      "source": {
+        "actual_commit": null,
+        "expected_commit": "370f76ec62bd929f7425e311d8df04a0d094990f"
+      }
+    },
+    "source_manifest": {
+      "path": "/Users/srikarjy/resume_projects/concordia/data/manifests/tsuboyama_rule2_manifest_v3.json",
+      "sha256": "ee683066419099303046a16e799f7eb21d88963cdd83d8c08e28587d0faedafc",
+      "variant_id": "1IGV.pdb_S1A"
+    },
+    "structure": {
+      "chain_id": "A",
+      "mapping": [
+        {
+          "insertion_code": "",
+          "residue_number": 1,
+          "sequence_position": 1
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 2,
+          "sequence_position": 2
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 3,
+          "sequence_position": 3
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 4,
+          "sequence_position": 4
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 5,
+          "sequence_position": 5
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 6,
+          "sequence_position": 6
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 7,
+          "sequence_position": 7
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 8,
+          "sequence_position": 8
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 9,
+          "sequence_position": 9
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 10,
+          "sequence_position": 10
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 11,
+          "sequence_position": 11
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 12,
+          "sequence_position": 12
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 13,
+          "sequence_position": 13
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 14,
+          "sequence_position": 14
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 15,
+          "sequence_position": 15
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 16,
+          "sequence_position": 16
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 17,
+          "sequence_position": 17
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 18,
+          "sequence_position": 18
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 19,
+          "sequence_position": 19
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 20,
+          "sequence_position": 20
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 21,
+          "sequence_position": 21
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 22,
+          "sequence_position": 22
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 23,
+          "sequence_position": 23
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 24,
+          "sequence_position": 24
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 25,
+          "sequence_position": 25
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 26,
+          "sequence_position": 26
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 27,
+          "sequence_position": 27
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 28,
+          "sequence_position": 28
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 29,
+          "sequence_position": 29
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 30,
+          "sequence_position": 30
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 31,
+          "sequence_position": 31
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 32,
+          "sequence_position": 32
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 33,
+          "sequence_position": 33
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 34,
+          "sequence_position": 34
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 35,
+          "sequence_position": 35
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 36,
+          "sequence_position": 36
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 37,
+          "sequence_position": 37
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 38,
+          "sequence_position": 38
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 39,
+          "sequence_position": 39
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 40,
+          "sequence_position": 40
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 41,
+          "sequence_position": 41
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 42,
+          "sequence_position": 42
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 43,
+          "sequence_position": 43
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 44,
+          "sequence_position": 44
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 45,
+          "sequence_position": 45
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 46,
+          "sequence_position": 46
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 47,
+          "sequence_position": 47
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 48,
+          "sequence_position": 48
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 49,
+          "sequence_position": 49
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 50,
+          "sequence_position": 50
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 51,
+          "sequence_position": 51
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 52,
+          "sequence_position": 52
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 53,
+          "sequence_position": 53
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 54,
+          "sequence_position": 54
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 55,
+          "sequence_position": 55
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 56,
+          "sequence_position": 56
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 57,
+          "sequence_position": 57
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 58,
+          "sequence_position": 58
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 59,
+          "sequence_position": 59
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 60,
+          "sequence_position": 60
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 61,
+          "sequence_position": 61
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 62,
+          "sequence_position": 62
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 63,
+          "sequence_position": 63
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 64,
+          "sequence_position": 64
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 65,
+          "sequence_position": 65
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 66,
+          "sequence_position": 66
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 67,
+          "sequence_position": 67
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 68,
+          "sequence_position": 68
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 69,
+          "sequence_position": 69
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 70,
+          "sequence_position": 70
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 71,
+          "sequence_position": 71
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 72,
+          "sequence_position": 72
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 73,
+          "sequence_position": 73
+        },
+        {
+          "insertion_code": "",
+          "residue_number": 74,
+          "sequence_position": 74
+        }
+      ],
+      "origin": "AlphaFold predicted structure; not experimental evidence",
+      "path": "/Users/srikarjy/resume_projects/concordia/data/raw/tsuboyama_v2_230420/structures/AlphaFold_model_PDBs/1IGV.pdb",
+      "sequence": "SPEELKGIFEKYAAKEGDPNQLSKEELKLLLQTEFPSLLKGPSTLDELFEELDKNGDGEVSFEEFQVLVKKISQ",
+      "sha256": "c4e893bebf436898394f99cf3b1da626f269b34bfc5c5d18d015bc06b27ecd50"
+    }
+  },
+  "request": {
+    "chain_id": "A",
+    "device": "cpu",
+    "dtype": "float32",
+    "manifest_path": "/Users/srikarjy/resume_projects/concordia/data/manifests/tsuboyama_rule2_manifest_v3.json",
+    "memory_limit_bytes": 8589934592,
+    "mutant": "A",
+    "position": 1,
+    "seed": 20261019,
+    "structure_path": "/Users/srikarjy/resume_projects/concordia/data/raw/tsuboyama_v2_230420/structures/AlphaFold_model_PDBs/1IGV.pdb",
+    "variant_id": "1IGV.pdb_S1A",
+    "wall_clock_limit_seconds": 1200,
+    "wildtype": "S"
+  },
+  "schema_version": 1,
+  "scientific_use_allowed": false,
+  "status": "unavailable",
+  "target": {
+    "converted_output": null,
+    "direction": "higher values mean more stable",
+    "formula": "f = -raw ThermoMPNN ddG",
+    "raw_output": null,
+    "units": "kcal/mol"
+  },
+  "terminal_reason": "ThermoMPNN source root was not provided; ThermoMPNN checkpoint cannot be located without a source root"
+}

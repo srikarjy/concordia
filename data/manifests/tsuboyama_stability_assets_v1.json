@@ -1,0 +1,47 @@
+{
+  "calibration_source": "held-out-position distances without labels; separately prepared",
+  "data_manifest_sha256": "ee683066419099303046a16e799f7eb21d88963cdd83d8c08e28587d0faedafc",
+  "distribution_status": "local_verified_bytes_only_no_public_bundle",
+  "domain": "1IGV.pdb",
+  "files": {
+    "data/manifests/tsuboyama_rule2_manifest_v3.json": {
+      "sha256": "ee683066419099303046a16e799f7eb21d88963cdd83d8c08e28587d0faedafc",
+      "size_bytes": 118709
+    },
+    "data/processed/tsuboyama_ensemble_artifacts.joblib": {
+      "sha256": "900267696e417b6bf56cf5532bb28b4f4f678f19122c90edabaaca810fecfa6e",
+      "size_bytes": 365261
+    },
+    "data/processed/tsuboyama_esm2_site_embeddings.parquet": {
+      "sha256": "0a74695670b4ad635fd4774d91a108d434351aec43c0b669ec74ea55805a5bda",
+      "size_bytes": 11570489
+    },
+    "data/processed/tsuboyama_production_ranker.json": {
+      "sha256": "c71f5b8888681a7de6422d9f811e973f5a7bfe5cbeb0d95aa4c08452e7613b3b",
+      "size_bytes": 118464
+    },
+    "data/processed/tsuboyama_t2_recalibration.json": {
+      "sha256": "1173ead4f3f58c40d30cab9dafefc515642b8514647c465708132a97bc3fae34",
+      "size_bytes": 1788
+    },
+    "data/processed/tsuboyama_uncertainty_metrics.json": {
+      "sha256": "bdb13949da7cfed364e7f750a201104ab621fd4bfb09735874d8dadb7fe5d616",
+      "size_bytes": 21955
+    },
+    "data/processed/tsuboyama_v2_230420_normalized.csv": {
+      "sha256": "495eb13282c123b1a06ec074986edb6aaa0c2f57858b7aac5435c0c1f1bccb79",
+      "size_bytes": 121026507
+    },
+    "data/raw/tsuboyama_v2_230420/structures/AlphaFold_model_PDBs/1IGV.pdb": {
+      "sha256": "c4e893bebf436898394f99cf3b1da626f269b34bfc5c5d18d015bc06b27ecd50",
+      "size_bytes": 95669
+    }
+  },
+  "kind": "concordia_frozen_1igv_serving_assets",
+  "model_source": {
+    "esm2_checkpoint": "facebook/esm2_t33_650M_UR50D",
+    "esm2_revision": "08e4846e537177426273712802403f7ba8261b6c",
+    "thermompnn_source_commit": "370f76ec62bd929f7425e311d8df04a0d094990f"
+  },
+  "schema_version": 1
+}

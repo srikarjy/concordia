@@ -1,0 +1,7 @@
+project_id = "zoosebdmsaflxcqtyyho"
+
+[functions.structure-gateway]
+verify_jwt = false
+
+[functions.protein-workbench]
+verify_jwt = false

@@ -8,6 +8,7 @@ import random
 import time
 import uuid
 from collections.abc import Callable
+from functools import partial
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -123,7 +124,7 @@ def run(manifest_path: Path, output_dir: Path) -> dict[str, Any]:
     try:
         for backbone_id, seed in enumerate(settings["rfdiffusion_seeds"], start=1):
             rf_result = call_with_backoff(
-                lambda seed=seed: rf.generate(
+                partial(rf.generate,
                     RFdiffusionRequest(
                         target_pdb=target_pdb,
                         contigs=target["contig"],
@@ -164,10 +165,10 @@ def run(manifest_path: Path, output_dir: Path) -> dict[str, Any]:
                 }
             )
             mpnn_result = call_with_backoff(
-                lambda chain_id=generated_chain.id, pdb=rf_result.pdb_text: mpnn.design(
+                partial(mpnn.design,
                     ProteinMpnnRequest(
-                        input_pdb=pdb,
-                        design_chains=(chain_id,),
+                        input_pdb=rf_result.pdb_text,
+                        design_chains=(generated_chain.id,),
                         num_sequences=int(settings["sequences_per_backbone"]),
                         sampling_temperature=float(settings["proteinmpnn_sampling_temperature"]),
                         random_seed=int(settings["proteinmpnn_seed"]),
@@ -201,10 +202,12 @@ def run(manifest_path: Path, output_dir: Path) -> dict[str, Any]:
                         time.sleep(wait)
                 last_boltz = time.monotonic()
                 boltz_result = call_with_backoff(
-                    lambda sequence=design_sequence: boltz.predict_complex(
+                    partial(boltz.predict_complex,
                         BoltzComplexRequest(
                             polymers=(
-                                BoltzPolymer(id="A", molecule_type="protein", sequence=sequence),
+                                BoltzPolymer(
+                                    id="A", molecule_type="protein", sequence=design_sequence
+                                ),
                                 BoltzPolymer(id="B", molecule_type="protein", sequence=retained),
                             ),
                             diffusion_samples=1,

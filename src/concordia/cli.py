@@ -62,6 +62,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     workspace_api.add_argument("--frontend", type=Path, default=Path("frontend/dist"))
     workspace_api.add_argument("--port", type=int, default=7860)
+    workspace_api.add_argument("--host", default="127.0.0.1")
     ledger = subparsers.add_parser(
         "ledger", help="export or check the event ledger's hash chain"
     )
@@ -292,7 +293,7 @@ def main() -> None:
 
         uvicorn.run(
             create_workspace_app(args.state_root, args.frontend),
-            host="0.0.0.0",
+            host=args.host,
             port=args.port,
         )
     elif args.command == "ledger":

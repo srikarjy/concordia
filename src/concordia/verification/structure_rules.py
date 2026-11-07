@@ -236,8 +236,8 @@ def evidence_records(
 class _MemoryArtifactStore:
     """In-memory content-addressed store, so verification needs no filesystem.
 
-    ``verify_measurements`` synthesises throwaway provenance envelopes purely so
-    the ordinary verifier can walk them. Nothing here outlives the call.
+    ``verify_measurements`` holds synthetic rule inputs only. No envelope claims
+    that a model ran or that scientific use is permitted.
     """
 
     def __init__(self) -> None:
@@ -272,10 +272,10 @@ def verify_measurements(
     include_reference: bool = False,
     policy: VerificationPolicy | None = None,
 ) -> VerificationResult:
-    """Verify measured signals directly, persisting nothing.
+    """Assess rules on caller-supplied signals, persisting nothing.
 
-    The caller supplies measurements and a scope; the provenance envelopes the
-    verifier expects are built in memory. ``include_reference`` admits DockQ
+    The caller supplies measurements and a scope. Synthetic envelopes exist only
+    to identify rule inputs and cannot establish model execution. ``include_reference`` admits DockQ
     against an experimental structure and must stay off whenever the verifier
     itself is being evaluated, because the reference is then the label rather
     than evidence.
@@ -294,8 +294,8 @@ def verify_measurements(
                 kind=kind,
                 payload_digest=store.put_json(payload),
                 dependencies=parents,
-                execution_mode="recorded_real",
-                scientific_use_allowed=True,
+                execution_mode="synthetic",
+                scientific_use_allowed=False,
                 source=description,
                 producing_tool=f"structure_rules/{RULE_PACK_VERSION}",
             ).model_dump(mode="json")
@@ -316,4 +316,4 @@ def verify_measurements(
             measured, scope, artifacts, include_reference=include_reference
         ),
     )
-    return verify_claim(claim, store, policy)
+    return verify_claim(claim, store, policy, assess_only=True)

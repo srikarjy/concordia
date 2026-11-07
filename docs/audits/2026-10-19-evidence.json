@@ -1,0 +1,378 @@
+{
+  "schema_version": 1,
+  "audit_date": "2026-10-19",
+  "recorded_at_utc": "2026-10-19T18:59:48.059128+00:00",
+  "repo": "https://github.com/srikarjy/concordia",
+  "workspace": "/Users/srikarjy/resume_projects/concordia",
+  "local_head": "0cc262a8ea7ffc60d6f1395c066063aebdef553c",
+  "local_branch": "feature/antibody-boltz-concordia",
+  "github": {
+    "main_head": "cad99ff32a3f87009ca889ec4e2fb48f14295b9b",
+    "feature_head": "65a44dcdab6abc561b66bfc2f1436ba853355110",
+    "feature_ahead_of_main": 6,
+    "feature_behind_main": 5,
+    "main_ci": {
+      "conclusion": "failure",
+      "url": "https://github.com/srikarjy/concordia/actions/runs/39080314624"
+    },
+    "feature_ci": {
+      "conclusion": "failure",
+      "url": "https://github.com/srikarjy/concordia/actions/runs/39081022425"
+    }
+  },
+  "scope": {
+    "first_party_code_config_files": 332,
+    "lines": 51274,
+    "local_python_ast_passed": 270,
+    "github_main_python_ast_passed": 250,
+    "by_kind": {
+      "config": 26,
+      "code": 230,
+      "test": 75,
+      "legacy": 1
+    },
+    "main_comparison": {
+      "same": 272,
+      "different": 12,
+      "absent": 48
+    },
+    "feature_comparison": {
+      "same": 273,
+      "different": 11,
+      "absent": 48
+    },
+    "interpretation": "Complete structural/static inventory of selected source/config scope, focused manual path reviews, suite checks. Not line-by-line semantic verification or measured code coverage."
+  },
+  "file_inventory": {
+    "path": "docs/audits/2026-10-19-file-inventory.tsv",
+    "sha256": "079045d46c979f00b087569c32184c5a4d65e80c55245092b53b5dd1154f23a1",
+    "bytes": 119501
+  },
+  "preexisting_working_tree_status": [
+    " M .gitignore",
+    " M .vercelignore",
+    " M Makefile",
+    " M docs/local-runtime.md",
+    " M frontend/package-lock.json",
+    " M frontend/package.json",
+    " M frontend/src/review-main.tsx",
+    " M frontend/src/review.css",
+    " M frontend/src/stability-main.tsx",
+    " M frontend/src/stability.css",
+    " M src/concordia/stability/structure_aware.py",
+    " M vercel.json",
+    "?? deploy/hf-structure-gateway/",
+    "?? deploy/hf-thermompnn-space/",
+    "?? docs/protein-public-beta.md",
+    "?? docs/researcher-product-review.md",
+    "?? docs/structure-workflow.md",
+    "?? frontend/playwright.public.config.ts",
+    "?? frontend/public/review-replay/",
+    "?? frontend/src/molstar-viewer.tsx",
+    "?? frontend/src/protein-account.tsx",
+    "?? frontend/src/protein-workbench.tsx",
+    "?? frontend/src/structure-inspection.tsx",
+    "?? frontend/tests-local/review-replay.spec.ts",
+    "?? frontend/tests-public/",
+    "?? scripts/build_connector_snapshot.py",
+    "?? scripts/build_review_replay.py",
+    "?? scripts/build_static_stability.py",
+    "?? scripts/deploy_structure_gateway.py",
+    "?? scripts/nvidia_connector_probe_snapshot.json",
+    "?? scripts/package_structure_gateway.py",
+    "?? scripts/prepare_static_stability_payload.py",
+    "?? scripts/sanitize_static_stability_bundle.py",
+    "?? scripts/verify_structure_workflow_live.py",
+    "?? src/concordia/runtime/structure_workflow.py",
+    "?? supabase/",
+    "?? tests/unit/test_connector_snapshot.py",
+    "?? tests/unit/test_structure_workflow.py"
+  ],
+  "checks": [
+    {
+      "id": "python",
+      "command": "PYTHONPATH=src .venv/bin/python -m pytest -ra",
+      "result": "pass",
+      "detail": "520 passed; 2 warnings; 45.75s",
+      "log": {
+        "path": "/private/tmp/concordia-review-20261019/pytest.log",
+        "sha256": "dabaf39f6f462b92d7465ec49e6bc6408738c91f6470b7845609d0fc7822009d",
+        "bytes": 1546
+      }
+    },
+    {
+      "id": "ruff",
+      "command": ".venv/bin/ruff check . --output-format json",
+      "result": "pass",
+      "detail": "0 findings under configured exclusions",
+      "log": {
+        "path": "/private/tmp/concordia-review-20261019/ruff.json",
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "bytes": 2
+      }
+    },
+    {
+      "id": "strict_stability_types",
+      "command": ".venv/bin/mypy --strict src/concordia/stability",
+      "result": "pass",
+      "detail": "7 source files",
+      "log": {
+        "path": "/private/tmp/concordia-review-20261019/mypy-stability.log",
+        "sha256": "050c52a2b0c61e8b681ef5c485e0bc03340b8d55148e0acef27d744c8be42033",
+        "bytes": 43
+      }
+    },
+    {
+      "id": "package_types",
+      "command": ".venv/bin/mypy src/concordia scripts/select_tsuboyama_domain.py scripts/build_tsuboyama_summary.py",
+      "result": "pass",
+      "detail": "157 source files",
+      "log": {
+        "path": "/private/tmp/concordia-review-20261019/mypy-ci.log",
+        "sha256": "1d5254de1f5cd2b65e2840c11867898bbc80efbab98f343299c70e0beddce4cc",
+        "bytes": 45
+      }
+    },
+    {
+      "id": "whole_tree_types",
+      "command": ".venv/bin/mypy .",
+      "result": "fail",
+      "detail": "Duplicate module named app across deployment entrypoints; stops check",
+      "log": {
+        "path": "/private/tmp/concordia-review-20261019/mypy-all.log",
+        "sha256": "9b469dd36788b76ebe9121caea1f37a9e24baedb3dc2042c1efba03b1d28631a",
+        "bytes": 676
+      }
+    },
+    {
+      "id": "frontend_types",
+      "command": "npm run check (cwd frontend)",
+      "result": "pass",
+      "detail": "TypeScript build check",
+      "log": {
+        "path": "/private/tmp/concordia-review-20261019/typescript.log",
+        "sha256": "e5509dab92387b5d59ab050c70227e1b25a9ab2b6c75065b72337f83826c64e1",
+        "bytes": 45
+      }
+    },
+    {
+      "id": "frontend_build",
+      "command": "npm run build (cwd frontend)",
+      "result": "pass",
+      "detail": "Visualization size/eval warnings",
+      "log": {
+        "path": "/private/tmp/concordia-review-20261019/build.log",
+        "sha256": "a5b1cd975af79ccd29610eb9a2a3214de3608082f5c804e364cb25f7cbbb2cde",
+        "bytes": 1924
+      }
+    },
+    {
+      "id": "stability_build",
+      "command": "npm run build:stability (cwd frontend)",
+      "result": "pass",
+      "detail": "Large visualization chunk warning",
+      "log": {
+        "path": "/private/tmp/concordia-review-20261019/build-stability.log",
+        "sha256": "9d1840503bd515489090f4dc6b1b14dbe75f576a3fbe611278cc8ca3e782990b",
+        "bytes": 1026
+      }
+    },
+    {
+      "id": "supabase_contract",
+      "command": "node --test supabase/tests/protein-contract.test.mjs",
+      "result": "pass",
+      "detail": "3 tests; no real DB or auth",
+      "log": {
+        "path": "/private/tmp/concordia-review-20261019/supabase-contract.log",
+        "sha256": "62600ad93e78631d46dd10df48d77c3913301f21b59ff1bea9205bc1b8b84c2e",
+        "bytes": 366
+      }
+    },
+    {
+      "id": "workspace_browser",
+      "command": "npm test -- --config=/private/tmp/concordia-review-20261019/workspace.config.cjs --reporter=line (cwd frontend)",
+      "result": "pass",
+      "detail": "8 tests; external temp config selects unchanged workspace tests, fresh state",
+      "log": {
+        "path": "/private/tmp/concordia-review-20261019/playwright-workspace.log",
+        "sha256": "b9bcaf0dfa3051d7d18d1cb8f371c561fd0e54394eabcffa5613d38090d8107d",
+        "bytes": 1532
+      }
+    },
+    {
+      "id": "local_browser",
+      "command": "npm test -- --config=playwright.local.config.ts --reporter=line (cwd frontend)",
+      "result": "pass",
+      "detail": "3 tests; local model path and review/replay",
+      "log": {
+        "path": "/private/tmp/concordia-review-20261019/playwright-local.log",
+        "sha256": "c14233e97fa6efd5ceb912826ba6d840ebee82341e6965aae581c39d59d9173b",
+        "bytes": 1305
+      }
+    },
+    {
+      "id": "public_browser",
+      "command": "npm test -- --config=playwright.public.config.ts --reporter=line (cwd frontend)",
+      "result": "pass",
+      "detail": "6 tests; local preview and fixtures",
+      "log": {
+        "path": "/private/tmp/concordia-review-20261019/playwright-public.log",
+        "sha256": "a40d134dbe436246d9bd321149ef539e185e00fe6b3d7f7808301507795737b1",
+        "bytes": 2031
+      }
+    },
+    {
+      "id": "lock_consistency",
+      "command": "UV_CACHE_DIR=/private/tmp/concordia-review-20261019/uv-cache uv lock --check --offline",
+      "result": "pass",
+      "detail": "126 packages resolved; no fresh install",
+      "log": {
+        "path": "/private/tmp/concordia-review-20261019/uv-lock-check-isolated.log",
+        "sha256": "3b57d60793e44e8cebd7e4f6eaad8ab3ca9b6486546976599ebeab048183f958",
+        "bytes": 30
+      }
+    }
+  ],
+  "not_run": [
+    "fresh dependency installation",
+    "wheel/container build",
+    "Deno typecheck",
+    "real database migrations/RLS/concurrency",
+    "live hosted inference",
+    "live email/account workflow",
+    "wet-lab validation"
+  ],
+  "github_evidence": [
+    {
+      "path": "/private/tmp/concordia-review-20261019/github-runs.jsonl",
+      "sha256": "da03bbf0a061d710e27007722552d3fe13752b68234e2db3244b90ee6223cbbe",
+      "bytes": 3252
+    },
+    {
+      "path": "/private/tmp/concordia-review-20261019/github-prs.json",
+      "sha256": "77a00ee3d9e758aa9d401139a1e6e9278db34cbb841db1e5422f7cd678ca8cdd",
+      "bytes": 913
+    },
+    {
+      "path": "/private/tmp/concordia-review-20261019/github-issues.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "bytes": 3
+    },
+    {
+      "path": "/private/tmp/concordia-review-20261019/github-main-tree.json",
+      "sha256": "d0875832ed2af9a4ace4e791cc3a3ba644904106085c37dd270865c443c3bc7a",
+      "bytes": 109368
+    },
+    {
+      "path": "/private/tmp/concordia-review-20261019/github-feature-tree.json",
+      "sha256": "290e1a7683c4cdeb6dd83d3d0b87bcaf8511349347907beb5f9d78342d3243a6",
+      "bytes": 109590
+    },
+    {
+      "path": "/private/tmp/concordia-review-20261019/github-compare.json",
+      "sha256": "c0649ee48a13eebabf6a0c1017cf1e27e32c791927807bd4ba214ff97e7168cd",
+      "bytes": 546
+    },
+    {
+      "path": "/private/tmp/concordia-review-20261019/github-feature-failed.log",
+      "sha256": "18f45aa9955bc1abdfcbadc9739b2572d836301d3666b630fc959c7594e138a1",
+      "bytes": 90885
+    },
+    {
+      "path": "/private/tmp/concordia-review-20261019/github-main-failed.log",
+      "sha256": "8af32a97df0e9b9f293ce1cba26c19e196b26f02d177a7b379197e9592837df1",
+      "bytes": 90492
+    }
+  ],
+  "inspected_scientific_artifacts": [
+    {
+      "path": "data/manifests/tsuboyama_rule2_manifest_v3.json",
+      "sha256": "ee683066419099303046a16e799f7eb21d88963cdd83d8c08e28587d0faedafc",
+      "bytes": 118709
+    },
+    {
+      "path": "data/processed/tsuboyama_uncertainty_metrics.json",
+      "sha256": "bdb13949da7cfed364e7f750a201104ab621fd4bfb09735874d8dadb7fe5d616",
+      "bytes": 21955
+    },
+    {
+      "path": "data/processed/tsuboyama_production_ranker.json",
+      "sha256": "c71f5b8888681a7de6422d9f811e973f5a7bfe5cbeb0d95aa4c08452e7613b3b",
+      "bytes": 118464
+    },
+    {
+      "path": "data/processed/tsuboyama_structure_aware_gate6.json",
+      "sha256": "e0b70dbba71b98100d2247eebf6a771c5564f2ef642c952f24fdb54e88cc7d36",
+      "bytes": 21149
+    },
+    {
+      "path": "reports/boltz2-antibody-benchmark-nim-defaults.json",
+      "sha256": "236d87c7116b3e519cc6fa60656cc3493fc7962c1e3fb7ba04fab675114ff01c",
+      "bytes": 28552
+    },
+    {
+      "path": "reports/verifier-on-boltz-benchmark.json",
+      "sha256": "740b2556b9857ff5ec7914e93e836b54a76a2e9e5fd87dea3127dd032be083b9",
+      "bytes": 6553
+    },
+    {
+      "path": "reports/structure-null-baseline-benchmark.json",
+      "sha256": "bf7111821fe143e8710d99c2ee17b09d4a3b2ea930a337ce4978ee8c3b424d98",
+      "bytes": 1630
+    }
+  ],
+  "dependency_manifests": [
+    {
+      "path": "uv.lock",
+      "sha256": "ab39e68e5f93995079cfef8dad79371b3671901331a5e85cfbcd34b9a07775b8",
+      "bytes": 452324
+    },
+    {
+      "path": "requirements-space.txt",
+      "sha256": "7812f93d46cc41318a7089a57f471e62d86512d51272e4377a21792b28032c4b",
+      "bytes": 207
+    },
+    {
+      "path": "requirements-space.lock.txt",
+      "sha256": "b4540709c579aab76fdf97690f6b6a23051f4279ab1efb7ab27a45fd6ca20a51",
+      "bytes": 55050
+    },
+    {
+      "path": "frontend/package-lock.json",
+      "sha256": "0d40e967e9558dee50270ac7d33bb17ef50b7c599ca412a7ecadcce7b8671196",
+      "bytes": 182404
+    },
+    {
+      "path": "deploy/hf-evo2-worker/requirements.txt",
+      "sha256": "04b5677a5533b7bc7864d95b979b7f8a49076c55c7a04cfff8e25603b26d1682",
+      "bytes": 375
+    },
+    {
+      "path": "deploy/hf-thermompnn-space/requirements.in",
+      "sha256": "1af23466bf445f4dd8349cb4ce59d0b7844c744f508bfa358a506e3ab2da758d",
+      "bytes": 153
+    },
+    {
+      "path": "deploy/hf-thermompnn-space/requirements.lock.txt",
+      "sha256": "891ddc0c1e764400cecdf405c790b424e6eca2ea311bef0c55ec244678d74796",
+      "bytes": 41860
+    },
+    {
+      "path": "deploy/hf-structure-gateway/requirements.in",
+      "sha256": "d94253c857160f2f2340a6266910d347ba52d285fa3e0af1efaaee6f9c734471",
+      "bytes": 64
+    },
+    {
+      "path": "deploy/hf-structure-gateway/requirements.lock.txt",
+      "sha256": "6db5e410e28cdec3fb7195e2a576a4e13283ad26f34d644fbb506580deebbe22",
+      "bytes": 13914
+    }
+  ],
+  "scientific_status": "Historical report inspection and software checks only; no new biological validation or independent remeasurement of recorded model benchmarks.",
+  "changes_in_this_task": [
+    "docs/protein-xai-build-instructions.md",
+    "docs/audits/2026-10-19-repository-audit.md",
+    "docs/audits/2026-10-19-file-inventory.tsv",
+    "docs/audits/2026-10-19-evidence.json"
+  ]
+}

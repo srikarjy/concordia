@@ -28,6 +28,13 @@ enough. It does not turn model confidence into a biological claim.
 
 ## Current demonstrations
 
+For the runnable portfolio path, use the
+[execution and deployment runbook](docs/PORTFOLIO_EXECUTION_RUNBOOK.md).
+It includes a freshly executed CPU baseline on 930 public measured 1PGA variants,
+position-held-out evaluation, a complete local review through assay import,
+and standalone verified exports. This is a retrospective software demonstration;
+the small baseline is not a validated general protein predictor.
+
 The repository contains two related workflows:
 
 1. **Structure-claim verification** for hosted structure predictions such as
@@ -42,6 +49,14 @@ The stability demonstration is deliberately narrow: one domain, one property,
 and in-silico results only. It does not claim that a mutation will fold, be
 stable in a cell, express, bind, or function. Its intervals are too wide to be
 used as an acquisition signal.
+
+The public replay follows one researcher workflow: import candidate mutations
+and recorded predictions, preserve a select/exclude/defer decision, import a
+later assay batch, and export a revision-specific bundle that verifies without
+this checkout. The included ThermoMPNN feasibility record is `unavailable`:
+the pinned source checkout and checkpoint were absent locally, so it contains
+no new model prediction, gradient, or attribution result. The replay labels
+the historical ranker values separately from that investigation.
 
 ## Run the project
 
@@ -70,6 +85,11 @@ make build-stability-static
 
 The page reads committed results and a bundled structure. It performs no model
 inference and makes no network calls.
+
+For the exact reviewer demonstration and export verification, see
+[the five-minute demo](docs/portfolio-demo.md). The release candidate's local
+evidence and remaining publication dependencies are in
+[the portfolio release record](docs/PORTFOLIO_RELEASE.md).
 
 ## Scientific boundary
 

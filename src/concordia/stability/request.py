@@ -9,17 +9,21 @@ decisions and reads the frozen manifest and ranker artifacts.
 
 from __future__ import annotations
 
+import csv
 import hashlib
 import json
 import re
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from concordia.events.sqlite import SQLiteEventLedger
+from concordia.evidence.contracts import ModelRunEvidence
+from concordia.stability.contracts import canonical_json
 from concordia.stability.measured import (
+    TABLE_PATH,
     UNCERTAINTY_PATH,
     MeasuredCandidate,
     MeasuredStabilityEngine,
@@ -117,6 +121,28 @@ def candidates_for_request(
     return candidates
 
 
+def _model_input_hash(engine: MeasuredStabilityEngine, request: TypedStabilityRequest) -> str:
+    """Hash the frozen reference sequence, requested substitutions, and domain."""
+    domain_id = str(engine.manifest["selection"]["selected_domain_id"])
+    sequence = None
+    with engine.asset_path(TABLE_PATH).open(newline="", encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            if row["domain_id"] == domain_id and row["is_wild_type"] == "True":
+                sequence = row["sequence"]
+                break
+    if not sequence:
+        raise ValueError(f"wild-type sequence missing from frozen stability table: {domain_id}")
+    payload = {
+        "domain_id": domain_id,
+        "sequence": sequence,
+        "mutations": [
+            [mutation.model_dump(mode="json", by_alias=True) for mutation in group]
+            for group in request.mutation_groups
+        ],
+    }
+    return hashlib.sha256(canonical_json(payload).encode("utf-8")).hexdigest()
+
+
 def run_typed_request(
     request: TypedStabilityRequest,
     *,
@@ -127,7 +153,7 @@ def run_typed_request(
     active_engine = engine or MeasuredStabilityEngine()
     candidates = candidates_for_request(active_engine, request)
     report = active_engine.rank(candidates)
-    uncertainty = json.loads(UNCERTAINTY_PATH.read_text(encoding="utf-8"))
+    uncertainty = json.loads(active_engine.asset_path(UNCERTAINTY_PATH).read_text(encoding="utf-8"))
     holdout_summary = uncertainty["holdout"]
     interval_quantile = float(holdout_summary["normalized_quantile"])
     label_range = [
@@ -217,12 +243,51 @@ def run_typed_request(
         },
         event_id=f"{run_id}:created",
     )
-    ledger.append(
+    stability_event = ledger.append(
         run_id,
         "STABILITY_RESULT",
         {"artifact_digest": artifact_digest, "ranker": report["ranker"], "holdout_used": False},
         expected_sequence=1,
         event_id=f"{run_id}:result",
+    )
+    refusal_reasons = tuple(
+        f"{item['variant_id']}: {trigger['code']}"
+        for item in report["refusals"]
+        for trigger in item["triggers"]
+    )
+    ranker_config = {
+        "ranker": report["ranker"],
+        "ranker_artifact_digest": report["ranker_artifact_digest"],
+    }
+    params_coverage_reason = "params coverage is limited to ranker identity and artifact digest"
+    verification_status: Literal["refused", "unverifiable"] = (
+        "refused" if refusal_reasons else "unverifiable"
+    )
+    verification_reasons = (
+        *refusal_reasons,
+        params_coverage_reason,
+    ) if refusal_reasons else (
+        "no independent verification rule applied in this path — retrospective ranker output",
+        params_coverage_reason,
+    )
+    evidence = ModelRunEvidence(
+        run_id=run_id,
+        model_id=str(report["ranker"]),
+        model_version=str(active_engine.manifest["schema_version"]),
+        endpoint=None,
+        input_hash=_model_input_hash(active_engine, request),
+        params_hash=hashlib.sha256(canonical_json(ranker_config).encode("utf-8")).hexdigest(),
+        raw_output_ref=artifact_digest,
+        verification_status=verification_status,
+        verification_reasons=verification_reasons,
+        created_at=stability_event.created_at,
+    )
+    ledger.append(
+        run_id,
+        "MODEL_RUN_EVIDENCE",
+        evidence.model_dump(mode="json"),
+        expected_sequence=2,
+        event_id=f"{run_id}:model-run-evidence",
     )
     report["artifact_digest"] = artifact_digest
     report["run_id"] = run_id

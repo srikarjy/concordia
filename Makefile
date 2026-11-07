@@ -1,34 +1,42 @@
-.PHONY: demo serve test frontend benchmark verify build-stability-static space-lock
+.PHONY: demo serve test frontend benchmark verify typecheck build-stability-static space-lock
+
+PYTHON_ENV ?= .venv
 
 # Offline, no network, exits 0: runs the genomic evidence pipeline on the bundled fixture.
 demo:
-	uv sync --extra dev --extra virtual-cell --extra postgres --extra scientist --extra xai
+	uv sync --locked --extra dev --extra virtual-cell --extra postgres
 	.venv/bin/concordia genomic-demo --output .concordia/genomic-demo
 	@echo "demo OK: .concordia/genomic-demo/manifest.json"
 
 # Interactive workspace at http://127.0.0.1:7860
 serve: frontend
-	uv sync --extra dev --extra virtual-cell --extra postgres --extra scientist --extra xai
+	uv sync --locked --extra dev --extra virtual-cell --extra postgres
 	.venv/bin/concordia serve-workspace --state-root .concordia/workspace --frontend frontend/dist --port 7860
 
 frontend:
 	cd frontend && npm ci && npm run build
 
 build-stability-static:
-	.venv/bin/python scripts/verify_static_stability_artifact.py
-	cd frontend && npm run build:stability
+	python3 scripts/build_static_stability.py
 
 test:
-	uv sync --extra dev --extra virtual-cell --extra postgres --extra scientist --extra xai
-	.venv/bin/pytest -q && .venv/bin/ruff check src tests && .venv/bin/mypy src/concordia
-	cd frontend && npm ci && npm run build && npm test
+	uv sync --locked --extra dev --extra virtual-cell --extra postgres
+	$(MAKE) verify
+	cd frontend && npm ci && npm run build && npm run test:all
 
 verify:
-	set -e; \
-	.venv/bin/ruff check .; \
-	.venv/bin/mypy --strict src/concordia/stability; \
-	.venv/bin/pytest -q; \
-	.venv/bin/mypy .
+	$(PYTHON_ENV)/bin/python scripts/check_stability_assets.py
+	$(PYTHON_ENV)/bin/ruff check .
+	$(MAKE) typecheck
+	$(PYTHON_ENV)/bin/pytest -q
+
+# Deployment directories have independent modules named app; check each separately.
+typecheck:
+	$(PYTHON_ENV)/bin/mypy --strict src/concordia/stability
+	$(PYTHON_ENV)/bin/mypy --explicit-package-bases src/concordia scripts tests
+	$(PYTHON_ENV)/bin/mypy deploy/hf-evo2-worker
+	$(PYTHON_ENV)/bin/mypy deploy/hf-structure-gateway
+	$(PYTHON_ENV)/bin/mypy deploy/hf-thermompnn-space
 
 benchmark:
 	uv sync --extra dev

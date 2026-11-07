@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('guides a claim from sequence context to its verification decision', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/workspace.html');
   await expect(page.getByRole('heading', { name: 'Genomic attribution audit' })).toBeVisible();
   await expect(page.locator('.loading-screen')).toHaveCount(0);
   await expect(page.getByRole('link', { name: /GitHub repository/ })).toHaveAttribute('href', 'https://github.com/srikarjy/concordia');
@@ -23,7 +23,7 @@ test('guides a claim from sequence context to its verification decision', async 
 });
 
 test('creates and branches a persistent molecular experiment', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/workspace.html');
   await expect(page.getByRole('heading', { name: /Create, branch, compare/ })).toBeVisible();
   await page.getByRole('button', { name: 'Create experiment' }).click();
 
@@ -47,7 +47,7 @@ test('creates and branches a persistent molecular experiment', async ({ page }) 
 });
 
 test('starts a protein experiment with a Boltz structure action', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/workspace.html');
   await page.getByRole('button', { name: 'Protein', exact: true }).click();
   await page.getByRole('button', { name: 'Create experiment' }).click();
 
@@ -61,7 +61,7 @@ test('opens the antibody complex workspace without sending a live request', asyn
   page.on('request', request => {
     if (request.method() !== 'GET') mutationRequests.push(request.url());
   });
-  await page.goto('/');
+  await page.goto('/workspace.html');
   await page.getByRole('button', { name: /Antibody complex/ }).click();
 
   await expect(page.getByRole('heading', { name: /Heavy chain, light chain, and antigen/ })).toBeVisible();
@@ -74,7 +74,7 @@ test('replays a bounded fixture mutation entirely in the browser', async ({ page
   page.on('request', request => {
     if (request.method() !== 'GET') mutationRequests.push(`${request.method()} ${request.url()}`);
   });
-  await page.goto('/');
+  await page.goto('/workspace.html');
   await page.getByRole('button', { name: /Sequence sandbox/ }).click();
 
   await expect(page.getByRole('heading', { name: /Explore a recorded mutation/ })).toBeVisible();
@@ -89,7 +89,7 @@ test('replays a bounded fixture mutation entirely in the browser', async ({ page
 });
 
 test('scrubs colony generations and keeps the selected member visible', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/workspace.html');
   await page.getByRole('button', { name: /Colony evolution/ }).click();
   const generation = page.getByRole('slider', { name: 'Generation' });
 
@@ -107,7 +107,7 @@ test('scrubs colony generations and keeps the selected member visible', async ({
 });
 
 test('opens provenance records and controls local event playback', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/workspace.html');
   await page.getByRole('button', { name: /Provenance graph/ }).click();
   await page.getByLabel('Accessible graph nodes').getByRole('button').first().click();
 
@@ -123,7 +123,7 @@ test('opens provenance records and controls local event playback', async ({ page
 });
 
 test('shows the scientific framework catalog and planned visualization stack', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/workspace.html');
   await page.getByRole('button', { name: /Scientific stack/ }).click();
 
   await expect(page.getByText('React Flow')).toBeVisible();

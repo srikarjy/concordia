@@ -47,3 +47,26 @@ Local protein training uses `concordia-protein-baseline` with
 a CPU ridge baseline. BioNeMo training still requires a configured external
 training service. Fine-tuning Qwen requires a training dataset and a separate
 trainer, after which compatible weights can be imported into Ollama.
+
+## Measured-stability page
+
+Build once with `npm run build --prefix frontend`, then run:
+
+```sh
+PYTHONPATH=src .venv/bin/python -m concordia.cli serve-workspace \
+  --state-root .concordia/workspace --frontend frontend/dist --port 7860
+```
+
+Open `http://localhost:7860/stability.html`. On localhost the page scores through
+`POST /api/stability/score` using the frozen local model artifacts. No Hugging Face
+or NVIDIA request is needed for stability scoring. Non-local deployments retain
+the hosted scoring endpoint. `VITE_STABILITY_API_ROOT` can explicitly override it.
+The Vite development server also proxies this API path to port 7860.
+
+Private protein uploads and authenticated structure prediction still use the
+configured Supabase service; they are not offline substitutes. Email redirects
+preserve the current page path, which must be allowed by the auth service.
+
+After building, verify the real local browser-to-engine path with
+`cd frontend && npm test -- --config=playwright.local.config.ts`. This test uses
+isolated temporary state and port 7864, and checks that no hosted requests occur.

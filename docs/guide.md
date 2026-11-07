@@ -71,12 +71,12 @@ CLI features checked in the audit: `list-tools`, `doctor`, `genomic-demo`, `colo
 | # | Severity | Finding | Status |
 |---|---|---|---|
 | 1 | High (integrity) | A client could create a node with `scientific_use_allowed: true`. | **Fixed:** rejected with 422; only server-side operations can set it. |
-| 2 | Medium | Rate-limit bypass via a client-controlled leftmost `X-Forwarded-For`. | **Fixed:** the client is the entry the trusted proxy appended (`CONCORDIA_TRUSTED_PROXY_HOPS`, default 1). Verify on the live Space after redeploy. |
+| 2 | Medium | Rate-limit bypass via a client-controlled leftmost `X-Forwarded-For`. | **Fixed:** the client is the entry the trusted proxy appended (`CONCORDIA_TRUSTED_PROXY_HOPS`, default 1). Check the recorded status in `reports/` before assuming the Space is current. |
 | 3 | Medium | No quota on experiment creation or node count. | **Fixed:** 10 creations per client per hour, 500 per day globally, 500 nodes per experiment. |
 | 4 | Low | No CSP, HSTS or frame policy. | **Fixed:** CSP (docs page exempt), HSTS over HTTPS, `frame-ancestors` limited to the app and Hugging Face. |
 | 5 | Low | Supabase leaked-password protection off (portfolio auth tables). | Open: dashboard setting. |
 
-The live Space only picks these up after a redeploy.
+The Space only picks these up after a redeploy.
 
 Positive findings: no CORS is configured (same-origin only), uvicorn runs as a non-root user in
 Docker, secrets are env-only, the public OpenAPI surface is read-only, and server and CI action

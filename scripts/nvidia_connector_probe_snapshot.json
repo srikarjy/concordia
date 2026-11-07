@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "snapshot_recorded_at": "2026-10-18T00:10:44Z",
+  "source": "recorded NVIDIA and Boltz catalog probe results; raw probe artifact was unavailable in this checkout",
+  "raw_probe_artifact_present": false,
+  "live_health": false,
+  "routes": [
+    {"name": "Evo2 generate", "does": "DNA sequence generation", "state": "healthy", "last_probed_at": "2026-10-18T00:10:44Z", "used_by_stability": false},
+    {"name": "Evo2 forward", "does": "DNA sequence scoring via HF Space", "state": "healthy", "last_probed_at": "2026-10-18T00:10:44Z", "used_by_stability": false},
+    {"name": "Evo2 attribution", "does": "DNA attribution scoring via HF Space", "state": "healthy", "last_probed_at": "2026-10-18T00:10:44Z", "used_by_stability": false},
+    {"name": "MSA Search", "does": "Multiple-sequence alignment generation", "state": "healthy", "last_probed_at": "2026-10-18T00:10:44Z", "used_by_stability": false},
+    {"name": "ProteinMPNN", "does": "Structure-conditioned sequence design", "state": "healthy", "last_probed_at": "2026-10-18T00:10:44Z", "used_by_stability": false},
+    {"name": "RFdiffusion", "does": "Protein backbone generation", "state": "healthy", "last_probed_at": "2026-10-18T00:10:44Z", "used_by_stability": false},
+    {"name": "Boltz-2", "does": "Structure prediction and the refold gate", "state": "healthy", "last_probed_at": "2026-10-18T00:10:44Z", "used_by_stability": true},
+    {"name": "OpenFold3", "does": "AlphaFold3-class multimodal folding", "state": "healthy", "last_probed_at": "2026-10-18T00:10:44Z", "used_by_stability": false},
+    {"name": "OpenFold2", "does": "Protein structure prediction; reproducible server CUDA fault", "state": "unavailable", "last_probed_at": "2026-10-18T00:10:44Z", "used_by_stability": false},
+    {"name": "AlphaFold2", "does": "Protein structure prediction; documented route unavailable", "state": "unavailable", "last_probed_at": "2026-10-18T00:10:44Z", "used_by_stability": false},
+    {"name": "DiffDock", "does": "Protein-ligand docking; documented route unavailable", "state": "unavailable", "last_probed_at": "2026-10-18T00:10:44Z", "used_by_stability": false},
+    {"name": "BioNeMo", "does": "BioNeMo adapter; no endpoint configured", "state": "unconfigured", "last_probed_at": "2026-10-18T00:10:44Z", "used_by_stability": false},
+    {"name": "BioRender", "does": "Manifest format only", "state": "unconfigured", "last_probed_at": "2026-10-18T00:10:44Z", "used_by_stability": false}
+  ]
+}

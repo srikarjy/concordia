@@ -1,13 +1,12 @@
 """Every script in scripts/ must import and expose a main().
 
-The benchmark scripts are not part of the package and CI does not lint or type
-check them, so a signature change in a shared helper can break them silently.
+The benchmark scripts are not part of the package, so a signature change in a
+shared helper can break them silently without explicit script checks.
 That happened once: adding a required argument to ``structure_measurements``
 broke ``paratope_counterfactual`` three hours into a run.
 
-These tests need biopython, which is deliberately not a project dependency, so
-they skip where it is missing. That means CI does not run them today; they catch
-the break for anyone working on the scripts locally.
+Biopython is a required project dependency. A missing installation must fail
+collection rather than silently skip the script coverage.
 """
 
 from __future__ import annotations
@@ -17,8 +16,6 @@ import sys
 from pathlib import Path
 
 import pytest
-
-pytest.importorskip("Bio", reason="scripts need biopython, which is not a project dependency")
 
 SCRIPTS = Path(__file__).resolve().parents[2] / "scripts"
 # Scripts that run work at import time rather than under a main() guard.

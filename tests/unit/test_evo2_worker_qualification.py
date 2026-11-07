@@ -86,7 +86,7 @@ def test_passing_runtime_qualification_still_does_not_execute(tmp_path: Path) ->
             "byte_size": len(content),
             "sha256": hashlib.sha256(content).hexdigest(),
         }
-    module.EXPECTED_FILES = expected_files
+    module.__dict__["EXPECTED_FILES"] = expected_files
 
     record = module.build_runtime_qualification(
         selected_paths,

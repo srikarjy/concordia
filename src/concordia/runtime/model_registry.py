@@ -137,10 +137,13 @@ def model_registry_report() -> dict[str, Any]:
 def esm2_on_demand(checkpoint: str = "facebook/esm2_t33_650M_UR50D") -> Iterator[Any]:
     """Load ESM-2 for one extraction scope and release it before returning."""
     import torch
-    from transformers import AutoModel, AutoTokenizer
+    from transformers import AutoModel
 
-    tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-    model = AutoModel.from_pretrained(checkpoint).eval()
+    from concordia.runtime.esm_checkpoint import ESM2_REPO, load_esm2
+
+    if checkpoint != ESM2_REPO:
+        raise ValueError("only the approved ESM-2 checkpoint is supported")
+    tokenizer, model, _source_digests = load_esm2(AutoModel)
     try:
         yield tokenizer, model
     finally:
