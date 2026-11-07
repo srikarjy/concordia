@@ -15,7 +15,7 @@ import json
 import re
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -260,7 +260,9 @@ def run_typed_request(
         "ranker_artifact_digest": report["ranker_artifact_digest"],
     }
     params_coverage_reason = "params coverage is limited to ranker identity and artifact digest"
-    verification_status = "refused" if refusal_reasons else "unverifiable"
+    verification_status: Literal["refused", "unverifiable"] = (
+        "refused" if refusal_reasons else "unverifiable"
+    )
     verification_reasons = (
         *refusal_reasons,
         params_coverage_reason,
