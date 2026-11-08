@@ -1,5 +1,5 @@
 {
-  "buildCommand": "python3 scripts/build_static_stability.py",
+  "buildCommand": "pip install 'pydantic>=2.10,<3' && python3 scripts/build_static_stability.py",
   "outputDirectory": "frontend/dist-stability",
   "framework": null,
   "rewrites": [

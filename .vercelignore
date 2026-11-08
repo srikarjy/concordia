@@ -24,8 +24,6 @@ data/processed/**
 /experiments/**
 /tests
 /tests/**
-/src
-/src/**
 /deploy
 /deploy/**
 /configs
