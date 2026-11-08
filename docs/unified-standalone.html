@@ -1,28 +1,206 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#08120f"><title>Concordia - Evidence workspace</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0F1720"><title>Concordia - Evidence workspace</title>
 <style>
-:root{color-scheme:dark;--bg:#08120f;--panel:#111e19;--line:#293b33;--text:#edf4ef;--muted:#a2b1a9;--green:#55dfa0;--amber:#f1bb6e;--red:#ff736c}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:1040px;margin:auto;padding:32px 20px}header{padding:8px 2px 16px}h1{font-size:clamp(30px,5vw,46px);line-height:1.1;letter-spacing:-.04em;margin:10px 0}h2{font-size:21px;margin:5px 0 15px}p{margin:5px 0;color:var(--muted)}.eyebrow{color:var(--green);font-size:12px;letter-spacing:.13em;text-transform:uppercase}.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.chip{border:1px solid var(--line);border-radius:99px;padding:5px 10px;color:#c7d5cd;font-size:12px}section{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:20px;margin-top:14px}.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px}.metric,.card,.candidate{border:1px solid var(--line);border-radius:11px;padding:13px}.label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.1em}.number{font-weight:700;font-size:21px;margin-top:4px}.good{color:var(--green)}.hashes{display:grid;gap:7px;margin-top:14px}.hashrow{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted)}code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere}.hashrow code{color:#cfddd4}.cards{display:grid;grid-template-columns:1fr;gap:11px}@media(min-width:801px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}.card h3{font:600 16px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;margin:0 0 7px;overflow-wrap:anywhere}.version,.date{color:var(--muted);font-size:12px}.badge{display:inline-block;border:1px solid currentColor;border-radius:99px;padding:3px 9px;font-size:12px;margin:8px 0}.supported{color:var(--green)}.unverifiable{color:var(--amber)}.refused{color:var(--red)}.missing{color:#f36d65}.reasons{font-size:12px;color:#c9d4ce;padding-left:18px;margin:7px 0}.date{margin-top:9px}.decisions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.decision{border:1px solid var(--line);border-radius:8px;padding:6px 9px}.bundle{display:flex;gap:13px;align-items:center;flex-wrap:wrap;margin-top:13px;font-size:13px}.bundle a{color:var(--green);font-weight:700}.candidates{display:grid;gap:8px}.candidate{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.refusal{border-left:2px solid var(--amber);padding:5px 0 5px 11px;margin:9px 0}.context{font-size:13px;color:var(--muted)}footer{border-top:1px solid var(--line);margin-top:18px;padding:15px 2px 0;color:var(--muted);font-size:13px}
-</style></head><body><main id="app"></main>
-<script type="application/json" id="evidence-data">[{"schema_version":1,"run_id":"boltz-report-replay-a427675e689e4f00888e3b18153eedad","model_id":"mit/boltz2","model_version":"boltz2-3hfm-reference-reproduction-v1","endpoint":"/nvidia/boltz/complex on the public Space","input_hash":"4f3f4d082f06957a95178b92f0b296ce3ad6eef9e64de15b7ccc5ecfd591164b","params_hash":null,"raw_output_ref":"ebcf595807359f2d7d096dc9b6fc6ee77b017fb03a00bb1a036385dcedc3b5ae","verification_status":"unverifiable","verification_reasons":["settings/params block not recorded in source artifact: reports/boltz2-3hfm-reference-reproduction.json"],"created_at":"2026-10-11T00:00:00Z"},{"schema_version":1,"run_id":"evo2-report-replay-85facb0f40b64c8280f83e74556adc48","model_id":"arc/evo2-40b-generate","model_version":"nvidia-evo2-hosted-smoke","endpoint":"https://health.api.nvidia.com/v1/biology/arc/evo2-40b/generate","input_hash":"b28b7e7e6b70661dfee15d5290c4bca097ca145f721c4fbc4de73ad1d1660b8b","params_hash":null,"raw_output_ref":"2fb2b199b32d4aff7fca5321c52b8a6705732f4d4bcef93d735417671dd9bb7e","verification_status":"unverifiable","verification_reasons":["generation-only historical artifact; no forward scoring or biological validation in this record","model_version derived from report filename; source report has no model_version field","settings/params block not recorded in source artifact: reports/nvidia-evo2-hosted-smoke.json"],"created_at":"2026-09-10T00:00:00Z"},{"schema_version":1,"run_id":"thermompnn-report-replay-799b918774fa4298b985389e852d6d9b","model_id":"thermompnn","model_version":"2026-10-20-1igv-s1a","endpoint":null,"input_hash":"4f0e7828fa80e25e6b1b50962f8e7af1b710e941234f9a6e5eb62c415ee7fb2e","params_hash":null,"raw_output_ref":"reports/thermompnn-feasibility/2026-10-20-1igv-s1a.json","verification_status":"unverifiable","verification_reasons":["execution not attempted; upstream checkpoint unavailable \u2014 see reports/thermompnn-feasibility/2026-10-20-1igv-s1a.json","created_at derived from git commit date; source report has no created_at field"],"created_at":"2026-10-20T00:00:00Z"},{"created_at":"2026-11-07T06:11:08.130638Z","endpoint":null,"input_hash":"3cd5a4b0cd2f850190f86061d75e924317d66f3177d73f8d4af3b45e5414ab92","model_id":"ThermoMPNN + one-hot rank average","model_version":"1","params_hash":"b5814127de88f84ef70a2484d697d315a357e553d77de3dfc5c1b337263acb6c","raw_output_ref":"dae4e417463b959e68b7ab2f25d4475e46e0be8d63d7af4c9c42bf1e78540b00","run_id":"typed-stability-150607a4d86246ee8b5469cc3b3cec02","schema_version":1,"verification_reasons":["1IGV.pdb_Q21E: HARD_PROTECTED_UNIPROT","1IGV.pdb_A13Q:K6Q: T3_MULTI_MUTANT_SINGLE_MODEL","params coverage is limited to ranker identity and artifact digest"],"verification_status":"refused"}]</script>
-<script type="application/json" id="ledger-data">{"runs_checked":4,"events_checked":9,"heads":{"boltz-report-replay-a427675e689e4f00888e3b18153eedad":"efa011fad8f6226f3527f81de1ea2481778129420000b13b1898e17c763573cd","evo2-report-replay-85facb0f40b64c8280f83e74556adc48":"e715b40c7e03c68c297159d42e9c4e812bff593c541d149a87a62d5eddf2d110","thermompnn-report-replay-799b918774fa4298b985389e852d6d9b":"d1ed9040807849295822b8693d81c5ee60a5ea9d00b22cac4a6a76c82d06c029","typed-stability-150607a4d86246ee8b5469cc3b3cec02":"d33a2c07da08aafb98bd94c4ef3cc9f4d4df23fbfc5bfbd336d9c18ae922da9e"},"breaks":[],"intact":true}</script>
+:root{--bg:#F3F5F7;--panel:#FFFFFF;--line:#DEE3E8;--line-soft:#EBEEF1;--text:#111A22;--muted:#55616D;--blue:#1E4FA8;--green:#13795B;--green-bg:#E6F4EE;--amber:#E08A2E;--red:#B42318;--red-bg:#FDECEA}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+a{color:var(--blue)}a:hover{color:#163C82}
+.mono{font-family:ui-monospace,"IBM Plex Mono",SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere}
+header.topbar{background:#0F1720;color:#E8EDF2;padding:0 20px;min-height:56px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:28px;flex-wrap:wrap;padding:10px 0}
+.brand .name{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;letter-spacing:-.01em}
+nav.toptabs{display:flex;gap:4px;font-size:13.5px;flex-wrap:wrap}
+nav.toptabs a{color:#A9B6C3;padding:7px 12px;border-radius:6px;text-decoration:none;cursor:pointer}
+nav.toptabs a.active{color:#fff;background:#1F2A36}
+.scope{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#A9B6C3;padding:10px 0}
+.dot{width:8px;height:8px;border-radius:999px;background:#3DD68C;display:inline-block;flex-shrink:0}
+main{width:100%;max-width:1200px;margin:0 auto;padding:28px 20px 64px;display:flex;flex-direction:column;gap:20px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:6px}
+.kpi .label{font-size:12px;color:var(--muted);font-weight:500}
+.kpi .val{display:flex;align-items:baseline;gap:8px}
+.kpi .val .n{font-size:26px;font-weight:600}
+.kpi .val .u{font-size:12.5px;font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:20px;align-items:stretch}
+.panel{flex:1 1 380px;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column}
+.panel.grow{flex:999 1 560px}
+.panel .ph{padding:16px 20px;border-bottom:1px solid var(--line-soft);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.panel .ph h2{margin:0;font-size:15px;font-weight:600}
+.panel .ph .sub{font-size:12px;color:var(--muted)}
+.badge{font-size:11.5px;font-weight:600;border-radius:5px;padding:3px 8px;white-space:nowrap}
+.badge.ok{color:var(--green);background:var(--green-bg)}
+.badge.blocked{color:var(--red);background:var(--red-bg)}
+table.ranker{width:100%;border-collapse:collapse}
+table.ranker td,table.ranker th{padding:12px 0;vertical-align:middle}
+table.ranker thead th{font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--line-soft);text-align:left}
+table.ranker tbody tr{border-bottom:1px solid var(--line-soft)}
+table.ranker tbody tr:last-child{border-bottom:none}
+.barwrap{position:relative;height:22px;min-width:160px}
+.barwrap .track{position:absolute;left:0;right:0;top:10px;height:2px;background:var(--line-soft)}
+.barwrap .zero{position:absolute;top:0;bottom:0;width:1px;background:#9AA5B1}
+.barwrap .range{position:absolute;top:7px;height:8px;border-radius:4px;background:#C9DAF8}
+.barwrap .point{position:absolute;top:4px;width:14px;height:14px;margin-left:-7px;border-radius:999px;background:var(--blue);border:2px solid #fff;box-sizing:border-box}
+.guard-item{padding:14px 20px;border-bottom:1px solid var(--line-soft);display:flex;flex-direction:column;gap:6px}
+.guard-item:last-child{border-bottom:none}
+.guard-item .hd{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.guard-item .ctx{font-size:12.5px;color:var(--muted)}
+.ledger-body{padding:22px 20px;display:flex;flex-direction:column;gap:16px}
+.chain{display:flex;align-items:center}
+.chain .node{width:14px;height:14px;border-radius:4px;background:var(--green);flex-shrink:0}
+.chain .link{flex:1;height:2px;background:#9FD3BC}
+.ledger-stats{display:flex;gap:28px;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
+.ledger-stats b{font-size:15px;font-weight:600;color:var(--text)}
+.data-body{padding:4px 20px 14px}
+.data-row{padding:14px 0;border-bottom:1px solid var(--line-soft);display:flex;flex-direction:column;gap:10px}
+.data-row:last-child{border-bottom:none}
+.data-row .hd{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.splitbar{display:flex;height:8px;border-radius:4px;overflow:hidden}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:6px}
+.sw{width:8px;height:8px;border-radius:2px;display:inline-block}
+.decisions{display:flex;gap:8px;flex-wrap:wrap}
+.decision{border:1px solid var(--line);border-radius:7px;padding:5px 9px;font-size:12.5px}
+.panel-footnote{padding:0 20px 16px;font-size:12px;color:var(--muted)}
+footer.page{border-top:1px solid var(--line);margin-top:8px;padding:18px 2px 0;color:var(--muted);font-size:13px;max-width:1200px;margin-left:auto;margin-right:auto;padding-left:20px;padding-right:20px}
+</style></head><body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="name">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6FA8FF" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="6" cy="6" r="2.5"></circle><circle cx="18" cy="6" r="2.5"></circle><circle cx="12" cy="18" r="2.5"></circle><path d="M8.2 7.3l2.6 8.4M15.8 7.3l-2.6 8.4M8.5 6h7"></path></svg>
+      Concordia
+    </div>
+    <nav class="toptabs">
+      <a href="#ranker" class="active">Ranker</a>
+      <a href="#guard">Guard</a>
+      <a href="#ledger">Ledger</a>
+      <a href="#data">Data</a>
+    </nav>
+  </div>
+  <div class="scope"><span class="dot" aria-hidden="true"></span>In-silico only</div>
+</header>
+
+<main id="app"></main>
+
+<script type="application/json" id="evidence-data">[{"schema_version":1,"run_id":"boltz-report-replay-e2416a579b264d72aedf238158a92a40","model_id":"mit/boltz2","model_version":"boltz2-3hfm-reference-reproduction-v1","endpoint":"/nvidia/boltz/complex on the public Space","input_hash":"4f3f4d082f06957a95178b92f0b296ce3ad6eef9e64de15b7ccc5ecfd591164b","params_hash":null,"raw_output_ref":"ebcf595807359f2d7d096dc9b6fc6ee77b017fb03a00bb1a036385dcedc3b5ae","verification_status":"unverifiable","verification_reasons":["settings/params block not recorded in source artifact: reports/boltz2-3hfm-reference-reproduction.json"],"created_at":"2026-10-11T00:00:00Z"},{"schema_version":1,"run_id":"evo2-report-replay-870c5222ab2142f18307e89e3371054c","model_id":"arc/evo2-40b-generate","model_version":"nvidia-evo2-hosted-smoke","endpoint":"https://health.api.nvidia.com/v1/biology/arc/evo2-40b/generate","input_hash":"b28b7e7e6b70661dfee15d5290c4bca097ca145f721c4fbc4de73ad1d1660b8b","params_hash":null,"raw_output_ref":"2fb2b199b32d4aff7fca5321c52b8a6705732f4d4bcef93d735417671dd9bb7e","verification_status":"unverifiable","verification_reasons":["generation-only historical artifact; no forward scoring or biological validation in this record","model_version derived from report filename; source report has no model_version field","settings/params block not recorded in source artifact: reports/nvidia-evo2-hosted-smoke.json"],"created_at":"2026-09-10T00:00:00Z"},{"schema_version":1,"run_id":"thermompnn-report-replay-f8ab70c024b84c6c89297ca02e5c1c23","model_id":"thermompnn","model_version":"2026-10-20-1igv-s1a","endpoint":null,"input_hash":"4f0e7828fa80e25e6b1b50962f8e7af1b710e941234f9a6e5eb62c415ee7fb2e","params_hash":null,"raw_output_ref":"reports/thermompnn-feasibility/2026-10-20-1igv-s1a.json","verification_status":"unverifiable","verification_reasons":["execution not attempted; upstream checkpoint unavailable \u2014 see reports/thermompnn-feasibility/2026-10-20-1igv-s1a.json","created_at derived from git commit date; source report has no created_at field"],"created_at":"2026-10-20T00:00:00Z"},{"created_at":"2026-11-07T20:52:50.688510Z","endpoint":null,"input_hash":"3cd5a4b0cd2f850190f86061d75e924317d66f3177d73f8d4af3b45e5414ab92","model_id":"ThermoMPNN + one-hot rank average","model_version":"1","params_hash":"b5814127de88f84ef70a2484d697d315a357e553d77de3dfc5c1b337263acb6c","raw_output_ref":"dae4e417463b959e68b7ab2f25d4475e46e0be8d63d7af4c9c42bf1e78540b00","run_id":"typed-stability-feacd6fa1c394008a5a91c4b6e4bffdf","schema_version":1,"verification_reasons":["1IGV.pdb_Q21E: HARD_PROTECTED_UNIPROT","1IGV.pdb_A13Q:K6Q: T3_MULTI_MUTANT_SINGLE_MODEL","params coverage is limited to ranker identity and artifact digest"],"verification_status":"refused"}]</script>
+<script type="application/json" id="ledger-data">{"runs_checked":4,"events_checked":9,"heads":{"boltz-report-replay-e2416a579b264d72aedf238158a92a40":"0eb96b7acfe2151bba3e449cd8066a4f7b0a4733692447ae6d20f23867d74dbd","evo2-report-replay-870c5222ab2142f18307e89e3371054c":"aecf5f6996402d38d442df7b4b3c89afa56ab1bf181ffa5a4f26f149a03e98b9","thermompnn-report-replay-f8ab70c024b84c6c89297ca02e5c1c23":"b1868a5e8f21262112628a853ff5bf691c1f67626e37f7ad828417e6cf04fceb","typed-stability-feacd6fa1c394008a5a91c4b6e4bffdf":"b378f0d4a3bba784863bdf10ca2aaa33c33e5826e80e36ce0260617b1d9740fb"},"breaks":[],"intact":true}</script>
 <script type="application/json" id="stability-data">{"ranked_candidates":[{"variant_id":"1IGV.pdb_L52Y","ddg":0.20366883277893066,"interval_low":-0.44024245238829796,"interval_high":0.8475801179461593,"rank":1},{"variant_id":"1IGV.pdb_A13Q","ddg":-1.2016946077346802,"interval_low":-1.7554320180493073,"interval_high":-0.647957197420053,"rank":2}],"refusals":[{"variant_id":"1IGV.pdb_Q21E","triggers":[{"code":"HARD_PROTECTED_UNIPROT","feature_type":"Binding site","accession":"P02633","uniprot_position":26}]},{"variant_id":"1IGV.pdb_A13Q:K6Q","triggers":[{"code":"T3_MULTI_MUTANT_SINGLE_MODEL","mutation_count":2}]}]}</script>
+
 <script>
 (function(){"use strict";
-var evidence=JSON.parse(document.getElementById("evidence-data").textContent),ledger=JSON.parse(document.getElementById("ledger-data").textContent),stability=JSON.parse(document.getElementById("stability-data").textContent);
-var pga_bundle_hash="b620326b949224487233cd7d89308a393acb14981d625d87f99ce05bf23c2bdb",pga_summary="930 variants \u00b7 745 train / 185 held out \u00b7 RMSE 1.724 vs 2.442 baseline (training mean)",pga_decisions=[["E15F","selected"],["T25Q","deferred"],["F30P","excluded"]],igv_digest=evidence[evidence.length-1].raw_output_ref;
-var app=document.getElementById("app");function el(t,c,x){var n=document.createElement(t);if(c)n.className=c;if(x!==undefined)n.textContent=x;return n}function add(p,n){p.appendChild(n);return n}function sec(k,t){var s=el("section");add(s,el("div","eyebrow",k));add(s,el("h2","",t));add(app,s);return s}function short(h){return h.slice(0,12)}
-var h=el("header");add(h,el("div","eyebrow","CONCORDIA / SCIENTIFIC SOFTWARE"));add(h,el("h1","","Concordia \u2014 evidence workspace"));add(h,el("p","","In-silico only. No biological validation."));var chips=add(h,el("div","chips"));["603 tests","all committed hashes match disk","every negative result named"].forEach(function(x){add(chips,el("span","chip",x))});add(app,h);
+var evidence=JSON.parse(document.getElementById("evidence-data").textContent),
+    ledger=JSON.parse(document.getElementById("ledger-data").textContent),
+    stability=JSON.parse(document.getElementById("stability-data").textContent);
 
-var proteins=el("section","");proteins.style.cssText="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0";
-var pgaThumb=el("div","");add(pgaThumb,el("div","","1PGA \u00b7 PROTEIN G")).style.cssText="font-size:12px;letter-spacing:.08em;color:#718096;margin-bottom:6px";add(pgaThumb,el("div","","930 measured variants \u00b7 745 train / 185 held out")).style.cssText="font-size:13px;color:#4a5568;margin-bottom:8px";var pgaSvg=el("div","");pgaSvg.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 140" width="220" height="140" style="background:#f8fafc;border-radius:6px"><polyline points="145.1,74.6 125.4,84.7 130.3,81.6 117.3,91.8 106.9,85.8 103.6,98.1 84.9,90.7 90.0,98.1 68.7,86.7 54.9,91.7 26.6,91.6 34.6,92.3 54.3,106.0 58.5,109.3 74.2,106.1 70.2,93.2 86.2,87.5 90.5,70.6 104.0,65.4 125.6,51.1 150.2,43.3 168.5,44.8 168.2,50.6 163.9,31.9 137.6,30.3 127.8,48.2 134.3,43.2 116.3,26.6 92.3,37.4 95.7,51.4 98.2,38.2 71.7,29.6 57.9,47.6 67.2,52.7 57.3,35.1 29.4,36.9 26.9,54.9 35.9,47.8 62.8,58.5 85.8,47.7 112.5,57.4 142.2,61.9 149.3,61.8 170.2,73.6 177.7,76.3 191.5,91.8 203.8,86.1 209.0,104.9 178.3,109.2 167.8,90.3 150.7,93.3 142.8,80.0 133.7,86.5 118.3,75.5 115.0,82.8 97.5,75.1" fill="none" stroke="#2f855a" stroke-width="1.2" stroke-linecap="round"/></svg>';add(pgaThumb,pgaSvg.firstElementChild);add(proteins,pgaThumb);
-var igvThumb=el("div","");add(igvThumb,el("div","","1IGV · MUTANT LIBRARY")).style.cssText="font-size:12px;letter-spacing:.08em;color:#718096;margin-bottom:6px";add(igvThumb,el("div","","11 held-out positions \u00b7 3 illustrative decisions")).style.cssText="font-size:13px;color:#4a5568;margin-bottom:8px";var igvSvg=el("div","");igvSvg.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 140" width="220" height="140" style="background:#f8fafc;border-radius:6px"><polyline points="28.8,38.2 35.7,40.4 44.2,24.9 58.3,27.3 68.4,40.8 74.3,32.1 85.9,20.9 98.4,32.9 105.0,39.8 113.8,25.8 126.8,22.6 139.9,36.7 142.1,38.1 152.7,23.2 172.6,28.3 186.3,36.9 183.2,39.1 160.0,37.9 143.3,28.2 124.0,37.1 132.2,51.6 140.1,58.2 161.5,66.7 162.3,79.5 175.7,70.5 159.1,58.0 139.4,68.4 151.5,75.0 154.4,60.5 130.0,56.4 121.2,70.5 136.4,69.8 129.9,54.2 105.3,52.9 97.3,68.6 112.6,77.2 93.0,87.5 94.3,93.2 118.4,98.0 110.7,105.4 96.3,115.6 103.4,129.7 109.4,120.8 133.7,116.3 140.5,102.4 148.3,111.5 126.0,119.4 113.2,105.4 128.4,98.3 124.8,110.8 99.6,110.0 99.2,94.1 115.5,94.2 98.3,100.4 110.6,95.7 133.0,102.1 146.9,88.6 157.4,88.9 145.1,75.3 121.7,72.5 107.3,61.8 88.6,53.4 71.5,63.3 83.0,76.3 84.9,68.8 59.1,67.3 58.4,83.6 68.3,81.0 49.2,70.5 32.0,82.0 44.4,92.4 43.6,81.9 18.9,78.1 11.0,93.7" fill="none" stroke="#2b6cb0" stroke-width="1.2" stroke-linecap="round"/></svg>';add(igvThumb,igvSvg.firstElementChild);add(proteins,igvThumb);add(app,proteins);
-var thesis=el("div","");thesis.style.cssText="margin:28px 0 18px;padding:16px 20px;background:#f0f4f8;border-left:3px solid #2b6cb0;border-radius:4px";add(thesis,el("div","","Four models, one contract, one validator.")).style.cssText="font-size:15px;color:#1a202c;font-weight:500";var thesisText=el("div","");thesisText.style.cssText="font-size:13px;color:#4a5568;margin-top:4px";thesisText.appendChild(document.createTextNode("The validator refuses to claim \"supported\" when source artifacts lack parameters. Three of four records below say "));add(thesisText,el("strong","","unverifiable")).style.cssText="color:#c05621";thesisText.appendChild(document.createTextNode(" - honestly, with named reasons."));add(thesis,thesisText);add(app,thesis);
+var pga_bundle_hash="b620326b949224487233cd7d89308a393acb14981d625d87f99ce05bf23c2bdb",
+    pga_decisions=[["E15F","selected"],["T25Q","deferred"],["F30P","excluded"]];
 
-var es=sec("01 / MODEL-RUN RECORDS","Evidence and provenance limits"),grid=add(es,el("div","cards"));evidence.forEach(function(r){var c=add(grid,el("article","card"));add(c,el("h3","",r.model_id));add(c,el("div","version",r.model_version));add(c,el("span","badge "+r.verification_status,r.verification_status));if(r.params_hash===null)add(c,el("strong","missing","params: NOT RECORDED"));else add(c,el("div","","params: "+short(r.params_hash)+"\u2026"));var ul=add(c,el("ul","reasons"));if(r.verification_reasons.length)r.verification_reasons.forEach(function(x){add(ul,el("li","",x))});else add(ul,el("li","","\u2014"));var pt=document.createElement("template");pt.innerHTML='<details style="margin-top:8px"><summary style="cursor:pointer;font-size:11px;color:#718096;list-style:none">▸ provenance details</summary><div style="font-size:11px;color:#718096;margin-top:6px;line-height:1.6"></div></details>';var pd=pt.content.firstElementChild.cloneNode(true);add(c,pd);add(pd.querySelector("div"),el("div","date",r.created_at))});
-var l=sec("02 / PROVENANCE","Hash-chained ledger"),ms=add(l,el("div","metrics"));[["Intact",ledger.intact?"\u2713 true":"false"],["Runs checked",ledger.runs_checked],["Events checked",ledger.events_checked],["Breaks",ledger.breaks.length]].forEach(function(x){var m=add(ms,el("div","metric"));add(m,el("div","label",x[0]));add(m,el("div","number",String(x[1]))).classList.toggle("good",x[0]==="Intact"&&ledger.intact)});var ht=document.createElement("template");ht.innerHTML='<details style="margin-top:8px"><summary style="cursor:pointer;font-size:11px;color:#718096;list-style:none">▸ provenance details</summary><div class="hashes"></div></details>';var hd=ht.content.firstElementChild.cloneNode(true);add(l,hd);var hs=hd.querySelector(".hashes");Object.keys(ledger.heads).forEach(function(k){var r=add(hs,el("div","hashrow"));add(r,el("span","",k));add(r,el("code","",short(ledger.heads[k])+"\u2026"))});
-var pg=sec("03 / MEASURED-DATA REVIEW","1PGA - retrospective stability benchmark");add(pg,el("p","",pga_summary));var ds=add(pg,el("div","decisions"));pga_decisions.forEach(function(x){add(ds,el("span","decision",x[0]+" "+x[1]))});var b=add(pg,el("div","bundle"));add(b,el("code","mono","Bundle hash: "+pga_bundle_hash.slice(0,8)+"\u2026"));var a=el("a","","Download bundle");a.href="../frontend/public/public-data-review/bundle.zip";a.download="";add(b,a);
-var ig=sec("04 / TYPED STABILITY REVIEW","1IGV - position-held-out ranker");add(ig,el("div","label","Ranked candidates"));var cs=add(ig,el("div","candidates"));stability.ranked_candidates.sort(function(a,b){return a.rank-b.rank}).forEach(function(x){var r=add(cs,el("div","candidate"));add(r,el("strong","","Rank "+x.rank+": "+x.variant_id.split("_").pop()));add(r,el("span","mono","predicted \u0394\u0394G "+x.ddg.toFixed(4)+" \u00b7 interval "+x.interval_low.toFixed(2)+" to "+x.interval_high.toFixed(2)))});add(ig,el("div","label","Refused"));stability.refusals.forEach(function(x){var r=add(ig,el("div","refusal"));add(r,el("strong","",x.variant_id.split("_").pop()));x.triggers.forEach(function(t){add(r,el("div","context",t.code));var d=[];if(t.feature_type)d.push(t.feature_type.toLowerCase());if(t.accession)d.push(t.accession);if(t.uniprot_position!==undefined)d.push("position "+t.uniprot_position);if(t.mutation_count!==undefined)d.push(t.mutation_count+" mutations");if(d.length)add(r,el("div","context","("+d.join(", ")+")"))})});add(ig,el("p","mono","Static digest: "+igv_digest.slice(0,8)+"\u2026"));
-var upload=el("section","");upload.style.cssText="margin:32px 0 16px";var drop=el("div","");drop.style.cssText="border:1.5px dashed #cbd5e0;border-radius:8px;padding:24px;text-align:center;background:#fafbfc";add(drop,el("div","","Drop a FASTA file here to inspect")).style.cssText="font-size:15px;color:#2d3748;margin-bottom:6px";add(drop,el("div","","or click to select \u00b7 20-300 aa \u00b7 up to 8 KB")).style.cssText="font-size:12px;color:#718096;margin-bottom:10px";var note=el("div","");note.style.cssText="font-size:11px;color:#a0aec0;max-width:420px;margin:0 auto";note.appendChild(document.createTextNode("Inspection only - scoring pipeline is not yet connected to this page. Upload-and-inspect is available in the full workspace at "));var port=add(note,el("code","",":7860"));port.style.cssText="background:#edf2f7;padding:1px 5px;border-radius:3px";note.appendChild(document.createTextNode("."));add(drop,note);add(upload,drop);add(app,upload);
-add(app,el("footer","","4 emitters. 3 unverifiable because sources don't record params \u2014 validator enforces this. 4 more scaffolds need live execution, not fabrication."));
+function el(t,c,x){var n=document.createElement(t);if(c)n.className=c;if(x!==undefined)n.textContent=x;return n}
+function add(p,n){p.appendChild(n);return n}
+function panel(parent,id,title,sub){var p=add(parent,el("section","panel"));p.id=id;var h=add(p,el("div","ph"));add(h,el("h2","",title));if(sub)add(h,el("span","sub",sub));return p;}
+
+var app=document.getElementById("app");
+
+/* ---- KPI row ---- */
+var kpis=add(app,el("div","kpis"));
+function kpi(label,n,unit,cls){var k=add(kpis,el("div","kpi"));add(k,el("div","label",label));var v=add(k,el("div","val"));add(v,el("span","n",n));var u=add(v,el("span","u",unit));if(cls)u.style.color=cls;}
+kpi("Tests","603","passing","var(--green)");
+kpi("Artifact hashes","100%","match disk","var(--green)");
+kpi("Ledger","0","breaks","var(--green)");
+kpi("Guard",String(stability.refusals.length),"blocked","var(--red)");
+
+/* ---- Ranker + Guard ---- */
+var row1=add(app,el("div","row"));
+var ranker=panel(row1,"ranker","Stability ranker","ΔΔG kcal/mol · 90% CI");
+ranker.classList.add("grow");
+ranker.querySelector(".ph").appendChild(el("span","mono sub","1IGV · position held-out"));
+
+var sorted=stability.ranked_candidates.slice().sort(function(a,b){return a.rank-b.rank});
+var allLow=Math.min.apply(null,sorted.map(function(c){return c.interval_low})),
+    allHigh=Math.max.apply(null,sorted.map(function(c){return c.interval_high}));
+var pad=(allHigh-allLow)*0.15||1;
+allLow-=pad;allHigh+=pad;
+var span=allHigh-allLow;
+function pct(v){return ((v-allLow)/span*100).toFixed(1)+"%";}
+
+var tableWrap=add(ranker,el("div",""));tableWrap.style.cssText="overflow-x:auto";
+var tinner=add(tableWrap,el("div",""));tinner.style.cssText="min-width:520px;padding:4px 20px 18px";
+var table=add(tinner,el("table","ranker"));
+var thead=add(table,el("thead"));var thr=add(thead,el("tr"));
+["#","Mutation","ΔΔG",""].forEach(function(x){add(thr,el("th","",x));});
+var tbody=add(table,el("tbody"));
+sorted.forEach(function(c,i){
+  var tr=add(tbody,el("tr"));
+  add(tr,el("td","mono",String(i+1).padStart(2,"0")));
+  add(tr,el("td","mono",c.variant_id.split("_").pop()));
+  add(tr,el("td","mono",c.ddg.toFixed(3)));
+  var td=add(tr,el("td",""));var bw=add(td,el("div","barwrap"));
+  add(bw,el("div","track"));
+  var zero=add(bw,el("div","zero"));zero.style.left=pct(0);
+  var range=add(bw,el("div","range"));range.style.left=pct(c.interval_low);range.style.width=(((c.interval_high-c.interval_low)/span)*100).toFixed(1)+"%";
+  var point=add(bw,el("div","point"));point.style.left=pct(c.ddg);
+});
+
+var guard=panel(row1,"guard","Constraint guard");
+stability.refusals.forEach(function(r){
+  var g=add(guard,el("div","guard-item"));
+  var hd=add(g,el("div","hd"));
+  add(hd,el("span","mono",r.variant_id.split("_").pop()));
+  add(hd,el("span","badge blocked","blocked"));
+  var parts=[];
+  r.triggers.forEach(function(t){
+    var d=[];
+    if(t.feature_type)d.push(t.feature_type);
+    if(t.accession)d.push(t.accession);
+    if(t.uniprot_position!==undefined)d.push("position "+t.uniprot_position);
+    if(t.mutation_count!==undefined)d.push(t.mutation_count+" mutations");
+    parts.push((d.length?d.join(", "):t.code));
+  });
+  add(g,el("div","ctx",parts.join(" · ")));
+});
+
+/* ---- Ledger + Data ---- */
+var row2=add(app,el("div","row"));
+var ledgerPanel=panel(row2,"ledger","Hash-chained ledger");
+ledgerPanel.querySelector(".ph").appendChild(el("span","badge ok",ledger.intact?"intact":"broken"));
+var lb=add(ledgerPanel,el("div","ledger-body"));
+var chain=add(lb,el("div","chain"));
+for(var i=0;i<ledger.events_checked;i++){
+  add(chain,el("span","node"));
+  if(i<ledger.events_checked-1)add(chain,el("span","link"));
+}
+var stats=add(lb,el("div","ledger-stats"));
+[[ledger.runs_checked,"runs"],[ledger.events_checked,"events"],[ledger.breaks.length,"breaks"]].forEach(function(x){
+  var s=add(stats,el("span",""));add(s,el("b","",String(x[0])));s.appendChild(document.createTextNode(" "+x[1]));
+});
+
+var dataPanel=panel(row2,"data","Datasets");
+var db=add(dataPanel,el("div","data-body"));
+var pgaRow=add(db,el("div","data-row"));
+var pgaHd=add(pgaRow,el("div","hd"));
+var pgaName=add(pgaHd,el("span",""));var pgaId=add(pgaName,el("span","mono","1PGA"));pgaId.style.fontWeight="600";pgaName.appendChild(document.createTextNode(" "));add(pgaName,el("span","","Protein G"));
+add(pgaHd,el("span","mono","930 variants"));
+var split=add(pgaRow,el("div","splitbar"));
+var trainSpan=add(split,el("span",""));trainSpan.style.cssText="flex:745;background:var(--blue)";
+var heldSpan=add(split,el("span",""));heldSpan.style.cssText="flex:185;background:var(--amber)";
+var legend=add(pgaRow,el("div","legend"));
+var l1=add(legend,el("span",""));var sw1=add(l1,el("span","sw"));sw1.style.background="var(--blue)";l1.appendChild(document.createTextNode("745 train"));
+var l2=add(legend,el("span",""));var sw2=add(l2,el("span","sw"));sw2.style.background="var(--amber)";l2.appendChild(document.createTextNode("185 held out"));
+var decisions=add(pgaRow,el("div","decisions"));
+pga_decisions.forEach(function(x){add(decisions,el("span","decision",x[0]+" "+x[1]));});
+var bundleLink=add(pgaRow,el("div",""));bundleLink.style.cssText="font-size:12.5px";
+var a=add(bundleLink,el("a","","Download bundle"));a.href="../frontend/public/public-data-review/bundle.zip";a.download="";
+bundleLink.appendChild(document.createTextNode(" · "));
+add(bundleLink,el("code","mono",pga_bundle_hash.slice(0,8)+"…"));
+
+var igvRow=add(db,el("div","data-row"));
+var igvHd=add(igvRow,el("div","hd"));
+var igvName=add(igvHd,el("span",""));var igvId=add(igvName,el("span","mono","1IGV"));igvId.style.fontWeight="600";igvName.appendChild(document.createTextNode(" "));add(igvName,el("span","","Mutant library"));
+add(igvHd,el("span","mono","11 held-out positions"));
+
+add(dataPanel,el("div","panel-footnote","Upload-and-inspect for your own protein runs live in the full workspace."));
+
+add(app,el("footer","page","4 emitters feed this contract. Archival model-run provenance (Boltz, Evo2, ThermoMPNN) is retained in the ledger and export bundle, not surfaced here — this view shows current results only."));
 })();
-</script></body></html>
+</script>
+</body></html>
